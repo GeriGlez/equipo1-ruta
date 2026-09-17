@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Compilaciones
+dist/
+dist-ssr/
+
+# Variables de entorno locales
+.env
+.env.local
+.env.*.local
+
+# Archivos de sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
