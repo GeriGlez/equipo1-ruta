@@ -55,12 +55,15 @@ app.innerHTML = `
         <div class="module-title">5. Órdenes de Servicio</div>
         <div class="module-desc">HU-05, HU-06, HU-07: Programación semanal y cancelación de órdenes.</div>
       </div>
-
+    
+    <a href="./src/modules/visitas/Visitas_y_Bitacora_Escritorio.html"
+    class="module-link" >
       <div class="module-card">
         <div class="module-owner">Brayan Ascencio</div>
         <div class="module-title">6. Visitas y Bitácora</div>
         <div class="module-desc">HU-08, HU-09, HU-10: Modo offline, sincronización y captura de pH/cloro.</div>
       </div>
+    </a>
 
       <div class="module-card">
         <div class="module-owner">Rooney</div>

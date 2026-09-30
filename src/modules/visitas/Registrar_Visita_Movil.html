@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Registrar visita</title>
+
+  <!-- Estilos globales -->
+  <link rel="stylesheet" href="../../styles/main.css">
+
+  <!-- Estilos del módulo móvil -->
+  <link rel="stylesheet" href="../../styles/visitas_movil.css">
+</head>
+
+<body>
+
+  <div class="m5-mobile-page">
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="m5-mobile-header">
+
+  <div class="m5-brand">
+
+    <div class="m5-brand-main">
+      <img
+        src="/logo-ruta.png"
+        alt="Logotipo RUTA"
+        class="m5-brand-logo"
+      >
+
+      <span class="m5-brand-name">
+        RUTA
+      </span>
+    </div>
+
+    <span class="m5-brand-subtitle">
+      Gestión de servicios en campo
+    </span>
+
+  </div>
+
+
+  <div class="m5-user">
+
+    <img
+      src="/avatar.png"
+      alt="Usuario técnico"
+      class="m5-user-avatar"
+    >
+
+    <strong>Usuario</strong>
+    <span>Técnico</span>
+
+  </div>
+
+</header>
+
+
+    <!-- =========================================
+         CONTENIDO
+    ========================================== -->
+
+    <main class="m5-mobile-content">
+
+      <!-- CABECERA DE PANTALLA -->
+
+      <div class="m5-screen-title">
+
+        <a
+          href="./Visitas_y_Bitacora_Movil.html"
+          class="m5-back"
+          aria-label="Volver"
+        >
+          ←
+        </a>
+
+        <h1>Registrar visita</h1>
+
+        <!-- Posteriormente JS cambiará online/offline -->
+        <span
+          id="connection-status"
+          class="m5-connection m5-connection--offline"
+        >
+          <span class="m5-connection-dot"></span>
+          Sin conexión
+        </span>
+
+      </div>
+
+
+      <!-- =========================================
+           INFORMACIÓN DE LA ORDEN
+      ========================================== -->
+
+      <section class="m5-order-card">
+
+      <div class="m5-order-icon">
+        <img
+          src="/hoja-de-calculo.png"
+          alt=""
+          aria-hidden="true"
+          class="m5-order-icon-img"
+        >
+      </div>
+
+        <div class="m5-order-data">
+
+          <h2 id="order-number">
+            Orden #OS-0028
+          </h2>
+
+          <p id="order-condominium">
+            Las Palmas Residencial
+          </p>
+
+          <p>
+            Servicio:
+            <strong id="order-service">
+              Mantenimiento General
+            </strong>
+          </p>
+
+          <p>
+            Fecha programada:
+            <strong id="order-date">
+              22 dic. 2026
+            </strong>
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================================
+           FORMULARIO
+      ========================================== -->
+
+      <form id="visit-form">
+
+        <!-- ÁREA -->
+
+        <div class="form-group m5-field-group">
+
+          <label
+            for="visit-area"
+            class="form-label m5-field-label"
+          >
+          <img
+            src="/ubicacion.png"
+            alt=""
+            aria-hidden="true"
+            class="m5-label-icon-img"
+          >
+            Área
+          </label>
+
+          <!-- De momento informativo.
+               Posteriormente se llena desde la orden. -->
+          <select
+            id="visit-area"
+            name="area"
+            class="form-input m5-input"
+            required
+          >
+            <option value="" selected disabled>
+              Selecciona el área
+            </option>
+
+            <option value="alberca">
+              Alberca
+            </option>
+
+            <option value="jardin">
+              Jardín
+            </option>
+
+            <option value="area-comun">
+              Área común
+            </option>
+
+            <option value="equipo">
+              Equipo
+            </option>
+          </select>
+
+        </div>
+
+
+        <!-- =========================================
+             HORARIO
+        ========================================== -->
+
+        <div class="form-group m5-field-group">
+
+          <div class="m5-field-label">
+            <img
+              src="/reloj.png"
+              alt=""
+              aria-hidden="true"
+              class="m5-label-icon-img"
+            >
+            Horario de atención
+          </div>
+
+          <div class="m5-time-grid">
+
+            <!-- ENTRADA -->
+            <div class="m5-time-field">
+
+              <label
+                for="entry-time"
+                class="m5-time-label"
+                >
+                Entrada
+              </label>
+
+            <div class="m5-time-box">
+
+              <img
+                src="/reloj.png"
+                alt=""
+                aria-hidden="true"
+                class="m5-time-icon-img"
+              >
+
+              <input
+                id="entry-time"
+                name="horaEntrada"
+                type="text"
+                value="09:34"
+                inputmode="numeric"
+                maxlength="5"
+                pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+              >
+
+              <button
+                type="button"
+                class="m5-time-clear"
+                aria-label="Limpiar hora de entrada"
+              >
+                ×
+              </button>
+
+            </div>
+
+          </div>
+
+
+  <!-- SALIDA -->
+  <div class="m5-time-field">
+
+    <label
+      for="exit-time"
+      class="m5-time-label"
+    >
+      Salida
+    </label>
+
+    <div class="m5-time-box">
+
+      <img
+        src="/reloj.png"
+        alt=""
+        aria-hidden="true"
+        class="m5-time-icon-img"
+      >
+
+      <input
+        id="exit-time"
+        name="horaSalida"
+        type="text"
+        value="13:15"
+        inputmode="numeric"
+        maxlength="5"
+        pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+      >
+
+      <button
+        type="button"
+        class="m5-time-clear"
+        aria-label="Limpiar hora de salida"
+      >
+        ×
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+        <!-- =========================================
+             LECTURAS
+        ========================================== -->
+
+        <section class="m5-readings">
+
+          <div class="m5-field-label">
+            <img
+              src="/estadistico.png"
+              alt=""
+              aria-hidden="true"
+              class="m5-label-icon-img"
+            >
+
+            Lecturas
+
+            <span class="m5-label-secondary">
+              (solo si aplica)
+            </span>
+          </div>
+
+
+          <!-- Estado inicial:
+               todavía no sabemos si el área requiere lecturas -->
+
+          <div
+            id="readings-info"
+            class="m5-info-box"
+          >
+            <span class="m5-info-icon">ⓘ</span>
+
+            <p>
+              Las lecturas se muestran solo para áreas
+              que lo requieren (ej. alberca)
+            </p>
+          </div>
+
+
+          <!-- Posteriormente JS mostrará esta sección
+               cuando corresponda -->
+
+          <div
+            id="pool-readings"
+            class="m5-readings-grid"
+            hidden
+          >
+
+            <div class="form-group">
+
+              <label
+                for="ph"
+                class="form-label"
+              >
+                pH
+              </label>
+
+              <input
+                id="ph"
+                name="ph"
+                type="number"
+                step="0.1"
+                class="form-input"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label
+                for="chlorine"
+                class="form-label"
+              >
+                Cloro (ppm)
+              </label>
+
+              <input
+                id="chlorine"
+                name="cloro"
+                type="number"
+                step="0.1"
+                class="form-input"
+              >
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =========================================
+             OBSERVACIONES
+        ========================================== -->
+
+        <div class="form-group m5-field-group">
+
+          <div class="m5-label-row">
+
+            <label
+              for="observations"
+              class="form-label m5-field-label"
+            >
+              <img
+                src="/nota-adhesiva.png"
+                alt=""
+                aria-hidden="true"
+                class="m5-label-icon-img"
+              >
+              Observaciones
+            </label>
+
+            <span
+              id="observations-counter"
+              class="m5-counter"
+            >
+              0/500
+            </span>
+
+          </div>
+
+
+          <textarea
+            id="observations"
+            name="observaciones"
+            class="form-input m5-textarea"
+            maxlength="500"
+            placeholder="Escribe las observaciones de la visita..."
+          ></textarea>
+
+        </div>
+
+
+        <!-- =========================================
+             QUIÉN RECIBIÓ
+        ========================================== -->
+
+        <div class="form-group m5-field-group">
+
+          <label
+            for="received-by"
+            class="form-label m5-field-label"
+          >
+            <img
+              src="/cuenta-de-usuario.png"
+              alt=""
+              aria-hidden="true"
+              class="m5-label-icon-img"
+            >
+            ¿Quién recibió?
+          </label>
+
+          <input
+            id="received-by"
+            name="quienRecibio"
+            type="text"
+            class="form-input m5-input"
+            placeholder="Nombre de la persona que recibió el servicio..."
+          >
+
+        </div>
+
+
+        <!-- =========================================
+             GUARDAR
+        ========================================== -->
+
+        <button
+          id="save-visit"
+          type="submit"
+          class="btn btn-primary m5-save-button"
+        >
+          <img
+            src="/herramienta-blanca.png"
+            alt=""
+            aria-hidden="true"
+            class="m5-label-icon-img-save"
+          >
+          Guardar visita
+        </button>
+
+      </form>
+
+    </main>
+
+  </div>
+
+<script>
+  const observations = document.querySelector('#observations');
+  const observationsCounter = document.querySelector('#observations-counter');
+
+  observations.addEventListener('input', () => {
+    observationsCounter.textContent =
+      `${observations.value.length}/500`;
+  });
+</script>
+
+</body>
+
+</html>
