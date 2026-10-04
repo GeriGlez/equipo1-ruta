@@ -694,3 +694,399 @@
 } */
 
 }
+
+/* =========================================================
+   MÓDULO 5 - PENDIENTES DE SINCRONIZACIÓN
+========================================================= */
+
+
+/* CONTENEDOR */
+
+.m5-pending-page .m5-mobile-content {
+  display: flex;
+  flex-direction: column;
+
+  min-height: calc(100vh - 180px);
+  min-height: calc(100dvh - 180px);
+
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+
+/* TÍTULO */
+
+.m5-pending-page .m5-screen-title {
+  display: flex;
+  align-items: center;
+
+  gap: 0.75rem;
+
+  margin-bottom: 1rem;
+}
+
+.m5-pending-page .m5-screen-title h1 {
+  flex: 1;
+  min-width: 0;
+
+  font-size: 1.3rem;
+  line-height: 1.25;
+
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.m5-pending-page .m5-back {
+  flex-shrink: 0;
+}
+
+
+/* INDICADOR DE CONEXIÓN */
+
+.m5-pending-connection {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-bottom: 1.5rem;
+}
+
+/* Estado provisional mientras JS verifica la conexión */
+
+.m5-pending-page
+.m5-connection:not(.m5-connection--online):not(.m5-connection--offline) {
+  background-color: #eef2f7;
+  color: #475569;
+}
+
+.m5-pending-page
+.m5-connection:not(.m5-connection--online):not(.m5-connection--offline)
+.m5-connection-dot {
+  background-color: #94a3b8;
+}
+
+
+/* TARJETA DE RESUMEN */
+
+.m5-pending-summary {
+  display: grid;
+
+  grid-template-columns: 68px minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 0.9rem;
+
+  padding: 1.2rem 1rem;
+
+  background-color: #eaf4ff;
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* ICONO DE DOCUMENTO */
+
+/* Círculo del icono */
+
+.m5-pending-summary-icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background-color: #bae6fd;
+}
+
+/* Imagen dentro del círculo */
+
+.m5-pending-summary-icon img {
+  width: 46px;
+  height: 46px;
+
+  object-fit: contain;
+}
+
+
+/* INFORMACIÓN DEL RESUMEN */
+
+.m5-pending-summary > div {
+  min-width: 0;
+}
+
+.m5-pending-summary h2 {
+  margin-bottom: 0.2rem;
+
+  color: #075f80;
+
+  font-size: 1.4rem;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.m5-pending-summary strong {
+  display: block;
+
+  margin-bottom: 0.4rem;
+
+  color: #111111;
+
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.m5-pending-summary p {
+  color: #333333;
+
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+
+/* LISTADO DE VISITAS */
+
+.m5-pending-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+
+  width: 100%;
+
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* MENSAJE DE ERROR */
+
+.m5-pending-error {
+  margin-top: 1rem;
+
+  padding: 1rem;
+
+  background-color: #fff1f2;
+
+  color: #b91c1c;
+
+  border-radius: var(--radius-md);
+
+  font-size: 0.9rem;
+}
+
+.m5-pending-error[hidden] {
+  display: none;
+}
+
+
+/* BOTÓN DE SINCRONIZACIÓN */
+
+.m5-pending-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 65px;
+
+  margin-top: auto;
+  padding: 0.85rem;
+
+  gap: 0.75rem;
+
+  border-radius: var(--radius-md);
+
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* BOTÓN DESHABILITADO */
+
+.m5-pending-button:disabled {
+  background-color: #d9dbde;
+  color: #666666;
+
+  cursor: not-allowed;
+}
+
+
+/* PANTALLAS PEQUEÑAS */
+
+@media (max-width: 390px) {
+
+  .m5-pending-page .m5-screen-title h1 {
+    font-size: 1.15rem;
+  }
+
+  .m5-pending-summary {
+    grid-template-columns: 56px minmax(0, 1fr);
+
+    padding: 1rem 0.8rem;
+  }
+
+  .m5-pending-summary-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .m5-pending-summary-icon img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .m5-pending-summary h2 {
+    font-size: 1.2rem;
+  }
+
+}
+
+/* Iconos de sincronización */
+
+.m5-sync-icon {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Inicialmente mostrar el icono deshabilitado */
+
+.m5-sync-icon--enabled {
+  display: none;
+}
+
+/* Cuando el botón esté habilitado */
+
+.m5-pending-button:not(:disabled)
+.m5-sync-icon--enabled {
+  display: block;
+}
+
+.m5-pending-button:not(:disabled)
+.m5-sync-icon--disabled {
+  display: none;
+}
+
+/* =========================================================
+   TARJETAS DE VISITAS PENDIENTES
+========================================================= */
+
+.m5-pending-card {
+  width: 100%;
+
+  padding: 1rem;
+
+  background-color: #f4f5f8;
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+}
+
+/* Contenido principal */
+
+.m5-pending-card-main {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 0.75rem;
+}
+
+.m5-pending-card-icon {
+  width: 60px;
+  height: 60px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #bae6fd;
+}
+
+.m5-pending-card-icon img {
+  width: 38px;
+  height: 38px;
+
+  object-fit: contain;
+}
+
+/* Información */
+
+.m5-pending-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.m5-pending-card-header {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 0.5rem;
+
+  margin-bottom: 0.4rem;
+}
+
+.m5-pending-card-header strong {
+  font-size: 1.1rem;
+  color: #111111;
+}
+
+/* Etiqueta pendiente */
+
+.m5-pending-badge {
+  padding: 0.2rem 0.65rem;
+
+  background-color: #fff1dc;
+  color: #b45309;
+
+  border: 1px solid #fbd6a3;
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Datos de visita */
+
+.m5-pending-order {
+  margin-bottom: 0.3rem;
+
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.m5-pending-area {
+  color: #555555;
+
+  font-size: 0.95rem;
+}
+
+/* Fecha y horario */
+
+.m5-pending-card-footer {
+  display: flex;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  margin-top: 1rem;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+}

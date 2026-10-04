@@ -492,6 +492,68 @@
   });
 </script>
 
+<script type="module">
+  import { abrirBD } from './db-local.js';
+
+  abrirBD()
+    .then((db) => {
+      console.log("Base de datos local creada correctamente");
+      console.log("Nombre:", db.name);
+      console.log("Almacenes:", [...db.objectStoreNames]);
+
+      db.close();
+    })
+    .catch((error) => {
+      console.error("Error al abrir IndexedDB:", error);
+    });
+</script>
+
+<script
+  type="module"
+  src="./registrar-visita.js"
+></script>
+
+<!-- Service Worker - HU-08 -->
+<script>
+  if ('serviceWorker' in navigator) {
+
+    window.addEventListener('load', async () => {
+
+      const esProduccion = '%MODE%' === 'production';
+
+      const archivoSW = esProduccion
+        ? '/sw.js'
+        : '/sw-visitas.js';
+
+      try {
+
+        const registro = await navigator.serviceWorker.register(
+          archivoSW,
+          {
+            scope: '/src/modules/visitas/'
+          }
+        );
+
+        console.log(
+          '[RUTA] Service Worker registrado:',
+          archivoSW,
+          registro.scope
+        );
+
+      } catch (error) {
+
+        console.error(
+          '[RUTA] Error al registrar Service Worker:',
+          error
+        );
+
+      }
+
+    });
+
+  }
+</script>
+
 </body>
 
 </html>
