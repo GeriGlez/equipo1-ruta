@@ -1,0 +1,1092 @@
+/* =========================================================
+   MÓDULO 5 - VISITAS
+   VISTA MÓVIL
+========================================================= */
+
+
+/* =========================================================
+   CONTENEDOR GENERAL
+========================================================= */
+
+.m5-mobile-page {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+
+  margin: 0 auto;
+
+  background-color: #075f80;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.m5-mobile-header {
+  min-height: 180px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 1rem 1.25rem;
+
+  color: #ffffff;
+}
+
+
+/* Marca */
+
+.m5-brand {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.25rem;
+}
+
+
+.m5-brand-main {
+  display: flex;
+  align-items: center;
+
+  gap: 0.35rem;
+}
+
+
+.m5-brand-logo {
+  width: 88px;
+  height: 88px;
+
+  object-fit: contain;
+}
+
+
+.m5-brand-name {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+
+  color: #ffffff;
+}
+
+
+.m5-brand-subtitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  color: #d6d6d6;
+
+  white-space: nowrap;
+}
+
+
+/* Usuario */
+
+.m5-user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+
+.m5-user-avatar {
+  width: 72px;
+  height: 72px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+}
+
+
+.m5-user strong {
+  margin-top: 0.2rem;
+
+  font-size: 1.1rem;
+  line-height: 1.1;
+}
+
+
+.m5-user span {
+  font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   CONTENIDO BLANCO
+========================================================= */
+
+.m5-mobile-content {
+  width: 100%;
+
+  min-height: calc(100vh - 180px);
+
+  padding: 2.4rem 1.25rem 2rem;
+
+  border-radius: 34px 34px 0 0;
+
+  background-color: var(--color-surface);
+}
+
+
+/* =========================================================
+   TÍTULO
+========================================================= */
+
+.m5-screen-title {
+  display: grid;
+
+  grid-template-columns: auto 1fr auto;
+
+  align-items: center;
+
+  gap: 0.65rem;
+
+  margin-bottom: 2.4rem;
+}
+
+
+.m5-screen-title h1 {
+  margin: 0;
+
+  font-size: 1.45rem;
+  font-weight: 800;
+
+  white-space: nowrap;
+
+  color: #050505;
+}
+
+
+/* Volver */
+
+.m5-back {
+  display: flex;
+  align-items: center;
+
+  color: #000000;
+
+  font-size: 3rem;
+  line-height: 1;
+
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   CONEXIÓN
+========================================================= */
+
+.m5-connection {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.45rem;
+
+  padding: 0.45rem 0.75rem;
+
+  border-radius: 999px;
+
+  white-space: nowrap;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+
+.m5-connection-dot {
+  width: 11px;
+  height: 11px;
+
+  border-radius: 50%;
+}
+
+
+/* Offline */
+
+.m5-connection--offline {
+  background-color: #fff1dc;
+  color: #d97706;
+}
+
+
+.m5-connection--offline .m5-connection-dot {
+  background-color: #f59e0b;
+}
+
+
+/* Online */
+
+.m5-connection--online {
+  background-color: #e6f8ec;
+  color: #15803d;
+}
+
+
+.m5-connection--online .m5-connection-dot {
+  background-color: #16a34a;
+}
+
+
+/* =========================================================
+   TARJETA DE ORDEN
+========================================================= */
+
+.m5-order-card {
+  display: flex;
+  align-items: center;
+
+  gap: 1.5rem;
+
+  margin-bottom: 1.6rem;
+
+  padding: 1rem 1.4rem;
+
+  border-radius: var(--radius-lg);
+
+  background-color: #f4f5f8;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+.m5-order-icon {
+  width: 75px;
+  height: 75px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #ffefbe;
+
+  font-size: 2.5rem;
+}
+
+
+.m5-order-data {
+  min-width: 0;
+}
+
+
+.m5-order-data h2 {
+  margin-bottom: 0.2rem;
+
+  font-size: 1.15rem;
+  font-weight: 800;
+
+  color: #000000;
+}
+
+
+.m5-order-data p {
+  margin: 0;
+
+  color: #666666;
+
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+
+.m5-order-data strong {
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FORMULARIO
+========================================================= */
+
+.m5-field-group {
+  margin-bottom: 1.4rem;
+}
+
+
+.m5-field-label {
+  display: flex;
+  align-items: center;
+
+  gap: 0.55rem;
+
+  margin-bottom: 0.5rem;
+
+  color: #050505;
+
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.m5-label-secondary {
+  margin-left: 0.2rem;
+
+  font-weight: 400;
+}
+
+
+.m5-input {
+  height: 58px;
+
+  font-size: 1rem;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* =========================================================
+   ICONOS DEL MÓDULO MÓVIL
+========================================================= */
+
+/* Área, Horario, Lecturas, Observaciones y Quién recibió */
+
+.m5-label-icon-img {
+  width: 28px;
+  height: 28px;
+
+  min-width: 28px;
+  max-width: 28px;
+
+  object-fit: contain;
+  display: block;
+
+  flex-shrink: 0;
+}
+
+.m5-label-icon-img-save {
+  width: 50px;
+  height: 50px;
+
+  min-width: 50px;
+  max-width: 50px;
+
+  object-fit: contain;
+  display: block;
+
+  flex-shrink: 0;
+}
+
+
+/* Relojes de Entrada y Salida */
+
+.m5-time-icon-img {
+  width: 30px;
+  height: 30px;
+
+  min-width: 30px;
+  max-width: 30px;
+
+  object-fit: contain;
+  display: block;
+
+  flex-shrink: 0;
+}
+
+
+/* Documento dentro de la tarjeta de la orden */
+
+.m5-order-icon-img {
+  width: 46px;
+  height: 46px;
+
+  max-width: 46px;
+
+  object-fit: contain;
+  display: block;
+}
+
+
+/* =========================================================
+   HORARIO
+========================================================= */
+
+.m5-time-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 1rem;
+}
+
+
+.m5-time-box {
+  min-width: 0;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 0.35rem;
+
+  padding: 0 0.45rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: #f8fafc;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+.m5-time-box input {
+  width: 65px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #555555;
+
+  font-family: inherit;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+
+/* Oculta el icono nativo del input time */
+
+.m5-time-box input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+
+.m5-time-clear {
+  margin-left: auto;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #555555;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.m5-time-field {
+  min-width: 0;
+}
+
+.m5-time-label {
+  display: block;
+
+  margin-bottom: 0.35rem;
+
+  color: #555555;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   LECTURAS
+========================================================= */
+
+.m5-readings {
+  margin-bottom: 1.4rem;
+}
+
+
+.m5-info-box {
+  display: flex;
+  align-items: center;
+
+  gap: 1rem;
+
+  padding: 1.15rem 1.4rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: #e6f3ff;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+.m5-info-box p {
+  margin: 0;
+
+  color: #515151;
+
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+
+.m5-info-icon {
+  flex-shrink: 0;
+
+  font-size: 1.65rem;
+}
+
+
+.m5-readings-grid {
+  grid-template-columns: 1fr 1fr;
+
+  gap: 1rem;
+
+  padding: 1rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: #e6f3ff;
+}
+
+
+/* =========================================================
+   OBSERVACIONES
+========================================================= */
+
+.m5-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+
+.m5-counter {
+  color: #555555;
+
+  font-size: 1rem;
+}
+
+
+.m5-textarea {
+  min-height: 128px;
+
+  resize: vertical;
+
+  font-size: 1rem;
+
+  border: 2px solid #111111;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* =========================================================
+   BOTÓN GUARDAR
+========================================================= */
+
+.m5-save-button {
+  width: 100%;
+  min-height: 65px;
+
+  margin-top: 3.5rem;
+
+  gap: 0.7rem;
+
+  border-radius: var(--radius-md);
+
+  font-size: 1.35rem;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+.m5-save-icon {
+  font-size: 1.6rem;
+}
+
+
+/* =========================================================
+   AJUSTES PARA TELÉFONOS MUY PEQUEÑOS
+========================================================= */
+
+@media (max-width: 390px) {
+
+  .m5-mobile-header {
+    min-height: 170px;
+
+    padding: 0.9rem 1rem;
+  }
+
+
+  .m5-brand-logo {
+    width: 78px;
+    height: 78px;
+  }
+
+
+  .m5-brand-name {
+    font-size: 2.5rem;
+  }
+
+
+  .m5-brand-subtitle {
+    font-size: 0.8rem;
+  }
+
+
+  .m5-user-avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+
+  .m5-mobile-content {
+    min-height: calc(100vh - 170px);
+
+    padding: 2rem 1rem;
+  }
+
+
+  .m5-screen-title h1 {
+    font-size: 1.3rem;
+  }
+
+
+  .m5-time-grid {
+    gap: 0.6rem;
+  }
+
+
+  .m5-time-box {
+    padding: 0 0.3rem;
+  }
+
+  /* Iconos de títulos de campos */
+
+/* .m5-label-icon-img {
+  width: 27px;
+  height: 27px;
+
+  flex-shrink: 0;
+
+  object-fit: contain;
+} */
+
+
+/* Icono de la tarjeta de orden */
+
+.m5-order-icon-img {
+  width: 46px;
+  height: 46px;
+
+  object-fit: contain;
+}
+
+
+/* Iconos de reloj dentro de Entrada / Salida */
+
+/* .m5-time-icon-img {
+  width: 27px;
+  height: 27px;
+
+  flex-shrink: 0;
+
+  object-fit: contain;
+} */
+
+}
+
+/* =========================================================
+   MÓDULO 5 - PENDIENTES DE SINCRONIZACIÓN
+========================================================= */
+
+
+/* CONTENEDOR */
+
+.m5-pending-page .m5-mobile-content {
+  display: flex;
+  flex-direction: column;
+
+  min-height: calc(100vh - 180px);
+  min-height: calc(100dvh - 180px);
+
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+
+/* TÍTULO */
+
+.m5-pending-page .m5-screen-title {
+  display: flex;
+  align-items: center;
+
+  gap: 0.75rem;
+
+  margin-bottom: 1rem;
+}
+
+.m5-pending-page .m5-screen-title h1 {
+  flex: 1;
+  min-width: 0;
+
+  font-size: 1.3rem;
+  line-height: 1.25;
+
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.m5-pending-page .m5-back {
+  flex-shrink: 0;
+}
+
+
+/* INDICADOR DE CONEXIÓN */
+
+.m5-pending-connection {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-bottom: 1.5rem;
+}
+
+/* Estado provisional mientras JS verifica la conexión */
+
+.m5-pending-page
+.m5-connection:not(.m5-connection--online):not(.m5-connection--offline) {
+  background-color: #eef2f7;
+  color: #475569;
+}
+
+.m5-pending-page
+.m5-connection:not(.m5-connection--online):not(.m5-connection--offline)
+.m5-connection-dot {
+  background-color: #94a3b8;
+}
+
+
+/* TARJETA DE RESUMEN */
+
+.m5-pending-summary {
+  display: grid;
+
+  grid-template-columns: 68px minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 0.9rem;
+
+  padding: 1.2rem 1rem;
+
+  background-color: #eaf4ff;
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* ICONO DE DOCUMENTO */
+
+/* Círculo del icono */
+
+.m5-pending-summary-icon {
+  width: 68px;
+  height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background-color: #bae6fd;
+}
+
+/* Imagen dentro del círculo */
+
+.m5-pending-summary-icon img {
+  width: 46px;
+  height: 46px;
+
+  object-fit: contain;
+}
+
+
+/* INFORMACIÓN DEL RESUMEN */
+
+.m5-pending-summary > div {
+  min-width: 0;
+}
+
+.m5-pending-summary h2 {
+  margin-bottom: 0.2rem;
+
+  color: #075f80;
+
+  font-size: 1.4rem;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.m5-pending-summary strong {
+  display: block;
+
+  margin-bottom: 0.4rem;
+
+  color: #111111;
+
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.m5-pending-summary p {
+  color: #333333;
+
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+
+/* LISTADO DE VISITAS */
+
+.m5-pending-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+
+  width: 100%;
+
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* MENSAJE DE ERROR */
+
+.m5-pending-error {
+  margin-top: 1rem;
+
+  padding: 1rem;
+
+  background-color: #fff1f2;
+
+  color: #b91c1c;
+
+  border-radius: var(--radius-md);
+
+  font-size: 0.9rem;
+}
+
+.m5-pending-error[hidden] {
+  display: none;
+}
+
+
+/* BOTÓN DE SINCRONIZACIÓN */
+
+.m5-pending-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 65px;
+
+  margin-top: auto;
+  padding: 0.85rem;
+
+  gap: 0.75rem;
+
+  border-radius: var(--radius-md);
+
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* BOTÓN DESHABILITADO */
+
+.m5-pending-button:disabled {
+  background-color: #d9dbde;
+  color: #666666;
+
+  cursor: not-allowed;
+}
+
+
+/* PANTALLAS PEQUEÑAS */
+
+@media (max-width: 390px) {
+
+  .m5-pending-page .m5-screen-title h1 {
+    font-size: 1.15rem;
+  }
+
+  .m5-pending-summary {
+    grid-template-columns: 56px minmax(0, 1fr);
+
+    padding: 1rem 0.8rem;
+  }
+
+  .m5-pending-summary-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .m5-pending-summary-icon img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .m5-pending-summary h2 {
+    font-size: 1.2rem;
+  }
+
+}
+
+/* Iconos de sincronización */
+
+.m5-sync-icon {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Inicialmente mostrar el icono deshabilitado */
+
+.m5-sync-icon--enabled {
+  display: none;
+}
+
+/* Cuando el botón esté habilitado */
+
+.m5-pending-button:not(:disabled)
+.m5-sync-icon--enabled {
+  display: block;
+}
+
+.m5-pending-button:not(:disabled)
+.m5-sync-icon--disabled {
+  display: none;
+}
+
+/* =========================================================
+   TARJETAS DE VISITAS PENDIENTES
+========================================================= */
+
+.m5-pending-card {
+  width: 100%;
+
+  padding: 1rem;
+
+  background-color: #f4f5f8;
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+}
+
+/* Contenido principal */
+
+.m5-pending-card-main {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 0.75rem;
+}
+
+.m5-pending-card-icon {
+  width: 60px;
+  height: 60px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #bae6fd;
+}
+
+.m5-pending-card-icon img {
+  width: 38px;
+  height: 38px;
+
+  object-fit: contain;
+}
+
+/* Información */
+
+.m5-pending-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.m5-pending-card-header {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 0.5rem;
+
+  margin-bottom: 0.4rem;
+}
+
+.m5-pending-card-header strong {
+  font-size: 1.1rem;
+  color: #111111;
+}
+
+/* Etiqueta pendiente */
+
+.m5-pending-badge {
+  padding: 0.2rem 0.65rem;
+
+  background-color: #fff1dc;
+  color: #b45309;
+
+  border: 1px solid #fbd6a3;
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Datos de visita */
+
+.m5-pending-order {
+  margin-bottom: 0.3rem;
+
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.m5-pending-area {
+  color: #555555;
+
+  font-size: 0.95rem;
+}
+
+/* Fecha y horario */
+
+.m5-pending-card-footer {
+  display: flex;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  margin-top: 1rem;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+}
