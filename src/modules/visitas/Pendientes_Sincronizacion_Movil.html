@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Pendientes de sincronización</title>
+
+  <link rel="stylesheet"
+        href="../../styles/main.css">
+
+  <link rel="stylesheet"
+        href="../../styles/visitas_movil.css">
+</head>
+
+<body>
+
+  <div class="m5-mobile-page m5-pending-page">
+
+    <!-- ENCABEZADO -->
+
+    <header class="m5-mobile-header">
+
+      <div class="m5-brand">
+
+        <div class="m5-brand-main">
+
+          <img
+            src="/logo-ruta.png"
+            alt="Logotipo RUTA"
+            class="m5-brand-logo"
+          >
+
+          <span class="m5-brand-name">
+            RUTA
+          </span>
+
+        </div>
+
+        <span class="m5-brand-subtitle">
+          Gestión de servicios en campo
+        </span>
+
+      </div>
+
+      <div class="m5-user">
+
+        <img
+          src="/avatar.png"
+          alt="Usuario técnico"
+          class="m5-user-avatar"
+        >
+
+        <strong>Usuario</strong>
+        <span>Técnico</span>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENIDO PRINCIPAL -->
+
+    <main class="m5-mobile-content">
+
+      <!-- TÍTULO -->
+
+      <div class="m5-screen-title">
+
+        <a
+          href="./Visitas_y_Bitacora_Movil.html"
+          class="m5-back"
+          aria-label="Volver"
+        >
+          ←
+        </a>
+
+        <h1>Pendientes de sincronización</h1>
+
+      </div>
+
+
+      <!-- ESTADO DE CONEXIÓN -->
+
+      <div class="m5-pending-connection">
+
+        <span
+          id="connection-status"
+          class="m5-connection"
+        >
+          <span class="m5-connection-dot"></span>
+          Verificando conexión...
+        </span>
+
+      </div>
+
+
+      <!-- RESUMEN DE PENDIENTES -->
+
+      <section class="m5-pending-summary">
+
+        <div class="m5-pending-summary-icon">
+            <img
+                src="/hoja-de-calculo.png"
+                alt=""
+                aria-hidden="true"
+            >
+        </div>
+
+        <div>
+
+          <h2 id="pending-count">
+            Consultando registros...
+          </h2>
+
+          <strong>
+            Guardados en este dispositivo
+          </strong>
+
+          <p id="pending-message">
+            Obteniendo información local.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- LISTADO DE VISITAS -->
+
+      <section
+        id="pending-list"
+        class="m5-pending-list"
+        aria-live="polite"
+      >
+
+        <!--
+          Aquí JavaScript insertará las visitas
+          recuperadas desde IndexedDB.
+
+          No agregaremos registros ficticios.
+        -->
+
+      </section>
+
+
+      <!-- MENSAJES DE ERROR -->
+
+      <div
+        id="pending-error"
+        class="m5-pending-error"
+        role="alert"
+        hidden
+      >
+        No fue posible consultar los registros locales.
+      </div>
+
+
+        <!-- BOTÓN DE SINCRONIZACIÓN -->
+
+        <button
+            type="button"
+            id="sync-button"
+            class="btn btn-primary m5-pending-button"
+            disabled
+            >
+            <img
+                src="/sincronizar.png"
+                alt=""
+                aria-hidden="true"
+                class="m5-sync-icon m5-sync-icon--disabled"
+            >
+
+            <img
+                src="/sincronizar-blanco.png"
+                alt=""
+                aria-hidden="true"
+                class="m5-sync-icon m5-sync-icon--enabled"
+            >
+
+            <span>Sincronizar pendientes</span>
+        </button>
+
+    </main>
+
+  </div>
+
+<script
+  type="module"
+  src="./pendientes-sincronizacion.js"
+></script>
+
+<!-- Service Worker - HU-08 -->
+<script>
+  if ('serviceWorker' in navigator) {
+
+    window.addEventListener('load', async () => {
+
+      const esProduccion = '%MODE%' === 'production';
+
+      const archivoSW = esProduccion
+        ? '/sw.js'
+        : '/sw-visitas.js';
+
+      try {
+
+        const registro = await navigator.serviceWorker.register(
+          archivoSW,
+          {
+            scope: '/src/modules/visitas/'
+          }
+        );
+
+        console.log(
+          '[RUTA] Service Worker registrado:',
+          archivoSW,
+          registro.scope
+        );
+
+      } catch (error) {
+
+        console.error(
+          '[RUTA] Error al registrar Service Worker:',
+          error
+        );
+
+      }
+
+    });
+
+  }
+</script>
+
+</body>
+</html>
