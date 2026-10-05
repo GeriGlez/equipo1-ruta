@@ -546,6 +546,61 @@
   background-color: #e6f3ff;
 }
 
+/* =========================================================
+   HU-10 - Lecturas de alberca
+   ========================================================= */
+
+#pool-readings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 20px 24px;
+  margin: 0;
+
+  background: #e5f2ff;
+  border-radius: 12px;
+}
+
+/* Evitar que los estilos generales del formulario
+   hagan crecer demasiado los campos de lecturas */
+#pool-readings .m5-field-group {
+  min-width: 0;
+  margin: 0;
+}
+
+#pool-readings .m5-field-label {
+  display: block;
+  margin-bottom: 8px;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+#pool-readings .m5-input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+
+  box-sizing: border-box;
+  padding: 8px 12px;
+
+  font-size: 18px;
+}
+
+/* El atributo hidden debe seguir teniendo prioridad */
+#pool-readings[hidden] {
+  display: none !important;
+}
+
+/* HU-10 - Respetar ocultamiento del mensaje informativo */
+#readings-info[hidden] {
+  display: none !important;
+}
+
 
 /* =========================================================
    OBSERVACIONES

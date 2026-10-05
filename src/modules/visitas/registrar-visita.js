@@ -3,10 +3,56 @@ import { guardarVisita } from './db-local.js';
   const formulario = document.querySelector('#visit-form');
   const botonGuardar = document.querySelector('#save-visit');
 
+  // ============================================
+// HU-10 - Lecturas según el área
+// ============================================
+
+const selectorArea = document.querySelector('#visit-area');
+const mensajeLecturas = document.querySelector('#readings-info');
+const lecturasAlberca = document.querySelector('#pool-readings');
+
+const campoPh = document.querySelector('#ph-reading');
+const campoCloro = document.querySelector('#chlorine-reading');
+
+function actualizarLecturasPorArea() {
+
+  const esAlberca = selectorArea.value === 'alberca';
+
+  // Alberca: mostrar campos de lectura
+  lecturasAlberca.hidden = !esAlberca;
+
+  // Otras áreas: mostrar mensaje informativo
+  mensajeLecturas.hidden = esAlberca;
+
+  campoPh.disabled = !esAlberca;
+  campoCloro.disabled = !esAlberca;
+
+  // Evitar conservar lecturas si el técnico
+  // cambia de Alberca a otra área
+  if (!esAlberca) {
+    campoPh.value = '';
+    campoCloro.value = '';
+  }
+}
+
+selectorArea.addEventListener(
+  'change',
+  actualizarLecturasPorArea
+);
+
+// Aplicar el estado correcto al cargar la pantalla
+actualizarLecturasPorArea();
+
   formulario.addEventListener('submit', async (event) => {
 
     // Evita que la página se recargue
     event.preventDefault();
+
+    const areaSeleccionada = selectorArea.value;
+    const esAlberca = areaSeleccionada === 'alberca';
+
+    const valorPh = campoPh.value.trim();
+    const valorCloro = campoCloro.value.trim();
 
     // Valida los campos HTML
     if (!formulario.reportValidity()) {
@@ -22,6 +68,8 @@ import { guardarVisita } from './db-local.js';
       return;
     }
 
+    
+
     // Datos capturados en el formulario
     const datosVisita = {
 
@@ -29,7 +77,7 @@ import { guardarVisita } from './db-local.js';
         .querySelector('#order-number')
         .textContent.trim(),
 
-      area_tipo: document.querySelector('#visit-area').value,
+      area_tipo: areaSeleccionada,
 
       hora_entrada: entrada,
 
@@ -41,9 +89,15 @@ import { guardarVisita } from './db-local.js';
       quien_recibio: document
         .querySelector('#received-by').value.trim(),
 
-      ph: null,
+      ph:
+        esAlberca && valorPh !== ''
+          ? Number(valorPh)
+          : null,
 
-      cloro: null
+      cloro:
+        esAlberca && valorCloro !== ''
+          ? Number(valorCloro)
+          : null
 
     };
 
@@ -61,8 +115,22 @@ import { guardarVisita } from './db-local.js';
         'Pendiente de sincronización.'
       );
 
-      // Evita guardar nuevamente el mismo formulario
-      botonGuardar.textContent = 'Visita guardada';
+      // Restablecer el formulario después de guardar
+      formulario.reset();
+
+      // Regresar la sección de lecturas a su estado inicial
+      actualizarLecturasPorArea();
+
+      // Restablecer el contador de observaciones
+      const contadorObservaciones =
+        document.querySelector('#observations-counter');
+
+      if (contadorObservaciones) {
+        contadorObservaciones.textContent = '0/500';
+      }
+
+      // Permitir capturar una nueva visita
+      botonGuardar.disabled = false;
 
     } catch (error) {
 
