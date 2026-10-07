@@ -1,0 +1,5 @@
+$kind: collection
+variables:
+  - key: supabase_api_key_0gcd
+    secret: true
+    disabled: false
