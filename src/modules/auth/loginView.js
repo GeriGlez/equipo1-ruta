@@ -209,6 +209,10 @@ export function renderLogin(container, onLoginSuccess) {
             <div class="logo-icon"></div>
             <h1 class="logo-title">RUTA</h1>
             <p class="logo-subtitle">Gestión de servicios en campo</p>
+            <div id="net-badge" style="margin-top: 10px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); color: #ffffff;">
+              <span id="net-dot" style="width: 8px; height: 8px; border-radius: 50%; background: ${navigator.onLine ? '#10b981' : '#f59e0b'};"></span>
+              <span id="net-text">${navigator.onLine ? 'En línea' : 'Sin conexión'}</span>
+            </div>
           </div>
         </header>
 
@@ -272,6 +276,21 @@ export function renderLogin(container, onLoginSuccess) {
       passwordInput.type = 'password'
     }
   })
+
+  // actualiza el indicador de red si se conecta o desconecta el internet
+  const netDot = container.querySelector('#net-dot')
+  const netText = container.querySelector('#net-text')
+  const actualizarRed = () => {
+    if (navigator.onLine) {
+      netDot.style.background = '#10b981'
+      netText.textContent = 'En línea'
+    } else {
+      netDot.style.background = '#f59e0b'
+      netText.textContent = 'Sin conexión'
+    }
+  }
+  window.addEventListener('online', actualizarRed)
+  window.addEventListener('offline', actualizarRed)
 
   // enviar formulario
   form.addEventListener('submit', async (e) => {
