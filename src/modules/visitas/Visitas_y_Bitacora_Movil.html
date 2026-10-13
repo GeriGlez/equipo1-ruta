@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>RUTA | Bitácora de visitas</title>
+
+  <link
+    rel="stylesheet"
+    href="../../styles/main.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="../../styles/visitas_movil.css"
+  >
+</head>
+
+
+<body>
+
+  <div class="m5-mobile-page m5-log-page">
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="m5-mobile-header">
+
+      <div class="m5-brand">
+
+        <div class="m5-brand-main">
+
+          <img
+            src="/logo-ruta.png"
+            alt="Logotipo RUTA"
+            class="m5-brand-logo"
+          >
+
+          <span class="m5-brand-name">
+            RUTA
+          </span>
+
+        </div>
+
+        <span class="m5-brand-subtitle">
+          Gestión de servicios en campo
+        </span>
+
+      </div>
+
+
+      <div class="m5-user">
+
+        <img
+          src="/avatar.png"
+          alt="Usuario técnico"
+          class="m5-user-avatar"
+        >
+
+        <strong>Usuario</strong>
+        <span>Técnico</span>
+
+      </div>
+
+    </header>
+
+
+    <!-- =========================================
+         VOLVER
+    ========================================== -->
+
+    <nav
+      class="m5-backbar"
+      aria-label="Navegación"
+    >
+
+      <button
+        type="button"
+        class="m5-back-button"
+        aria-label="Volver a la pantalla anterior"
+      >
+
+        <span
+          class="m5-back-arrow"
+          aria-hidden="true"
+        >
+          ←
+        </span>
+
+        <span>
+          Volver
+        </span>
+
+      </button>
+
+    </nav>
+
+
+    <!-- =========================================
+         CONTENIDO
+    ========================================== -->
+
+    <main class="m5-mobile-content">
+
+      <!-- ESTADO DE CONEXIÓN -->
+
+      <div class="m5-log-connection">
+
+        <span
+          id="connection-status"
+          class="m5-connection"
+        >
+
+          <span class="m5-connection-dot"></span>
+
+          Verificando conexión...
+
+        </span>
+
+      </div>
+
+
+      <!-- TÍTULO -->
+
+      <div class="m5-screen-title">
+
+        <h1>
+          Bitácora de visitas
+        </h1>
+
+      </div>
+
+
+      <!-- RESUMEN -->
+
+      <section class="m5-log-summary">
+
+        <div class="m5-log-summary-icon">
+
+          <img
+            src="/hoja-de-calculo.png"
+            alt=""
+            aria-hidden="true"
+          >
+
+        </div>
+
+        <div>
+
+          <h2 id="visit-count">
+            Consultando visitas...
+          </h2>
+
+          <p>
+            Registro de servicios realizados
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================================
+           LISTADO
+      ========================================== -->
+
+      <section
+        id="visit-log-list"
+        class="m5-log-list"
+        aria-live="polite"
+      >
+      </section>
+
+
+      <!-- ESTADO VACÍO -->
+
+      <div
+        id="visit-log-empty"
+        class="m5-log-empty"
+      >
+
+        <div
+          class="m5-log-empty-icon"
+          aria-hidden="true"
+        >
+          <img
+            src="/reloj.png"
+            alt=""
+            aria-hidden="true"
+          >
+        </div>
+
+        <strong>
+          No hay visitas registradas
+        </strong>
+
+        <p>
+          Las visitas realizadas aparecerán aquí.
+        </p>
+
+      </div>
+
+
+      <!-- ERROR -->
+
+      <div
+        id="visit-log-error"
+        class="m5-pending-error"
+        role="alert"
+        hidden
+      >
+        No fue posible consultar la bitácora de visitas.
+      </div>
+
+
+      <!-- =========================================
+           PLANTILLA DE TARJETA
+           No se muestra en pantalla.
+      ========================================== -->
+
+      <template id="visit-log-card-template">
+
+        <article class="m5-log-card">
+
+          <div class="m5-log-card-main">
+
+            <div class="m5-log-card-icon">
+
+              <img
+                src="/hoja-de-calculo.png"
+                alt=""
+                aria-hidden="true"
+              >
+
+            </div>
+
+
+            <div class="m5-log-card-info">
+
+              <div class="m5-log-card-header">
+
+                <strong>
+                  Visita
+                </strong>
+
+                <span class="m5-log-badge">
+                </span>
+
+              </div>
+
+
+              <h2 class="m5-log-order">
+              </h2>
+
+
+              <p class="m5-log-condominium">
+              </p>
+
+
+              <p class="m5-log-area">
+              </p>
+
+
+              <p class="m5-log-service">
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="m5-log-card-footer">
+
+            <span class="m5-log-date">
+            </span>
+
+            <span class="m5-log-hours">
+            </span>
+
+          </div>
+
+        </article>
+
+      </template>
+
+    </main>
+
+  </div>
+
+
+  <script
+    type="module"
+    src="./visitas-bitacora.js"
+  ></script>
+
+</body>
+
+</html>

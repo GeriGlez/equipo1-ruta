@@ -60,29 +60,34 @@
 
     </header>
 
+    <nav
+      class="m5-backbar"
+      aria-label="Navegación"
+    >
+      <button
+        type="button"
+        class="m5-back-button"
+        aria-label="Volver a la pantalla anterior"
+      >
+        <span
+          class="m5-back-arrow"
+          aria-hidden="true"
+        >
+          ←
+        </span>
+
+        <span>
+          Volver
+        </span>
+      </button>
+    </nav>
+
 
     <!-- CONTENIDO PRINCIPAL -->
 
     <main class="m5-mobile-content">
 
-      <!-- TÍTULO -->
-
-      <div class="m5-screen-title">
-
-        <a
-          href="./Visitas_y_Bitacora_Movil.html"
-          class="m5-back"
-          aria-label="Volver"
-        >
-          ←
-        </a>
-
-        <h1>Pendientes de sincronización</h1>
-
-      </div>
-
-
-      <!-- ESTADO DE CONEXIÓN -->
+    <!-- ESTADO DE CONEXIÓN -->
 
       <div class="m5-pending-connection">
 
@@ -96,6 +101,53 @@
 
       </div>
 
+      <!-- TÍTULO -->
+
+      <div class="m5-screen-title">
+
+        <h1>Pendientes de sincronización</h1>
+
+      </div>
+
+      <!-- ERROR DE SINCRONIZACIÓN -->
+
+      <div
+        id="sync-error"
+        class="m5-sync-error"
+        role="alert"
+        hidden
+      >
+        <svg
+          class="m5-sync-error-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 3L2.8 20h18.4L12 3z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 9v5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+          <circle
+            cx="12"
+            cy="17"
+            r="1"
+            fill="currentColor"
+          />
+        </svg>
+
+        <strong>
+          Error de sincronización
+        </strong>
+      </div>
 
       <!-- RESUMEN DE PENDIENTES -->
 
@@ -158,6 +210,34 @@
       </div>
 
 
+      <!-- AVISO SIN CONEXIÓN -->
+
+      <div
+        id="offline-sync-warning"
+        class="m5-offline-warning"
+        role="status"
+        hidden
+      >
+        <div
+          class="m5-offline-warning-icon"
+          aria-hidden="true"
+        >
+          !
+        </div>
+
+        <div class="m5-offline-warning-content">
+
+          <strong>Sin conexión</strong>
+
+          <p>
+            Recupera la conexión para sincronizar
+            los registros pendientes.
+          </p>
+
+        </div>
+      </div>
+
+
         <!-- BOTÓN DE SINCRONIZACIÓN -->
 
         <button
@@ -192,46 +272,7 @@
   src="./pendientes-sincronizacion.js"
 ></script>
 
-<!-- Service Worker - HU-08 -->
-<script>
-  if ('serviceWorker' in navigator) {
 
-    window.addEventListener('load', async () => {
-
-      const esProduccion = '%MODE%' === 'production';
-
-      const archivoSW = esProduccion
-        ? '/sw.js'
-        : '/sw-visitas.js';
-
-      try {
-
-        const registro = await navigator.serviceWorker.register(
-          archivoSW,
-          {
-            scope: '/src/modules/visitas/'
-          }
-        );
-
-        console.log(
-          '[RUTA] Service Worker registrado:',
-          archivoSW,
-          registro.scope
-        );
-
-      } catch (error) {
-
-        console.error(
-          '[RUTA] Error al registrar Service Worker:',
-          error
-        );
-
-      }
-
-    });
-
-  }
-</script>
 
 </body>
 </html>
