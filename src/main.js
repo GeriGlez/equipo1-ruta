@@ -50,11 +50,11 @@ app.innerHTML = `
         <div class="module-desc">HU-03: Catálogo de servicios y asignación a condominios.</div>
       </div>
 
-      <div class="module-card">
-        <div class="module-owner">Fernando Carrera</div>
-        <div class="module-title">5. Órdenes de Servicio</div>
-        <div class="module-desc">HU-05, HU-06, HU-07: Programación semanal y cancelación de órdenes.</div>
-      </div>
+      <a href="/src/modules/ordenes/index.html" class="module-card">
+    <div class="module-owner">Fernando Carrera</div>
+    <div class="module-title">5. Órdenes de Servicio</div>
+    <div class="module-desc">HU-05, HU-06, HU-07: Programación semanal y cancelación de órdenes.</div>
+    </a>
 
       <div class="module-card">
         <div class="module-owner">Brayan Ascencio</div>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta - Órdenes de Servicio</title>
+    <!-- Enlace a los estilos -->
+    <link rel="stylesheet" href="ordenes.css">
+</head>
+<body>
+
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="navbar">
+        <div class="logo">
+            🌐 RUTA <span class="subtitle">Gestión de servicios en campo</span>
+        </div>
+        <div class="user-profile">
+            <div class="avatar"></div>
+            <div class="user-info">
+                <div><strong>Ángel Carrera</strong></div>
+                <div style="font-size: 12px;">Admin ⌄</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container">
+        <div class="header-actions">
+            <h1>Órdenes de Servicio</h1>
+            <button class="btn-success" id="btn-abrir-nueva-orden">
+                ⊕ Programar una nueva orden
+            </button>
+        </div>
+
+        <!-- TABLA -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Condominio</th>
+                    <th>Área</th>
+                    <th>Servicio</th>
+                    <th>Fecha Programada</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <!-- El cuerpo de la tabla está vacío porque JS lo llenará -->
+            <tbody id="cuerpo-tabla-ordenes">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL 1: NUEVA / EDITAR ORDEN -->
+    <div id="modal-nueva-orden" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="titulo-modal-orden">Nueva Orden de Servicio</h2>
+            <form id="form-orden">
+                <div class="form-group">
+                    <label>Condominio:</label>
+                    <select id="input-condominio">
+                        <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Área:</label>
+                    <select id="input-area">
+                        <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Servicio:</label>
+                    <select id="input-servicio">
+                        <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" id="input-fecha" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                </div>
+                <div style="text-align: center; font-size: 10px; color: gray; margin: 15px 0;">
+                    La orden nacerá en estado: PROGRAMADA
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cancelar</button>
+                    <button type="button" class="btn-success" id="btn-guardar-orden">☑ Guardar Orden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CANCELAR ORDEN -->
+    <div id="modal-cancelar-orden" class="modal-overlay">
+        <div class="modal-content">
+            <h2>⚠️ Cancelar Orden</h2>
+            <p class="warning-text">¿Estás seguro de que deseas cancelar esta orden?<br>Esta acción no se puede deshacer.</p>
+            <form>
+                <div>
+                    <label style="font-size: 12px; font-weight: bold;">Motivo de cancelación (Obligatorio):</label>
+                    <textarea id="input-motivo-cancelacion"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cancelar</button>
+                    <button type="button" class="btn-success" id="btn-confirmar-cancelacion">☑ Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 1. CDN de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 2. Tu archivo de lógica -->
+    <script src="ordenes.js"></script>
+</body>
+</html>
