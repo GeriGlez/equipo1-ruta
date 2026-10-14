@@ -10,7 +10,7 @@
 <body>
 
   <div id="app">
-    <!-- Header -->
+    <!-- Header RUTA -->
     <header class="header">
       <div class="brand">
         RUTA <span>Gestión de servicios en campo</span>
@@ -25,24 +25,29 @@
       <button id="btn-volver" class="btn-back-ruta">← Volver</button>
     </div>
 
-    <!-- Contenido -->
-    <main>
+    <!-- Contenido Principal con padding justo para liberar el FAB sin estirar la vista -->
+    <main style="position: relative;">
       <h1 style="text-align: center; margin-top: 1.25rem; font-size: 1.6rem; color: #0F172A;">Servicios</h1>
 
-      <!-- Buscador -->
+      <!-- Buscador Ovalado -->
       <div class="search-ruta-container">
         <input type="text" id="busqueda-servicio" class="search-ruta-input" placeholder="🔍 Buscar servicio...">
       </div>
 
       <!-- Grilla de Tarjetas -->
       <div id="grid-servicios" class="services-grid-ruta">
-        <!-- Render dinámico desde JS -->
+        <!-- Generadas dinámicamente desde JS -->
+      </div>
+
+      <!-- Contenedor de Paginación -->
+      <div id="paginacion-servicios" style="display: none; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        <!-- Botones de navegación generados por JS -->
       </div>
 
       <!-- Botón Flotante (+) -->
       <button id="btn-fab-nuevo" class="fab-ruta" title="Crear nuevo servicio">+</button>
 
-      <!-- Modal Emergente -->
+      <!-- Modal Emergente (Crear / Editar) -->
       <div id="modal-servicio" class="modal-overlay-ruta hidden">
         <div class="modal-card-ruta">
           <button id="btn-close-modal" class="modal-close-x">&times;</button>
@@ -53,27 +58,19 @@
 
             <div class="form-group">
               <label for="input-nombre" class="form-label">Servicio:</label>
-              <input type="text" id="input-nombre" class="form-input" required style="border-radius: 8px;">
+              <input type="text" id="input-nombre" class="form-input" required style="border-radius: 8px;" placeholder="Ej. Limpieza de Albercas">
             </div>
 
             <div class="form-group">
               <label for="input-descripcion" class="form-label">Descripción:</label>
-              <textarea id="input-descripcion" class="form-input" rows="3" style="border-radius: 8px;"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="input-costo" class="form-label">Costo por visita:</label>
-              <div style="position: relative;">
-                <span style="position: absolute; left: 10px; top: 8px;">$</span>
-                <input type="number" id="input-costo" class="form-input" step="0.01" min="0" required style="padding-left: 28px; border-radius: 8px;">
-              </div>
+              <textarea id="input-descripcion" class="form-input" rows="3" style="border-radius: 8px;" placeholder="Detalles o actividades del servicio..."></textarea>
             </div>
 
             <div class="form-group">
               <label for="input-tiempo" class="form-label">Tiempo estimado en minutos:</label>
               <div style="position: relative;">
                 <span style="position: absolute; left: 10px; top: 8px;">🕒</span>
-                <input type="number" id="input-tiempo" class="form-input" min="1" required style="padding-left: 32px; border-radius: 8px;">
+                <input type="number" id="input-tiempo" class="form-input" min="1" required style="padding-left: 32px; border-radius: 8px;" placeholder="60">
               </div>
             </div>
 
@@ -84,6 +81,23 @@
           </form>
         </div>
       </div>
+
+      <!-- Modal Confirmar Eliminación -->
+      <div id="modal-confirmar-eliminar" class="modal-overlay-ruta hidden">
+        <div class="modal-card-ruta" style="max-width: 420px; text-align: center;">
+          <button id="btn-close-modal-eliminar" class="modal-close-x">&times;</button>
+          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h2 class="modal-title-ruta" style="color: #DC2626; margin-bottom: 0.5rem;">¿Eliminar servicio?</h2>
+          <p id="texto-confirmar-eliminar" style="color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem;">
+            ¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.
+          </p>
+          <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button id="btn-confirmar-eliminar" class="btn-ruta-confirm" style="background-color: #DC2626; border-color: #DC2626;">Sí, eliminar</button>
+            <button id="btn-cancelar-eliminar" class="btn-ruta-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 

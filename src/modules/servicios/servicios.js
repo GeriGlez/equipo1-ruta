@@ -1,10 +1,12 @@
-// Importamos la instancia global de Supabase desde la carpeta services
 import { supabase } from '../../services/supabase.js';
 
-// Referencias a los elementos del HTML
+// Referencias DOM
 const gridServicios = document.getElementById('grid-servicios');
+const paginacionContainer = document.getElementById('paginacion-servicios');
 const busquedaInput = document.getElementById('busqueda-servicio');
+const btnVolver = document.getElementById('btn-volver');
 
+// Modal Crear/Editar
 const fabNuevo = document.getElementById('btn-fab-nuevo');
 const modalServicio = document.getElementById('modal-servicio');
 const modalTitle = document.getElementById('modal-title');
@@ -15,29 +17,49 @@ const formModal = document.getElementById('form-modal-servicio');
 const inputId = document.getElementById('input-servicio-id');
 const inputNombre = document.getElementById('input-nombre');
 const inputDescripcion = document.getElementById('input-descripcion');
-const inputCosto = document.getElementById('input-costo');
 const inputTiempo = document.getElementById('input-tiempo');
 
-let serviciosCache = [];
+// Modal Eliminar
+const modalEliminar = document.getElementById('modal-confirmar-eliminar');
+const btnCloseModalEliminar = document.getElementById('btn-close-modal-eliminar');
+const btnCancelarEliminar = document.getElementById('btn-cancelar-eliminar');
+const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
+const textoConfirmarEliminar = document.getElementById('texto-confirmar-eliminar');
 
-// Inicialización al cargar la página
+// Estado Global
+let serviciosCache = [];
+let serviciosFiltrados = [];
+let paginaActual = 1;
+const ITEMS_POR_PAGINA = 12;
+let servicioAEliminarId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   cargarServicios();
   initEventListeners();
 });
 
 function initEventListeners() {
-  // Buscador en tiempo real
+  // Botón Volver
+  btnVolver.addEventListener('click', () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/';
+    }
+  });
+
+  // Buscador
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
-    const filtrados = serviciosCache.filter(s => 
+    serviciosFiltrados = serviciosCache.filter(s => 
       s.nombre.toLowerCase().includes(query) || 
       (s.descripcion && s.descripcion.toLowerCase().includes(query))
     );
-    renderTarjetas(filtrados);
+    paginaActual = 1;
+    renderTarjetas();
   });
 
-  // Abrir Modal para Crear Nuevo Servicio
+  // Abrir Modal Crear
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
@@ -45,12 +67,27 @@ function initEventListeners() {
     modalServicio.classList.remove('hidden');
   });
 
-  // Cerrar Modal
+  // Cerrar Modales
   const cerrarModal = () => modalServicio.classList.add('hidden');
   btnCloseModal.addEventListener('click', cerrarModal);
   btnCancelarModal.addEventListener('click', cerrarModal);
 
-  // Evento de Submit del Formulario (Crear / Editar)
+  const cerrarModalEliminar = () => {
+    modalEliminar.classList.add('hidden');
+    servicioAEliminarId = null;
+  };
+  btnCloseModalEliminar.addEventListener('click', cerrarModalEliminar);
+  btnCancelarEliminar.addEventListener('click', cerrarModalEliminar);
+
+  // Confirmar Eliminación
+  btnConfirmarEliminar.addEventListener('click', async () => {
+    if (servicioAEliminarId) {
+      await eliminarServicio(servicioAEliminarId);
+      cerrarModalEliminar();
+    }
+  });
+
+  // Guardar (Crear o Editar)
   formModal.addEventListener('submit', async (e) => {
     e.preventDefault();
     await guardarServicio();
@@ -58,39 +95,54 @@ function initEventListeners() {
 }
 
 // ------------------------------------------------------------------
-// CONSULTAR SERVICIOS (READ)
+// 1. CONSULTAR SERVICIOS (READ)
 // ------------------------------------------------------------------
 async function cargarServicios() {
-  gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b;">Cargando servicios desde Supabase...</p>';
+  gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">Cargando servicios desde Supabase...</p>';
+  paginacionContainer.innerHTML = '';
+  paginacionContainer.style.display = 'none';
 
   try {
     const { data, error } = await supabase
       .from('servicios')
-      .select('*')
+      .select('id, nombre, descripcion, duracion_estimada_min, created_at')
       .order('nombre', { ascending: true });
 
     if (error) throw error;
 
     serviciosCache = data || [];
+    serviciosFiltrados = [...serviciosCache];
 
-    if (serviciosCache.length === 0) {
-      gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b;">No hay servicios registrados aún. Haz clic en + para agregar el primero.</p>';
-    } else {
-      renderTarjetas(serviciosCache);
+    const totalPaginas = Math.ceil(serviciosFiltrados.length / ITEMS_POR_PAGINA) || 1;
+    if (paginaActual > totalPaginas) {
+      paginaActual = totalPaginas;
     }
+
+    renderTarjetas();
   } catch (err) {
     console.error('Error al consultar Supabase:', err.message);
-    gridServicios.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444;">Error al cargar datos: ${err.message}</p>`;
+    gridServicios.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444; padding: 2rem;">Error al cargar datos: ${err.message}</p>`;
   }
 }
 
 // ------------------------------------------------------------------
-// RENDERIZAR TARJETAS EN PANTALLA
+// 2. RENDERIZAR TARJETAS Y PAGINACIÓN
 // ------------------------------------------------------------------
-function renderTarjetas(lista) {
+function renderTarjetas() {
   gridServicios.innerHTML = '';
 
-  lista.forEach(s => {
+  if (serviciosFiltrados.length === 0) {
+    gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">No se encontraron servicios.</p>';
+    paginacionContainer.innerHTML = '';
+    paginacionContainer.style.display = 'none';
+    return;
+  }
+
+  const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
+  const fin = inicio + ITEMS_POR_PAGINA;
+  const paginaItems = serviciosFiltrados.slice(inicio, fin);
+
+  paginaItems.forEach(s => {
     const card = document.createElement('div');
     card.className = 'card-ruta';
     card.innerHTML = `
@@ -100,7 +152,10 @@ function renderTarjetas(lista) {
             <span>📄</span>
             <span>${s.nombre}</span>
           </div>
-          <button class="btn-edit-circle btn-editar-card" title="Editar servicio">✏️</button>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
+            <button class="btn-edit-circle btn-editar-card" title="Editar servicio">✏️</button>
+            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar servicio" style="background: #FEE2E2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">🗑️</button>
+          </div>
         </div>
         <div class="desc-box-ruta">
           <strong>Descripción:</strong><br>
@@ -108,42 +163,100 @@ function renderTarjetas(lista) {
         </div>
       </div>
       <div class="card-ruta-footer">
-        <div>💲 Costo por visita MXN: $${parseFloat(s.costo_visita || 0).toFixed(2)}</div>
-        <div>🕒 Tiempo estimado en minutos: ${s.duracion_estimada_min || 0}</div>
+        <div>🕒 Tiempo estimado en minutos: <strong>${s.duracion_estimada_min || 0} min</strong></div>
       </div>
     `;
 
-    // Asignar evento al botón de editar de la tarjeta
+    // Clic Editar
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = s.id;
       inputNombre.value = s.nombre;
       inputDescripcion.value = s.descripcion || '';
-      inputCosto.value = s.costo_visita || 0;
       inputTiempo.value = s.duracion_estimada_min || 0;
 
       modalTitle.textContent = 'Editar servicio';
       modalServicio.classList.remove('hidden');
     });
 
+    // Clic Eliminar
+    card.querySelector('.btn-eliminar-card').addEventListener('click', () => {
+      servicioAEliminarId = s.id;
+      textoConfirmarEliminar.textContent = `¿Estás seguro de que deseas eliminar el servicio "${s.nombre}"? Esta acción no se puede deshacer.`;
+      modalEliminar.classList.remove('hidden');
+    });
+
     gridServicios.appendChild(card);
   });
+
+  renderPaginacion();
+}
+
+function renderPaginacion() {
+  const totalPaginas = Math.ceil(serviciosFiltrados.length / ITEMS_POR_PAGINA);
+
+  if (totalPaginas <= 1) {
+    paginacionContainer.innerHTML = '';
+    paginacionContainer.style.display = 'none';
+    return;
+  }
+
+  paginacionContainer.style.display = 'flex';
+  paginacionContainer.innerHTML = '';
+
+  // Botón Anterior
+  const btnPrev = document.createElement('button');
+  btnPrev.textContent = '◄ Anterior';
+  btnPrev.disabled = paginaActual === 1;
+  btnPrev.style.cssText = `padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #CBD5E1; background: ${paginaActual === 1 ? '#F1F5F9' : '#FFF'}; cursor: ${paginaActual === 1 ? 'not-allowed' : 'pointer'}; color: #0F172A; font-weight: 500;`;
+  btnPrev.addEventListener('click', () => {
+    if (paginaActual > 1) {
+      paginaActual--;
+      renderTarjetas();
+    }
+  });
+  paginacionContainer.appendChild(btnPrev);
+
+  // Botones Numéricos
+  for (let i = 1; i <= totalPaginas; i++) {
+    const btnPage = document.createElement('button');
+    btnPage.textContent = i;
+    const esActiva = i === paginaActual;
+    btnPage.style.cssText = `padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid ${esActiva ? '#005C7A' : '#CBD5E1'}; background: ${esActiva ? '#005C7A' : '#FFF'}; color: ${esActiva ? '#FFF' : '#0F172A'}; font-weight: ${esActiva ? 'bold' : 'normal'}; cursor: pointer;`;
+    btnPage.addEventListener('click', () => {
+      paginaActual = i;
+      renderTarjetas();
+    });
+    paginacionContainer.appendChild(btnPage);
+  }
+
+  // Botón Siguiente
+  const btnNext = document.createElement('button');
+  btnNext.textContent = 'Siguiente ►';
+  btnNext.disabled = paginaActual === totalPaginas;
+  btnNext.style.cssText = `padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid #CBD5E1; background: ${paginaActual === totalPaginas ? '#F1F5F9' : '#FFF'}; cursor: ${paginaActual === totalPaginas ? 'not-allowed' : 'pointer'}; color: #0F172A; font-weight: 500;`;
+  btnNext.addEventListener('click', () => {
+    if (paginaActual < totalPaginas) {
+      paginaActual++;
+      renderTarjetas();
+    }
+  });
+  paginacionContainer.appendChild(btnNext);
 }
 
 // ------------------------------------------------------------------
-// GUARDAR / ACTUALIZAR EN SUPABASE (CREATE / UPDATE)
+// 3. GUARDAR / ACTUALIZAR / ELIMINAR EN SUPABASE
 // ------------------------------------------------------------------
 async function guardarServicio() {
   const id = inputId.value;
+
   const payload = {
     nombre: inputNombre.value.trim(),
     descripcion: inputDescripcion.value.trim(),
-    costo_visita: parseFloat(inputCosto.value),
-    duracion_estimada_min: parseInt(inputTiempo.value)
+    duracion_estimada_min: parseInt(inputTiempo.value, 10)
   };
 
   try {
     if (id) {
-      // Editar registro existente
       const { error } = await supabase
         .from('servicios')
         .update(payload)
@@ -151,7 +264,6 @@ async function guardarServicio() {
 
       if (error) throw error;
     } else {
-      // Insertar nuevo registro
       const { error } = await supabase
         .from('servicios')
         .insert([payload]);
@@ -159,10 +271,24 @@ async function guardarServicio() {
       if (error) throw error;
     }
 
-    // Ocultar modal y refrescar la grilla
     modalServicio.classList.add('hidden');
-    cargarServicios();
+    await cargarServicios();
   } catch (err) {
-    alert('Error al guardar el servicio en Supabase: ' + err.message);
+    alert('Error al guardar en Supabase: ' + err.message);
+  }
+}
+
+async function eliminarServicio(id) {
+  try {
+    const { error } = await supabase
+      .from('servicios')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await cargarServicios();
+  } catch (err) {
+    alert('Error al eliminar en Supabase: ' + err.message);
   }
 }
