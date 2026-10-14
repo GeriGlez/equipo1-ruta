@@ -41,12 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function initEventListeners() {
   // Botón Volver
   btnVolver.addEventListener('click', () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = '/';
-    }
-  });
+  window.location.href = './index.html';
+});
 
   // Buscador
   busquedaInput.addEventListener('input', (e) => {
