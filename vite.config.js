@@ -10,8 +10,8 @@ export default defineConfig({
       // Registraremos el SW manualmente
       injectRegister: false,
 
-      // Mantener el alcance del módulo 5
-      scope: '/src/modules/visitas/',
+      // Toda la PWA RUTA
+      scope: '/',
 
       // Evitar generar otro manifiesto
       // mientras revisamos el existente
@@ -23,13 +23,17 @@ export default defineConfig({
       },
 
       workbox: {
-        // Archivos necesarios para trabajar offline
         globPatterns: [
           '**/*.{html,js,css,png,svg,webp,ico,json}'
         ],
 
-        // No redirigir ambas páginas a index.html
         navigateFallback: null,
+
+        ignoreURLParametersMatching: [
+          /^utm_/,
+          /^fbclid$/,
+          /^orden_id$/
+        ],
 
         cleanupOutdatedCaches: true
       }
@@ -49,7 +53,17 @@ export default defineConfig({
         pendientesVisitas: resolve(
           process.cwd(),
           'src/modules/visitas/Pendientes_Sincronizacion_Movil.html'
-        )
+        ),
+
+        bitacoraVisitas: resolve(
+          process.cwd(),
+          'src/modules/visitas/Visitas_y_Bitacora_Movil.html'
+        ),
+
+        bitacoraVisitasEscritorio: resolve(
+          process.cwd(),
+          'src/modules/visitas/Visitas_y_Bitacora_Escritorio.html'
+        ),
       }
     }
   }

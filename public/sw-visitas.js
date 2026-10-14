@@ -4,43 +4,71 @@
 // HU-08
 // ============================================
 
-const CACHE_NAME = 'ruta-visitas-v4';
+const CACHE_NAME = 'ruta-app-v4';
 
 const RECURSOS = [
+
+  // App Shell general
+  '/',
+  '/index.html',
+
+  '/src/main.js',
+  '/src/adminapp.js',
+  '/src/tecnicoapp.js',
+
+  // Autenticación
+  '/src/modules/auth/authService.js',
+  '/src/modules/auth/loginView.js',
+
+  // Supabase
+  '/src/services/supabase.js',
+
+  '/src/services/ordenes-tecnico.js',
+
+  // IndexedDB
+  '/src/modules/visitas/db-local.js',
 
   // Pantallas del módulo 5
   '/src/modules/visitas/Registrar_Visita_Movil.html',
   '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
+  '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
+  '/src/modules/visitas/Visitas_y_Bitacora_Escritorio.html',
 
-  // Base de datos local
-  '/src/modules/visitas/db-local.js',
+  // JS del módulo 5
   '/src/modules/visitas/registrar-visita.js',
   '/src/modules/visitas/pendientes-sincronizacion.js',
+  '/src/modules/visitas/visitas-bitacora.js',
 
   // Estilos
   '/src/styles/main.css',
+  '/src/styles/tecnicoapp.css',
   '/src/styles/visitas_movil.css',
 
-  // Identidad visual
+  // Identidad
   '/logo-ruta.png',
   '/avatar.png',
 
-  // Iconos del formulario
-  '/hoja-de-calculo.png',
+  // Inicio técnico
+  '/portapapeles.png',
   '/ubicacion.png',
+  '/caja.png',
+  '/advertencia.png',
   '/reloj.png',
+
+  // Visitas
+  '/hoja-de-calculo.png',
   '/estadistico.png',
   '/nota-adhesiva.png',
   '/cuenta-de-usuario.png',
   '/herramienta-blanca.png',
 
-  // Iconos de sincronización
+  // Sincronización
   '/sincronizar.png',
   '/sincronizar-blanco.png'
 
 ];
 
-const RUTAS = new Set(RECURSOS);
+
 
 // Instalar y almacenar recursos esenciales
 self.addEventListener('install', (event) => {
@@ -63,7 +91,10 @@ self.addEventListener('activate', (event) => {
     await Promise.all(
       nombres
         .filter(nombre =>
-          nombre.startsWith('ruta-visitas-') &&
+          (
+            nombre.startsWith('ruta-visitas-') ||
+            nombre.startsWith('ruta-app-')
+          ) &&
           nombre !== CACHE_NAME
         )
         .map(nombre => caches.delete(nombre))
@@ -75,47 +106,146 @@ self.addEventListener('activate', (event) => {
 
 });
 
-// Atender únicamente recursos del módulo
-self.addEventListener('fetch', (event) => {
+// ============================================
+// PETICIONES
+// ============================================
 
-  if (event.request.method !== 'GET') {
-    return;
-  }
+self.addEventListener(
+  'fetch',
+  (event) => {
 
-  const url = new URL(event.request.url);
-
-  if (
-    url.origin !== self.location.origin ||
-    !RUTAS.has(url.pathname)
-  ) {
-    return;
-  }
-
-  event.respondWith((async () => {
-
-    const cache = await caches.open(CACHE_NAME);
-
-    try {
-
-      const respuesta = await fetch(event.request);
-
-      if (respuesta.ok) {
-        await cache.put(
-          event.request,
-          respuesta.clone()
-        );
-      }
-
-      return respuesta;
-
-    } catch (error) {
-
-      const guardada = await cache.match(event.request);
-
-      return guardada || Response.error();
-
+    if (
+      event.request.method !== 'GET'
+    ) {
+      return;
     }
 
-  })());
 
-});
+    const url =
+      new URL(
+        event.request.url
+      );
+
+
+    // Solo recursos propios de RUTA.
+    // Supabase continúa siendo responsabilidad
+    // de la red.
+    if (
+      url.origin !==
+      self.location.origin
+    ) {
+      return;
+    }
+
+
+    event.respondWith(
+      (async () => {
+
+        const cache =
+          await caches.open(
+            CACHE_NAME
+          );
+
+
+        // ------------------------------------
+        // NAVEGACIÓN
+        // ------------------------------------
+
+        if (
+          event.request.mode ===
+          'navigate'
+        ) {
+
+          try {
+
+            const respuesta =
+              await fetch(
+                event.request
+              );
+
+
+            if (respuesta.ok) {
+
+              await cache.put(
+                event.request,
+                respuesta.clone()
+              );
+
+            }
+
+
+            return respuesta;
+
+          } catch (error) {
+
+            const guardada =
+              await cache.match(
+                event.request
+              );
+
+
+            if (guardada) {
+              return guardada;
+            }
+
+
+            const inicio =
+              await cache.match(
+                '/index.html'
+              );
+
+
+            return (
+              inicio ||
+              Response.error()
+            );
+
+          }
+
+        }
+
+
+        // ------------------------------------
+        // RECURSOS ESTÁTICOS / MÓDULOS
+        // ------------------------------------
+
+        try {
+
+          const respuesta =
+            await fetch(
+              event.request
+            );
+
+
+          if (respuesta.ok) {
+
+            await cache.put(
+              event.request,
+              respuesta.clone()
+            );
+
+          }
+
+
+          return respuesta;
+
+        } catch (error) {
+
+          const guardada =
+            await cache.match(
+              event.request
+            );
+
+
+          return (
+            guardada ||
+            Response.error()
+          );
+
+        }
+
+      })()
+    );
+
+  }
+);

@@ -16,7 +16,7 @@
 
 <body>
 
-  <div class="m5-mobile-page">
+  <div class="m5-mobile-page m5-register-page">
 
     <!-- =========================================
          HEADER
@@ -60,6 +60,28 @@
 
 </header>
 
+  <nav
+    class="m5-backbar"
+    aria-label="Navegación"
+  >
+    <button
+      type="button"
+      class="m5-back-button"
+      aria-label="Volver a la pantalla anterior"
+    >
+      <span
+        class="m5-back-arrow"
+        aria-hidden="true"
+      >
+        ←
+      </span>
+
+      <span>
+        Volver
+      </span>
+    </button>
+  </nav>
+
 
     <!-- =========================================
          CONTENIDO
@@ -67,31 +89,56 @@
 
     <main class="m5-mobile-content">
 
-      <!-- CABECERA DE PANTALLA -->
+      <!-- ESTADO DE CONEXIÓN -->
 
-      <div class="m5-screen-title">
+      <div class="m5-register-connection">
 
-        <a
-          href="./Visitas_y_Bitacora_Movil.html"
-          class="m5-back"
-          aria-label="Volver"
-        >
-          ←
-        </a>
-
-        <h1>Registrar visita</h1>
-
-        <!-- Posteriormente JS cambiará online/offline -->
         <span
           id="connection-status"
-          class="m5-connection m5-connection--offline"
+          class="m5-connection"
         >
           <span class="m5-connection-dot"></span>
-          Sin conexión
+          Verificando conexión...
         </span>
 
       </div>
 
+      <!-- CABECERA DE PANTALLA -->
+
+      <div class="m5-screen-title">
+
+        <h1>
+          Registrar Visita
+        </h1>
+
+      </div>
+
+      <!-- ERROR AL CARGAR LA ORDEN -->
+
+      <div
+        id="register-context-error"
+        class="m5-register-context-error"
+        role="alert"
+        hidden
+      >
+        <div
+          class="m5-register-context-error-icon"
+          aria-hidden="true"
+        >
+          !
+        </div>
+
+        <div>
+          <strong>
+            No fue posible cargar la orden
+          </strong>
+
+          <p>
+            La información de esta orden no está disponible
+            en el servidor ni en este dispositivo.
+          </p>
+        </div>
+      </div>
 
       <!-- =========================================
            INFORMACIÓN DE LA ORDEN
@@ -111,24 +158,24 @@
         <div class="m5-order-data">
 
           <h2 id="order-number">
-            Orden #OS-0028
+            Orden #--
           </h2>
 
           <p id="order-condominium">
-            Las Palmas Residencial
+            --- -----
           </p>
 
           <p>
             Servicio:
             <strong id="order-service">
-              Mantenimiento General
+              ---- -------
             </strong>
           </p>
 
           <p>
             Fecha programada:
             <strong id="order-date">
-              22 dic. 2026
+              -- --- ----
             </strong>
           </p>
 
@@ -233,14 +280,16 @@
                 id="entry-time"
                 name="horaEntrada"
                 type="text"
-                value="09:34"
+                placeholder="--:--"
                 inputmode="numeric"
                 maxlength="5"
                 pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+                required
               >
 
               <button
                 type="button"
+                id="clear-entry-time"
                 class="m5-time-clear"
                 aria-label="Limpiar hora de entrada"
               >
@@ -275,7 +324,7 @@
         id="exit-time"
         name="horaSalida"
         type="text"
-        value="13:15"
+        placeholder="--:--"
         inputmode="numeric"
         maxlength="5"
         pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
@@ -283,6 +332,7 @@
 
       <button
         type="button"
+        id="clear-exit-time"
         class="m5-time-clear"
         aria-label="Limpiar hora de salida"
       >
@@ -464,7 +514,10 @@
             aria-hidden="true"
             class="m5-label-icon-img-save"
           >
-          Guardar visita
+
+          <span id="save-visit-label">
+            Guardar visita
+          </span>
         </button>
 
       </form>
@@ -476,6 +529,11 @@
 <script>
   const observations = document.querySelector('#observations');
   const observationsCounter = document.querySelector('#observations-counter');
+  const tituloPantalla = document.querySelector('.m5-screen-title h1');
+  const textoBotonGuardar = document.querySelector('#save-visit-label');
+  const campoObservaciones = document.querySelector('#observations');
+  const campoQuienRecibio = document.querySelector('#received-by');
+  const contadorObservaciones = document.querySelector('#observations-counter');
 
   observations.addEventListener('input', () => {
     observationsCounter.textContent =
@@ -502,47 +560,56 @@
 <script
   type="module"
   src="./registrar-visita.js"
-></script>
+>
 
-<!-- Service Worker - HU-08 -->
-<script>
-  if ('serviceWorker' in navigator) {
 
-    window.addEventListener('load', async () => {
 
-      const esProduccion = '%MODE%' === 'production';
+  // // ============================================
+  // // CARGAR VISITA EXISTENTE EN EL FORMULARIO
+  // // ============================================
 
-      const archivoSW = esProduccion
-        ? '/sw.js'
-        : '/sw-visitas.js';
+  // function aplicarVisitaExistente(
+  //   visita
+  // ) {
 
-      try {
+  //   campoEntrada.value =
+  //     visita.hora_entrada || '';
 
-        const registro = await navigator.serviceWorker.register(
-          archivoSW,
-          {
-            scope: '/src/modules/visitas/'
-          }
-        );
+  //   campoSalida.value =
+  //     visita.hora_salida || '';
 
-        console.log(
-          '[RUTA] Service Worker registrado:',
-          archivoSW,
-          registro.scope
-        );
 
-      } catch (error) {
+  //   campoObservaciones.value =
+  //     visita.observaciones || '';
 
-        console.error(
-          '[RUTA] Error al registrar Service Worker:',
-          error
-        );
+  //   campoQuienRecibio.value =
+  //     visita.quien_recibio || '';
 
-      }
 
-    });
+  //   campoPh.value =
+  //     visita.ph ?? '';
 
-  }
+  //   campoCloro.value =
+  //     visita.cloro ?? '';
+
+
+  //   contadorObservaciones.textContent =
+  //     `${campoObservaciones.value.length}/500`;
+
+
+  //   tituloPantalla.textContent =
+  //     'Editar visita';
+
+  //   textoBotonGuardar.textContent =
+  //     'Guardar cambios';
+
+
+  //   console.log(
+  //     '[RUTA] Visita existente cargada:',
+  //     visita
+  //   );
+
+  // }
 </script>
 
 </body>
