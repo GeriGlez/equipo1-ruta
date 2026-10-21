@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA · Contratos</title>
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="./contratos.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- Header RUTA Identico -->
+    <header class="header-ruta">
+      <div class="brand-ruta">
+        <div class="logo-icon-ruta">
+          <svg width="38" height="38" viewBox="0 0 100 100" fill="none">
+            <path d="M50 5 L85 25 L85 75 L50 95 L15 75 L15 25 Z" fill="#00A859"/>
+            <path d="M50 15 L75 30 L75 70 L50 85 L25 70 L25 30 Z" fill="#FFB800"/>
+            <circle cx="50" cy="50" r="18" fill="#005C7A"/>
+          </svg>
+        </div>
+        <div class="brand-text-ruta">
+          <div class="brand-title">RUTA</div>
+          <div class="brand-subtitle">Gestión de servicios en campo</div>
+        </div>
+      </div>
+      <div class="user-profile-ruta">
+        <div class="avatar-circle">
+          <span style="font-size: 1.2rem;">👤</span>
+        </div>
+        <div class="user-info">
+          <span class="user-name">Usuario</span>
+          <span class="user-role">Administrador</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Subheader Volver -->
+    <div class="sub-header-bar">
+      <button id="btn-volver" class="btn-back-ruta">← Volver</button>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main style="padding-bottom: 3.5rem; position: relative;">
+      <h1 style="text-align: center; margin-top: 1.25rem; font-size: 1.6rem; color: #0F172A;">Contratos</h1>
+
+      <!-- Buscador Ovalado -->
+      <div class="search-ruta-container">
+        <input type="text" id="busqueda-contrato" class="search-ruta-input" placeholder="🔍 Buscar condominio o contrato...">
+      </div>
+
+      <!-- Grilla de Tarjetas -->
+      <div id="grid-contratos" class="services-grid-ruta">
+        <!-- Generadas dinámicamente desde JS -->
+      </div>
+
+      <!-- Contenedor de Paginación -->
+      <div id="paginacion-contratos" style="display: none; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        <!-- Botones generados por JS -->
+      </div>
+
+      <!-- Botón Flotante (+) -->
+      <button id="btn-fab-nuevo" class="fab-ruta" title="Crear nuevo contrato">+</button>
+
+      <!-- Modal Emergente (Nuevo / Editar) -->
+      <div id="modal-contrato" class="modal-overlay-ruta hidden">
+        <div class="modal-card-contrato">
+          <button id="btn-close-modal" class="modal-close-x-red">&times;</button>
+          <h2 id="modal-title" class="modal-title-contrato">Nuevo contrato</h2>
+
+          <form id="form-modal-contrato">
+            <input type="hidden" id="input-contrato-id">
+
+            <div class="form-group-contrato">
+              <label for="input-condominio" class="label-contrato">Nombre de condominio:</label>
+              <input type="text" id="input-condominio" class="input-contrato" required placeholder="Ej. Condominio fresita #1573">
+            </div>
+
+            <div class="form-group-contrato">
+              <label for="select-servicio" class="label-contrato">Servicio a contratar:</label>
+              <select id="select-servicio" class="input-contrato" required>
+                <option value="" disabled selected>Selecciona un servicio...</option>
+              </select>
+            </div>
+
+            <div class="form-group-contrato">
+              <label for="input-tarifa" class="label-contrato">Tarifa mensual ($):</label>
+              <input type="number" id="input-tarifa" class="input-contrato" min="0" step="0.01" required placeholder="2000">
+            </div>
+
+            <div class="form-group-contrato">
+              <label for="select-frecuencia" class="label-contrato">Frecuencia semanal / mensual:</label>
+              <select id="select-frecuencia" class="input-contrato" required>
+                <option value="" disabled selected>Selecciona frecuencia...</option>
+                <option value="1 día a la semana">1 día a la semana</option>
+                <option value="2 días a la semana">2 días a la semana</option>
+                <option value="3 días a la semana">3 días a la semana</option>
+                <option value="4 días a la semana">4 días a la semana</option>
+                <option value="5 días a la semana">5 días a la semana</option>
+                <option value="Quincenal">Quincenal</option>
+                <option value="Mensual">Mensual</option>
+              </select>
+            </div>
+
+            <div class="form-group-contrato">
+              <label for="input-dias" class="label-contrato">Días de la semana preferenciales:</label>
+              <input type="text" id="input-dias" class="input-contrato" required placeholder="Ej. Lunes, Viernes y Sábados">
+            </div>
+
+            <div class="modal-actions-contrato">
+              <button type="submit" class="btn-confirmar-green">Confirmar</button>
+              <button type="button" id="btn-cancelar-modal" class="btn-cancelar-red">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Confirmar Eliminación -->
+      <div id="modal-confirmar-eliminar" class="modal-overlay-ruta hidden">
+        <div class="modal-card-ruta" style="max-width: 420px; text-align: center;">
+          <button id="btn-close-modal-eliminar" class="modal-close-x">&times;</button>
+          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h2 class="modal-title-ruta" style="color: #DC2626; margin-bottom: 0.5rem;">¿Eliminar contrato?</h2>
+          <p id="texto-confirmar-eliminar" style="color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem;">
+            ¿Estás seguro de que deseas eliminar este contrato? Esta acción no se puede deshacer.
+          </p>
+          <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button id="btn-confirmar-eliminar" class="btn-ruta-confirm" style="background-color: #DC2626; border-color: #DC2626;">Sí, eliminar</button>
+            <button id="btn-cancelar-eliminar" class="btn-ruta-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module" src="./contratos.js"></script>
+</body>
+</html>
