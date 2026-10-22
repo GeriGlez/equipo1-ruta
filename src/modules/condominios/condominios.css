@@ -1,0 +1,299 @@
+/* Módulo 1 · Condominios y áreas */
+
+:root {
+  --condo-azul: #075f80;
+  --condo-azul-claro: #dceaf1;
+  --condo-verde: #16a34a;
+  --condo-verde-hover: #15803d;
+}
+
+body {
+  background: var(--color-surface);
+}
+
+/* ---------- Encabezado ---------- */
+
+.condo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 2rem;
+  background: var(--condo-azul);
+  color: #fff;
+}
+
+.condo-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.condo-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.condo-brand-name {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.condo-brand-sub {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.condo-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.condo-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.condo-user-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.condo-user-info strong {
+  font-size: 0.95rem;
+}
+
+.condo-subbar {
+  padding: 0.4rem 2rem;
+  background: var(--condo-azul-claro);
+}
+
+.condo-back {
+  color: var(--condo-azul);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.condo-back:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Contenido ---------- */
+
+.condo-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.condo-title {
+  margin-bottom: 2rem;
+  font-size: 1.35rem;
+  text-align: center;
+}
+
+/* Filtros */
+
+.condo-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.condo-buscador {
+  position: relative;
+  flex: 2 1 280px;
+}
+
+.condo-buscador-icono {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+}
+
+.condo-buscador .form-input {
+  padding-left: 2.25rem;
+}
+
+.condo-filtro {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+/* Tabla */
+
+.condo-tabla-wrap {
+  min-height: 260px;
+  overflow-x: auto;
+}
+
+.condo-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.condo-tabla th {
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--color-border);
+  font-size: 0.85rem;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.condo-tabla td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.condo-nombre {
+  font-weight: 600;
+}
+
+.condo-muted {
+  color: var(--color-text-muted);
+}
+
+.condo-centro {
+  text-align: center;
+}
+
+.condo-vacio {
+  padding: 2.5rem 0 !important;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.condo-badge-inactivo {
+  background: #f1f5f9;
+  color: var(--color-text-muted);
+}
+
+.condo-acciones {
+  white-space: nowrap;
+}
+
+.condo-link {
+  margin-right: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.condo-link:hover {
+  text-decoration: underline;
+}
+
+.condo-link:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Paginación */
+
+.condo-paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.condo-paginas button {
+  margin-left: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.condo-paginas button.activa {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+
+.condo-paginas button:disabled {
+  color: var(--color-text-light);
+  cursor: default;
+}
+
+.condo-mensaje {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.condo-acciones-pie {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.condo-btn-registrar {
+  padding: 0.8rem 2rem;
+  background: var(--condo-verde);
+  color: #fff;
+}
+
+.condo-btn-registrar:hover {
+  background: var(--condo-verde-hover);
+}
+
+@media (max-width: 640px) {
+  .condo-header,
+  .condo-subbar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .condo-brand-sub,
+  .condo-user-info {
+    display: none;
+  }
+}
+/* HU-02 · Recuadro de notas de acceso (se usa en pantallas del técnico) */
+.notas-acceso {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.notas-acceso strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.notas-acceso p {
+  margin: 0;
+  white-space: pre-line;
+}

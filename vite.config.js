@@ -64,6 +64,16 @@ export default defineConfig({
           process.cwd(),
           'src/modules/visitas/Visitas_y_Bitacora_Escritorio.html'
         ),
+
+                condominios: resolve(
+          process.cwd(),
+          'src/modules/condominios/condominios.html'
+        ),
+
+        registrarCondominio: resolve(
+          process.cwd(),
+          'src/modules/condominios/registrar-condominio.html'
+        ),
       }
     }
   }
