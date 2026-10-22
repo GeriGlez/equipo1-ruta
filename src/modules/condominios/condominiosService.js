@@ -17,14 +17,23 @@ function limpiar(texto) {
   const valor = (texto ?? '').trim()
   return valor === '' ? null : valor
 }
+// Teléfono: solo números y exactamente 10 dígitos (se toleran espacios y guiones al escribir)
+const PATRON_TELEFONO = /^\d{10}$/
 
+function prepararTelefono(texto) {
+  const telefono = limpiar(texto)?.replace(/[\s-]/g, '') ?? null
+  if (telefono && !PATRON_TELEFONO.test(telefono)) {
+    throw new Error('El teléfono debe tener exactamente 10 dígitos, solo números.')
+  }
+  return telefono
+}
 function prepararCondominio(datos) {
   const condominio = {
     nombre: limpiar(datos.nombre),
     direccion: limpiar(datos.direccion),
     colonia: limpiar(datos.colonia),
     contacto: limpiar(datos.contacto),
-    telefono: limpiar(datos.telefono),
+    telefono: prepararTelefono(datos.telefono),
     notas_acceso: limpiar(datos.notas_acceso),
     activo: datos.activo ?? true
   }
@@ -172,4 +181,38 @@ export async function agregarAreas(condominioId, areas) {
   const filas = areas.map(a => prepararArea(a, condominioId))
   const { error } = await supabase.from('areas').insert(filas)
   if (error) throw error
+}
+// ---------- Eliminar áreas ya registradas ----------
+
+export async function eliminarAreas(ids) {
+  if (ids.length === 0) return
+
+  // Un área con órdenes no se borra: rompería el historial de visitas y reportes
+  const { data: conOrdenes, error: errorOrdenes } = await supabase
+    .from('ordenes_servicio')
+    .select('area_id, areas(nombre)')
+    .in('area_id', ids)
+
+  if (errorOrdenes) throw errorOrdenes
+
+  if (conOrdenes.length > 0) {
+    const nombres = [...new Set(conOrdenes.map(o => o.areas?.nombre ?? `#${o.area_id}`))]
+    throw new Error(
+      `No se puede eliminar ${nombres.join(', ')}: ya tiene órdenes de servicio registradas.`
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('areas')
+    .delete()
+    .in('id', ids)
+    .select('id')
+
+  // 23503 = la base lo impide porque otra tabla apunta al área (por ejemplo, incidencias)
+  if (error?.code === '23503') {
+    throw new Error('No se puede eliminar el área: tiene incidencias u otros registros asociados.')
+  }
+  if (error) throw error
+  // Igual que en update: si RLS bloquea el delete, no hay error, solo 0 filas
+  if (data.length < ids.length) throw new Error('No tienes permiso para eliminar estas áreas.')
 }
