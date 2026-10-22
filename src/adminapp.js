@@ -44,13 +44,11 @@ app.innerHTML = `
         <div class="module-desc">HU-04: Armado de cuadrillas con técnicos disponibles.</div>
       </div>
 
-      <a href="./src/modules/condominios/condominios.html" class="module-link">
-        <div class="module-card">
-          <div class="module-owner">André Sánchez</div>
-          <div class="module-title">3. Condominios y Áreas</div>
-          <div class="module-desc">HU-01, HU-02: Registro de condominios, áreas y notas de acceso.</div>
-        </div>
-      </a>
+      <div class="module-card">
+        <div class="module-owner">André Sánchez</div>
+        <div class="module-title">3. Condominios y Áreas</div>
+        <div class="module-desc">HU-01, HU-02: Registro de condominios, áreas y notas de acceso.</div>
+      </div>
 
       <div class="module-card">
         <div class="module-owner">Jose (Pechu)</div>
