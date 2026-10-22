@@ -66,8 +66,9 @@
             <div class="reg-doble">
               <input id="contacto" name="contacto" class="form-input"
                      placeholder="Ej. Roberto Gómez" aria-label="Contacto en sitio">
-              <input id="telefono" name="telefono" class="form-input" type="tel"
-                     placeholder="Ej. 322 123 4567" aria-label="Teléfono">
+                            <input id="telefono" name="telefono" class="form-input" type="tel"
+                     inputmode="numeric" maxlength="10" pattern="[0-9]{10}"
+                     placeholder="Ej. 3221234567" aria-label="Teléfono (10 dígitos)">
             </div>
           </div>
         </div>

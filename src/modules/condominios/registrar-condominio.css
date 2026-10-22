@@ -138,6 +138,7 @@
 }
 
 @media (max-width: 720px) {
+
   .reg-grid,
   .reg-area-nueva {
     grid-template-columns: 1fr;
@@ -150,4 +151,22 @@
   .reg-botones {
     flex-direction: column-reverse;
   }
+}
+
+/* Áreas guardadas marcadas para eliminar */
+
+.reg-area-eliminada td:not(:last-child) {
+  color: var(--color-text-light);
+  text-decoration: line-through;
+}
+
+.reg-etiqueta-eliminar {
+  margin-right: 0.5rem;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reg-link-peligro {
+  color: #b91c1c;
 }
