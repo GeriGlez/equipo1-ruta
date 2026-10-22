@@ -4,65 +4,6 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.header-ruta {
-  background-color: #005C7A;
-  color: white;
-  padding: 0.8rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-ruta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.brand-subtitle {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-
-.user-profile-ruta {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #0284C7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  text-align: right;
-}
-
-.user-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.user-role {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
 .sub-header-bar {
   background-color: #DCE6EB;
   padding: 0.5rem 1.5rem;
@@ -166,4 +107,69 @@ body {
   color: #475569;
   margin: 0;
   line-height: 1.3;
+}
+/* ==================================================
+   ESTILOS ENCABEZADO UNIFICADO (VISITAS-HEADER)
+=================================================== */
+.visitas-header {
+  background-color: #005C7A;
+  color: #ffffff;
+  padding: 0.8rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.visitas-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visitas-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.visitas-brand-text {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.visitas-brand-text:nth-of-type(2) {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.visitas-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visitas-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.visitas-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  color: #ffffff;
+}
+
+.visitas-user-info strong {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.visitas-user-info span {
+  font-size: 0.75rem;
+  opacity: 0.8;
 }

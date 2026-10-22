@@ -5,25 +5,6 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Header RUTA */
-.header {
-  background-color: #005C7A !important;
-  color: #ffffff !important;
-  padding: 0.8rem 1.5rem !important;
-  border-bottom: none !important;
-}
-
-.brand {
-  color: #ffffff !important;
-  font-size: 1.4rem;
-}
-
-.brand span {
-  color: #B0D4E3 !important;
-  font-size: 0.9rem;
-  font-weight: normal;
-}
-
 /* Sub-header / Volver */
 .sub-header-bar {
   background-color: #D6E4EB;
@@ -310,4 +291,70 @@ main {
 
 .hidden {
   display: none !important;
+}
+
+/* ==================================================
+   ESTILOS ENCABEZADO UNIFICADO (VISITAS-HEADER)
+=================================================== */
+.visitas-header {
+  background-color: #005C7A;
+  color: #ffffff;
+  padding: 0.8rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.visitas-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visitas-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.visitas-brand-text {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.visitas-brand-text:nth-of-type(2) {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.visitas-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visitas-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.visitas-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  color: #ffffff;
+}
+
+.visitas-user-info strong {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.visitas-user-info span {
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
