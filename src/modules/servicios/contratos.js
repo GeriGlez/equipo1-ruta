@@ -4,7 +4,6 @@ import { supabase } from '../../services/supabase.js';
 const gridContratos = document.getElementById('grid-contratos');
 const paginacionContainer = document.getElementById('paginacion-contratos');
 const busquedaInput = document.getElementById('busqueda-contrato');
-const btnVolver = document.getElementById('btn-volver');
 
 // Modal Crear/Editar
 const fabNuevo = document.getElementById('btn-fab-nuevo');
@@ -43,11 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initEventListeners() {
-  // Botón Volver -> Regresa a index.html dentro de la misma carpeta
-  btnVolver.addEventListener('click', () => {
-    window.location.href = './index.html';
-  });
-
   // Buscador en tiempo real
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();

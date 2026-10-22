@@ -31,13 +31,28 @@ body {
   border-bottom: 1px solid #C0D1DC;
 }
 
-.btn-back-ruta {
-  background: transparent;
-  border: none;
+.sub-header-bar .visitas-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: #003B50;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 0.95rem;
-  cursor: pointer;
+  text-decoration: none;
+}
+
+.sub-header-bar .visitas-back span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.sub-header-bar .visitas-back:hover {
+  text-decoration: underline;
+}
+
+.sub-header-bar .visitas-back:focus-visible {
+  outline: 2px solid #005C7A;
+  outline-offset: 3px;
 }
 
 /* Buscador Ovalado */

@@ -52,11 +52,13 @@ app.innerHTML = `
         </div>
       </a>
 
-      <div class="module-card">
-        <div class="module-owner">Jose (Pechu)</div>
-        <div class="module-title">4. Servicios Contratados</div>
-        <div class="module-desc">HU-03: Catálogo de servicios y asignación a condominios.</div>
-      </div>
+      <a href="./src/modules/servicios/modulos.html" class="module-link">
+        <div class="module-card">
+          <div class="module-owner">Jose (Pechu)</div>
+          <div class="module-title">4. Servicios Contratados</div>
+          <div class="module-desc">HU-03: Catálogo de servicios y asignación a condominios.</div>
+        </div>
+      </a>
 
       <div class="module-card">
         <div class="module-owner">Fernando Carrera</div>

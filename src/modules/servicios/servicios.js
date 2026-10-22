@@ -4,7 +4,6 @@ import { supabase } from '../../services/supabase.js';
 const gridServicios = document.getElementById('grid-servicios');
 const paginacionContainer = document.getElementById('paginacion-servicios');
 const busquedaInput = document.getElementById('busqueda-servicio');
-const btnVolver = document.getElementById('btn-volver');
 
 // Modal Crear/Editar
 const fabNuevo = document.getElementById('btn-fab-nuevo');
@@ -39,11 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initEventListeners() {
-  // Botón Volver
-  btnVolver.addEventListener('click', () => {
-  window.location.href = './index.html';
-});
-
   // Buscador
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();

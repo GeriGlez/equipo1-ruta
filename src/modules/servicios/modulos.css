@@ -68,14 +68,28 @@ body {
   padding: 0.5rem 1.5rem;
 }
 
-.btn-back-ruta {
-  background: none;
-  border: none;
+.sub-header-bar .visitas-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: #005C7A;
-  font-weight: 700;
   font-size: 0.95rem;
-  cursor: pointer;
-  padding: 0;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sub-header-bar .visitas-back span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.sub-header-bar .visitas-back:hover {
+  text-decoration: underline;
+}
+
+.sub-header-bar .visitas-back:focus-visible {
+  outline: 2px solid #005C7A;
+  outline-offset: 3px;
 }
 
 .modulos-main {
