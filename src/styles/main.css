@@ -197,6 +197,12 @@ body {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.module-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .module-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
