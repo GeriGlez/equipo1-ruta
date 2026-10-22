@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = './servicios.html';
   });
 
-  // Evento opcional para contratos
-  cardContratos.addEventListener('click', () => {
-    alert('Módulo de Contratos en desarrollo.');
-  });
+
+cardContratos.addEventListener('click', () => {
+  window.location.href = './contratos.html';
+});
 
   // Botón volver
   btnVolver.addEventListener('click', () => {
