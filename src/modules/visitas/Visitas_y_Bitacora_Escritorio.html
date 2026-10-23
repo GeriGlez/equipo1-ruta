@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Bitácora de visitas</title>
+
+  <!-- Estilos generales del proyecto -->
+  <link rel="stylesheet" href="../../styles/main.css">
+
+  <!-- Estilos exclusivos del módulo 5 -->
+  <link rel="stylesheet" href="../../styles/visitas_escritorio.css">
+</head>
+
+<body>
+
+  <div class="visitas-page">
+
+    <!-- ==================================================
+         ENCABEZADO
+    =================================================== -->
+
+    <header class="visitas-header">
+
+  <div class="visitas-brand">
+
+    <img
+      src="/logo-ruta.png"
+      alt="RUTA"
+      class="visitas-logo"
+    >
+
+    <span class="visitas-brand-text">
+      RUTA
+    </span>
+
+    <span class="visitas-brand-text">
+      Gestión de servicios en campo
+    </span>
+
+  </div>
+
+  <div class="visitas-user">
+
+    <img
+      src="/avatar.png"
+      alt="Usuario administrador"
+      class="visitas-avatar"
+    >
+
+    <div class="visitas-user-info">
+      <strong>Usuario</strong>
+      <span>Admin</span>
+    </div>
+
+
+  </div>
+
+</header>
+
+
+    <!-- ==================================================
+         CONTENIDO PRINCIPAL
+    =================================================== -->
+
+    <main class="visitas-container">
+
+      <a
+        href="/"
+        class="visitas-back"
+        aria-label="Volver al panel de administración"
+      >
+        <span aria-hidden="true">←</span>
+        Volver
+      </a>
+
+      <h1 class="visitas-title">
+        Bitácora de visitas
+      </h1>
+
+
+      <!-- =================================================
+           FILTROS
+      ================================================== -->
+
+      <section class="visitas-filters">
+
+        <!-- Buscador -->
+        <div class="visitas-search">
+
+          <span class="visitas-search-icon">
+            ⌕
+          </span>
+
+          <input
+            class="form-input visitas-search-input"
+            type="search"
+            id="buscar-visita"
+            placeholder="Buscar por número de visita, orden o técnico"
+          >
+
+        </div>
+
+
+        <!-- Tipo de área -->
+        <div class="form-group visitas-filter">
+
+          <label
+            for="tipo-area"
+            class="form-label"
+          >
+            Tipo de área:
+          </label>
+
+          <select
+            id="tipo-area"
+            class="form-input"
+          >
+            <option value="">Todas</option>
+            <option value="alberca">Alberca</option>
+            <option value="jardin">Jardín</option>
+            <option value="area-comun">Área común</option>
+            <option value="equipo">Equipo</option>
+          </select>
+
+        </div>
+
+
+        <!-- Estado -->
+        <div class="form-group visitas-filter">
+
+          <label
+            for="estado"
+            class="form-label"
+          >
+            Estado:
+          </label>
+
+          <select
+            id="estado"
+            class="form-input"
+          >
+            <option value="">Todos</option>
+          </select>
+
+        </div>
+
+
+        <!-- Condominio -->
+        <div class="form-group visitas-filter">
+
+          <label
+            for="condominio"
+            class="form-label"
+          >
+            Condominio / Residencia
+          </label>
+
+          <select
+            id="condominio"
+            class="form-input"
+          >
+            <option value="">Todos</option>
+          </select>
+
+        </div>
+
+
+        <!-- Fecha -->
+        <div class="form-group visitas-filter">
+
+          <label
+            for="fecha"
+            class="form-label"
+          >
+            Fecha:
+          </label>
+
+          <input
+            id="fecha"
+            class="form-input"
+            type="date"
+          >
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           TABLA
+      ================================================== -->
+
+      <section class="visitas-table-container">
+
+        <table class="visitas-table">
+
+          <thead>
+
+            <tr>
+              <th>VISITA</th>
+              <th>CONDOMINIO</th>
+              <th>ÁREA</th>
+              <th>TÉCNICO</th>
+              <th>HORARIO</th>
+              <th>ACTUALIZACIÓN</th>
+              <th>OBSERVACIONES</th>
+            </tr>
+
+          </thead>
+
+          <!--
+            Se deja vacío intencionalmente.
+
+            Los registros se agregarán posteriormente
+            desde JavaScript / Supabase.
+          -->
+
+          <tbody id="visitas-body"></tbody>
+
+        </table>
+
+      </section>
+
+    </main>
+
+
+    <!-- ==================================================
+         PIE DE PÁGINA
+    =================================================== -->
+
+    <footer class="visitas-footer">
+
+      <div class="visitas-footer-group">
+        <strong>RUTA</strong>
+        <span>|</span>
+        <strong>Equipo #1</strong>
+      </div>
+
+      <div class="visitas-footer-group">
+        <strong>Versión: 1.0.0</strong>
+        <span>|</span>
+        <strong>Octubre 2026</strong>
+      </div>
+
+    </footer>
+
+  </div>
+
+<script
+  type="module"
+  src="./visitas-bitacora-escritorio.js"
+></script>
+
+</body>
+
+</html>

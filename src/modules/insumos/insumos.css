@@ -1,0 +1,622 @@
+/* =========================================================
+   MÓDULO 6 - INSUMOS Y CONSUMO (HU-11)
+   Catálogo y reporte (escritorio) + registro (móvil)
+   Prefijo: ins-
+   Depende de main.css, visitas_escritorio.css (escritorio)
+   y visitas_movil.css (móvil).
+========================================================= */
+
+:root {
+  --ins-green: #0f9b4f;
+  --ins-green-hover: #0c8444;
+  --ins-danger: #d62828;
+  --ins-panel: #e6e8eb;
+  --ins-field: #f5f6f8;
+}
+
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+.ins-message {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: var(--color-primary-light);
+  color: var(--color-text-main);
+
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ins-message--error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.ins-message[hidden] {
+  display: none;
+}
+
+
+/* =========================================================
+   CATÁLOGO - FILTROS Y BOTÓN
+========================================================= */
+
+.ins-filters {
+  display: grid;
+
+  grid-template-columns:
+    minmax(280px, 2.4fr)
+    minmax(140px, 1fr)
+    minmax(140px, 1fr)
+    minmax(140px, 1fr)
+    auto;
+
+  gap: 1rem;
+  align-items: end;
+
+  margin-bottom: 2rem;
+}
+
+.ins-add-button {
+  height: 48px;
+
+  padding: 0 1.75rem;
+
+  border: 0;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-green);
+  color: #ffffff;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.ins-add-button:hover {
+  background-color: var(--ins-green-hover);
+}
+
+.ins-add-button:focus-visible,
+.ins-submit:focus-visible,
+.ins-link-button:focus-visible,
+.ins-dialog-close:focus-visible {
+  outline: 3px solid #1597d4;
+  outline-offset: 3px;
+}
+
+
+/* Estado */
+
+.ins-badge {
+  display: inline-block;
+
+  padding: 0.15rem 0.7rem;
+
+  border-radius: 999px;
+
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ins-badge--disponible {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.ins-badge--agotado {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.ins-badge--inactivo {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.ins-empty {
+  padding: 3rem 1rem !important;
+
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   VENTANA MODAL (<dialog>)
+========================================================= */
+
+.ins-dialog {
+  width: min(430px, calc(100% - 2rem));
+
+  margin: auto;
+  padding: 2rem 2.25rem 2.25rem;
+
+  border: 0;
+  border-radius: var(--radius-lg);
+
+  background-color: #d9d9d9;
+  color: var(--color-text-main);
+
+  box-shadow: var(--shadow-lg);
+}
+
+/* Mientras hay una ventana abierta, la página de atrás no se desplaza */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+.ins-dialog--wide {
+  width: min(560px, calc(100% - 2rem));
+}
+
+.ins-dialog::backdrop {
+  background-color: rgb(15 23 42 / 0.55);
+}
+
+.ins-dialog-title {
+  margin-bottom: 1.5rem;
+
+  text-align: center;
+
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.ins-dialog-close {
+  position: absolute;
+
+  top: 0.7rem;
+  right: 1rem;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--ins-danger);
+
+  font-size: 1.9rem;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.ins-field {
+  margin-bottom: 1.1rem;
+}
+
+.ins-field label {
+  display: block;
+
+  margin-bottom: 0.3rem;
+
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ins-optional {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.ins-input {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 0.9rem;
+
+  border: 1px solid #2b2b2b;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-field);
+  color: var(--color-text-main);
+
+  font: inherit;
+  font-weight: 600;
+}
+
+.ins-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.ins-submit {
+  width: 100%;
+  min-height: 56px;
+
+  margin-top: 0.75rem;
+
+  border: 0;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-green);
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.ins-submit:hover:not(:disabled) {
+  background-color: var(--ins-green-hover);
+}
+
+.ins-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   REPORTE - TARJETAS
+========================================================= */
+
+.ins-report-title {
+  margin-bottom: 1.5rem;
+
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.ins-report-search {
+  max-width: 720px;
+
+  margin-bottom: 2rem;
+}
+
+.ins-cards {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.ins-card {
+  padding: 1.25rem 1.5rem 1rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: #f3f5f7;
+  box-shadow: var(--shadow-md);
+}
+
+.ins-card-title {
+  margin-bottom: 0.9rem;
+
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ins-card-owner {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 0.75rem;
+
+  border-radius: var(--radius-sm);
+
+  background-color: #ffffff;
+  box-shadow: var(--shadow-sm);
+
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ins-card-owner img {
+  width: 28px;
+  height: 28px;
+
+  padding: 4px;
+
+  border-radius: 50%;
+
+  background-color: var(--color-primary-light);
+  object-fit: contain;
+}
+
+.ins-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  padding-top: 0.7rem;
+
+  border-top: 1px solid #c9ced6;
+
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ins-link-button {
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--color-primary);
+
+  font: inherit;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.ins-link-button:hover {
+  text-decoration: underline;
+}
+
+.ins-detail-meta {
+  margin-bottom: 1rem;
+
+  text-align: center;
+
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.ins-detail-table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+.ins-detail-table th,
+.ins-detail-table td {
+  padding: 0.6rem 0.5rem;
+
+  text-align: left;
+
+  border-bottom: 1px solid #c9ced6;
+}
+
+.ins-detail-table th {
+  font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   MÓVIL - REGISTRO DE INSUMOS
+========================================================= */
+
+.ins-panel {
+  margin-bottom: 1rem;
+}
+
+.ins-panel[hidden] {
+  display: none;
+}
+
+.ins-line {
+  position: relative;
+
+  margin-bottom: 1rem;
+  padding: 1rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.ins-line-label {
+  display: block;
+
+  margin-bottom: 0.8rem;
+
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.ins-line-label .ins-input,
+.ins-line-label .ins-unit,
+.ins-line-label .ins-stepper {
+  margin-top: 0.3rem;
+}
+
+.ins-line-remove {
+  position: absolute;
+
+  top: 0.3rem;
+  right: 0.7rem;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--ins-danger);
+
+  font-size: 1.6rem;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.ins-line-remove[hidden] {
+  display: none;
+}
+
+.ins-search {
+  position: relative;
+
+  display: block;
+}
+
+.ins-search .ins-input {
+  padding-left: 2.2rem;
+}
+
+.ins-search-icon {
+  position: absolute;
+
+  z-index: 1;
+
+  top: 50%;
+  left: 0.8rem;
+
+  transform: translateY(-50%);
+
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+
+  pointer-events: none;
+}
+
+.ins-unit {
+  display: flex;
+  align-items: center;
+
+  min-height: 48px;
+
+  padding: 0 0.9rem;
+
+  border: 1px solid #b9bec6;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-field);
+
+  font-weight: 700;
+}
+
+.ins-stepper {
+  display: grid;
+
+  grid-template-columns: 52px 1fr 52px;
+
+  height: 48px;
+
+  overflow: hidden;
+
+  border: 1px solid #b9bec6;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-field);
+}
+
+.ins-step {
+  border: 0;
+  background-color: #d5d9de;
+
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.ins-step:active {
+  background-color: #c2c7ce;
+}
+
+.ins-step-value {
+  min-width: 0;
+
+  border: 0;
+  background: transparent;
+
+  text-align: center;
+
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.ins-step-value::-webkit-outer-spin-button,
+.ins-step-value::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.ins-hint {
+  margin-top: -0.3rem;
+
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.ins-hint[hidden] {
+  display: none;
+}
+
+.ins-add-line-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ins-add-line {
+  width: 48px;
+  height: 48px;
+
+  border: 0;
+  border-radius: var(--radius-md);
+
+  background-color: var(--ins-green);
+  color: #ffffff;
+
+  font-size: 1.8rem;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.ins-add-line:active {
+  background-color: var(--ins-green-hover);
+}
+
+.ins-save {
+  margin-top: 2rem;
+}
+
+.ins-save:disabled {
+  background-color: #cfd4da;
+  color: #5b6470;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   RESPONSIVE (ESCRITORIO / TABLET)
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .ins-filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .visitas-search,
+  .ins-add-button {
+    grid-column: 1 / -1;
+  }
+
+}
+
+@media (max-width: 640px) {
+
+  .ins-cards {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  .ins-add-button,
+  .ins-submit,
+  .ins-add-line {
+    transition: background-color 0.15s ease;
+  }
+
+}

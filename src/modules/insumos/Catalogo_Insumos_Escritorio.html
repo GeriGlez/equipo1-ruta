@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Catálogo de insumos</title>
+
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/visitas_escritorio.css">
+  <link rel="stylesheet" href="./insumos.css">
+</head>
+
+<body>
+
+  <div class="visitas-page">
+
+    <header class="visitas-header">
+      <div class="visitas-brand">
+        <img src="/logo-ruta.png" alt="RUTA" class="visitas-logo">
+        <span class="visitas-brand-text">Gestión de insumos</span>
+      </div>
+      <div class="visitas-user">
+        <img src="/avatar.png" alt="Usuario administrador" class="visitas-avatar">
+        <div class="visitas-user-info">
+          <strong id="admin-name">Usuario</strong>
+          <span>Admin</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="visitas-container">
+
+      <a href="/" class="visitas-back" aria-label="Volver al panel de administración">
+        <span aria-hidden="true">←</span>
+        Volver
+      </a>
+
+      <h1 class="visitas-title">Catálogo de insumos</h1>
+
+      <!-- FILTROS -->
+      <section class="ins-filters" aria-label="Filtros del catálogo">
+
+        <div class="visitas-search">
+          <span class="visitas-search-icon" aria-hidden="true">⌕</span>
+          <input
+            id="buscar-insumo"
+            class="form-input visitas-search-input"
+            type="search"
+            placeholder="Buscar insumos"
+            aria-label="Buscar insumos"
+          >
+        </div>
+
+        <div class="form-group visitas-filter">
+          <label for="filtro-tipo" class="form-label">Tipo de insumo:</label>
+          <select id="filtro-tipo" class="form-input">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div class="form-group visitas-filter">
+          <label for="filtro-estado" class="form-label">Estado:</label>
+          <select id="filtro-estado" class="form-input">
+            <option value="">Todos</option>
+            <option value="disponible">Disponible</option>
+            <option value="agotado">Agotado</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+
+        <div class="form-group visitas-filter">
+          <label for="filtro-unidad" class="form-label">Unidad</label>
+          <select id="filtro-unidad" class="form-input">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <button type="button" id="abrir-agregar" class="ins-add-button">
+          Agregar Insumo
+        </button>
+
+      </section>
+
+      <p id="catalogo-error" class="ins-message ins-message--error" role="alert" hidden></p>
+
+      <!-- TABLA -->
+      <section class="visitas-table-container">
+        <table class="visitas-table">
+          <thead>
+            <tr>
+              <th>ID_INSUMO</th>
+              <th>NOMBRE</th>
+              <th>STOCK</th>
+              <th>CANTIDAD</th>
+              <th>UNIDAD</th>
+              <th>ESTADO</th>
+              <th>DESCRIPCIÓN</th>
+            </tr>
+          </thead>
+          <tbody id="insumos-body"></tbody>
+        </table>
+      </section>
+
+    </main>
+
+    <footer class="visitas-footer">
+      <div class="visitas-footer-group">
+        <strong>RUTA</strong><span>|</span><strong>Equipo #1</strong>
+      </div>
+      <div class="visitas-footer-group">
+        <strong>Versión: 1.0.0</strong><span>|</span><strong>Octubre 2026</strong>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- MODAL: AGREGAR INSUMO -->
+  <dialog id="dialogo-agregar" class="ins-dialog" aria-labelledby="titulo-agregar" aria-modal="true">
+
+    <form id="form-agregar" novalidate>
+
+      <button type="button" class="ins-dialog-close" id="cerrar-agregar" aria-label="Cerrar">×</button>
+
+      <h2 id="titulo-agregar" class="ins-dialog-title">Agregar Insumo</h2>
+
+      <div class="ins-field">
+        <label for="nuevo-nombre">Insumo</label>
+        <input id="nuevo-nombre" class="ins-input" type="text" maxlength="80"
+               placeholder="Nombre de insumo" autocomplete="off" required>
+      </div>
+
+      <div class="ins-field">
+        <label for="nueva-unidad">Unidad</label>
+        <input id="nueva-unidad" class="ins-input" type="text" maxlength="40"
+               list="unidades-sugeridas" placeholder="Botella 1L" autocomplete="off" required>
+        <datalist id="unidades-sugeridas">
+          <option value="Litros"></option>
+          <option value="Botella 1L"></option>
+          <option value="Garrafa 20L"></option>
+          <option value="Kilogramos"></option>
+          <option value="Bolsa 25kg"></option>
+          <option value="Piezas"></option>
+          <option value="Pares"></option>
+        </datalist>
+      </div>
+
+      <div class="ins-field">
+        <label for="nueva-existencia">Existencia</label>
+        <input id="nueva-existencia" class="ins-input" type="number" min="0" step="0.01"
+               inputmode="decimal" placeholder="0" required>
+      </div>
+
+      <p id="agregar-error" class="ins-message ins-message--error" role="alert" hidden></p>
+
+      <button type="submit" id="guardar-insumo" class="ins-submit">
+        AGREGAR INSUMO
+      </button>
+
+    </form>
+
+  </dialog>
+
+  <!-- Clásico: la ventana abre aunque el módulo falle -->
+  <script src="./modal-agregar.js"></script>
+
+  <script type="module" src="./catalogo-insumos.js"></script>
+
+</body>
+
+</html>
