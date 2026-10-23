@@ -1,7 +1,4 @@
-import {
-  supabase
-} from '../../services/supabase.js'
-
+import { supabase } from '../../services/supabase.js'
 import {
   guardarUsuarioContexto,
   obtenerUsuarioContexto,
@@ -9,1010 +6,322 @@ import {
   guardarCredencialOffline
 } from '../visitas/db-local.js'
 
-
-// ============================================
-// CONFIGURACIÓN LOCAL
-// ============================================
-
-const ACTIVE_AUTH_UID_KEY =
-  'ruta_active_auth_uid'
-
-const LOGOUT_PENDING_KEY =
-  'ruta_logout_pendiente'
-
-const OFFLINE_ALGORITHM =
-  'PBKDF2-SHA-256'
-
-const PBKDF2_ITERATIONS =
-  200000
-
+// Constantes de almacenamiento local
+const ACTIVE_AUTH_UID_KEY = 'ruta_active_auth_uid'
+const LOGOUT_PENDING_KEY = 'ruta_logout_pendiente'
+const OFFLINE_ALGORITHM = 'PBKDF2-SHA-256'
+const PBKDF2_ITERATIONS = 200000
 
 // ============================================
 // UTILIDADES
 // ============================================
 
-function normalizarCorreo(
-  correo
-) {
-
-  return String(
-    correo || ''
-  )
-    .trim()
-    .toLowerCase()
-
+function normalizarCorreo(correo) {
+  return String(correo || '').trim().toLowerCase()
 }
 
-
-function bytesABase64(
-  bytes
-) {
-
-  let texto = ''
-
-
-  for (
-    const byte
-    of bytes
-  ) {
-
-    texto +=
-      String.fromCharCode(
-        byte
-      )
-
-  }
-
-
-  return btoa(
-    texto
-  )
-
-}
-
-
-function base64ABytes(
-  valor
-) {
-
-  const texto =
-    atob(
-      valor
-    )
-
-
-  return Uint8Array.from(
-    texto,
-    caracter =>
-      caracter.charCodeAt(0)
-  )
-
-}
-
-
-function compararBytes(
-  a,
-  b
-) {
-
-  if (
-    a.length !==
-    b.length
-  ) {
-
-    return false
-
-  }
-
-
-  let diferencia = 0
-
-
-  for (
-    let i = 0;
-    i < a.length;
-    i++
-  ) {
-
-    diferencia |=
-      a[i] ^ b[i]
-
-  }
-
-
-  return diferencia === 0
-
-}
-
-
-function esErrorDeRed(
-  error
-) {
-
-  const mensaje =
-    String(
-      error?.message ||
-      error ||
-      ''
-    ).toLowerCase()
-
-
+function esErrorDeRed(error) {
+  const mensaje = String(error?.message || error || '').toLowerCase()
   return (
     error instanceof TypeError ||
-    mensaje.includes(
-      'failed to fetch'
-    ) ||
-    mensaje.includes(
-      'network'
-    ) ||
-    mensaje.includes(
-      'internet'
-    ) ||
-    mensaje.includes(
-      'fetch'
-    )
+    mensaje.includes('failed to fetch') ||
+    mensaje.includes('network') ||
+    mensaje.includes('internet') ||
+    mensaje.includes('fetch')
   )
-
 }
 
-
 // ============================================
-// DERIVAR VERIFICADOR DE CONTRASEÑA
+// CRIPTOGRAFÍA OFFLINE (PBKDF2 NATIVO)
 // ============================================
 
-async function derivarVerificador(
-  password,
-  salt,
-  iteraciones
-) {
-
-  const encoder =
-    new TextEncoder()
-
-
-  const material =
-    await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(
-        password
-      ),
-      {
-        name: 'PBKDF2'
-      },
-      false,
-      [
-        'deriveBits'
-      ]
-    )
-
-
-  const bits =
-    await crypto.subtle.deriveBits(
-      {
-        name:
-          'PBKDF2',
-
-        salt,
-
-        iterations:
-          iteraciones,
-
-        hash:
-          'SHA-256'
-      },
-      material,
-      256
-    )
-
-
-  return new Uint8Array(
-    bits
+async function derivarVerificador(password, salt, iteraciones = PBKDF2_ITERATIONS) {
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
   )
-
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: iteraciones, hash: 'SHA-256' },
+    key,
+    256
+  )
+  return btoa(String.fromCharCode(...new Uint8Array(bits)))
 }
 
+async function crearCredencialOffline(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const verificador = await derivarVerificador(password, salt, PBKDF2_ITERATIONS)
+  return {
+    algoritmo: OFFLINE_ALGORITHM,
+    iteraciones: PBKDF2_ITERATIONS,
+    salt: btoa(String.fromCharCode(...salt)),
+    verificador
+  }
+}
+
+async function validarCredencialOffline(password, credencial) {
+  if (!credencial?.salt || !credencial?.verificador) return false
+  const salt = Uint8Array.from(atob(credencial.salt), c => c.charCodeAt(0))
+  const iteraciones = credencial.iteraciones || PBKDF2_ITERATIONS
+  const obtenido = await derivarVerificador(password, salt, iteraciones)
+  return obtenido === credencial.verificador
+}
 
 // ============================================
-// CREAR CREDENCIAL OFFLINE
+// ADAPTADOR DE SESIÓN COMPATIBLE CON LA APP
 // ============================================
 
-async function crearCredencialOffline(
-  password
-) {
+function construirSesion(usuarioLocal) {
+  const usuario = {
+    id: usuarioLocal.usuario_id || usuarioLocal.id,
+    nombre: usuarioLocal.nombre,
+    correo: usuarioLocal.correo,
+    rol: usuarioLocal.rol,
+    telefono: usuarioLocal.telefono || null,
+    activo: usuarioLocal.activo ?? true
+  }
 
-  const salt =
-    crypto.getRandomValues(
-      new Uint8Array(16)
-    )
-
-
-  const verificador =
-    await derivarVerificador(
-      password,
-      salt,
-      PBKDF2_ITERATIONS
-    )
-
+  const user = {
+    id: usuarioLocal.auth_uid || usuarioLocal.id,
+    email: usuarioLocal.correo,
+    aud: 'authenticated',
+    role: 'authenticated'
+  }
 
   return {
-
-    algoritmo:
-      OFFLINE_ALGORITHM,
-
-    iteraciones:
-      PBKDF2_ITERATIONS,
-
-    salt:
-      bytesABase64(
-        salt
-      ),
-
-    verificador:
-      bytesABase64(
-        verificador
-      )
-
+    user,
+    usuario,
+    profile: usuario, // alias para retrocompatibilidad
+    isOffline: true
   }
-
 }
 
-
 // ============================================
-// VALIDAR CREDENCIAL OFFLINE
+// CONSULTA DE USUARIO EN SUPABASE (TABLA USUARIOS)
 // ============================================
 
-async function validarCredencialOffline(
-  password,
-  credencial
-) {
-
-  if (
-    !credencial ||
-    credencial.algoritmo !==
-      OFFLINE_ALGORITHM ||
-    !credencial.salt ||
-    !credencial.verificador ||
-    !credencial.iteraciones
-  ) {
-
-    return false
-
+export async function obtenerUsuarioRuta(usuarioAuth) {
+  if (!usuarioAuth?.email) {
+    throw new Error('El usuario autenticado no tiene correo asociado.')
   }
 
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id, nombre, correo, rol, telefono, activo')
+    .eq('correo', usuarioAuth.email)
+    .eq('activo', true)
+    .single()
 
-  const salt =
-    base64ABytes(
-      credencial.salt
-    )
+  if (error) throw error
+  if (!data) throw new Error('El usuario autenticado no existe en RUTA.')
 
-
-  const esperado =
-    base64ABytes(
-      credencial.verificador
-    )
-
-
-  const obtenido =
-    await derivarVerificador(
-      password,
-      salt,
-      credencial.iteraciones
-    )
-
-
-  return compararBytes(
-    esperado,
-    obtenido
-  )
-
+  return data
 }
 
-
 // ============================================
-// RECONSTRUIR USUARIO LOCAL
-// ============================================
-
-function construirUsuarioLocal(
-  usuarioLocal
-) {
-
-  return {
-
-    id:
-      usuarioLocal.usuario_id,
-
-    nombre:
-      usuarioLocal.nombre,
-
-    correo:
-      usuarioLocal.correo,
-
-    rol:
-      usuarioLocal.rol,
-
-    telefono:
-      usuarioLocal.telefono ||
-      null,
-
-    activo:
-      usuarioLocal.activo
-
-  }
-
-}
-
-
-function construirUsuarioAuthLocal(
-  usuarioLocal
-) {
-
-  return {
-
-    id:
-      usuarioLocal.auth_uid,
-
-    email:
-      usuarioLocal.correo,
-
-    aud:
-      'authenticated',
-
-    role:
-      'authenticated'
-
-  }
-
-}
-
-
-// ============================================
-// OBTENER SESIÓN LOCAL ACTIVA
+// SESIÓN LOCAL ACTIVA (OFFLINE)
 // ============================================
 
 async function obtenerSesionLocalActiva() {
+  const authUid = localStorage.getItem(ACTIVE_AUTH_UID_KEY)
+  if (!authUid) return null
 
-  const authUid =
-    localStorage.getItem(
-      ACTIVE_AUTH_UID_KEY
-    )
-
-
-  if (!authUid) {
-
+  const usuarioLocal = await obtenerUsuarioContexto(authUid)
+  if (!usuarioLocal || usuarioLocal.activo !== true) {
+    localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
     return null
-
   }
 
-
-  const usuarioLocal =
-    await obtenerUsuarioContexto(
-      authUid
-    )
-
-
-  if (
-    !usuarioLocal ||
-    usuarioLocal.activo !== true
-  ) {
-
-    localStorage.removeItem(
-      ACTIVE_AUTH_UID_KEY
-    )
-
-    return null
-
-  }
-
-
-  return {
-
-    user:
-      construirUsuarioAuthLocal(
-        usuarioLocal
-      ),
-
-    usuario:
-      construirUsuarioLocal(
-        usuarioLocal
-      )
-
-  }
-
+  return construirSesion(usuarioLocal)
 }
-
 
 // ============================================
 // LOGIN OFFLINE
 // ============================================
 
-async function loginOffline(
-  email,
-  password
-) {
+async function loginOffline(email, password) {
+  const correo = normalizarCorreo(email)
+  const usuarioLocal = await obtenerUsuarioContextoPorCorreo(correo)
 
-  const correo =
-    normalizarCorreo(
-      email
-    )
-
-
-  const usuarioLocal =
-    await obtenerUsuarioContextoPorCorreo(
-      correo
-    )
-
-
-  if (
-    !usuarioLocal ||
-    usuarioLocal.activo !== true
-  ) {
-
-    throw new Error(
-      'No hay acceso offline disponible para este usuario.'
-    )
-
+  if (!usuarioLocal || usuarioLocal.activo !== true) {
+    throw new Error('No hay acceso sin conexión disponible para este usuario.')
   }
 
-
-  // La experiencia offline del proyecto
-  // está destinada al técnico.
-  if (
-    usuarioLocal.rol !==
-      'tecnico'
-  ) {
-
-    throw new Error(
-      'El acceso sin conexión está disponible únicamente para técnicos.'
-    )
-
+  if (usuarioLocal.rol !== 'tecnico') {
+    throw new Error('El acceso sin conexión está disponible únicamente para técnicos.')
   }
 
-
-  if (
-    !usuarioLocal
-      .credencial_offline
-  ) {
-
-    throw new Error(
-      'Este dispositivo aún no está habilitado para iniciar sesión sin conexión. Inicia sesión una vez con internet.'
-    )
-
+  if (!usuarioLocal.credencial_offline) {
+    throw new Error('Este dispositivo aún no está habilitado para iniciar sesión sin conexión. Inicia sesión una vez con internet.')
   }
 
-
-  const credencialValida =
-    await validarCredencialOffline(
-      password,
-      usuarioLocal
-        .credencial_offline
-    )
-
-
-  if (!credencialValida) {
-
-    throw new Error(
-      'Correo o contraseña incorrectos.'
-    )
-
+  const valida = await validarCredencialOffline(password, usuarioLocal.credencial_offline)
+  if (!valida) {
+    throw new Error('Correo o contraseña incorrectos.')
   }
 
+  localStorage.setItem(ACTIVE_AUTH_UID_KEY, usuarioLocal.auth_uid)
+  localStorage.removeItem(LOGOUT_PENDING_KEY)
 
-  localStorage.setItem(
-    ACTIVE_AUTH_UID_KEY,
-    usuarioLocal.auth_uid
-  )
-
-
-  localStorage.removeItem(
-    LOGOUT_PENDING_KEY
-  )
-
-
-  return {
-
-    user:
-      construirUsuarioAuthLocal(
-        usuarioLocal
-      ),
-
-    usuario:
-      construirUsuarioLocal(
-        usuarioLocal
-      )
-
-  }
-
+  return construirSesion(usuarioLocal)
 }
 
-
 // ============================================
-// INICIAR SESIÓN
+// INICIAR SESIÓN (ONLINE / OFFLINE)
 // ============================================
 
-export async function login(
-  email,
-  password
-) {
+export async function login(email, password) {
+  const correo = normalizarCorreo(email)
 
-  const correo =
-    normalizarCorreo(
-      email
-    )
-
-
-  // ==========================================
-  // SIN CONEXIÓN
-  // ==========================================
-
+  // Sin conexión a internet
   if (!navigator.onLine) {
-
-    return loginOffline(
-      correo,
-      password
-    )
-
+    return loginOffline(correo, password)
   }
 
-
-  // ==========================================
-  // CON CONEXIÓN
-  // ==========================================
-
-  let data
-
-
+  // Con conexión a internet
   try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: correo,
+      password
+    })
 
-    const resultado =
-      await supabase.auth
-        .signInWithPassword({
-          email:
-            correo,
+    if (error) throw error
 
-          password
-        })
+    const usuario = await obtenerUsuarioRuta(data.user)
 
+    // Guardar contexto local para persistencia offline
+    await guardarUsuarioContexto({
+      auth_uid: data.user.id,
+      usuario_id: usuario.id,
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      rol: usuario.rol,
+      telefono: usuario.telefono,
+      activo: usuario.activo
+    })
 
-    if (
-      resultado.error
-    ) {
-
-      throw resultado.error
-
+    // Si es técnico, guardar credencial cifrada para permitir login offline futuro
+    if (usuario.rol === 'tecnico') {
+      const credencialOffline = await crearCredencialOffline(password)
+      await guardarCredencialOffline(data.user.id, credencialOffline)
     }
 
+    localStorage.setItem(ACTIVE_AUTH_UID_KEY, data.user.id)
+    localStorage.removeItem(LOGOUT_PENDING_KEY)
 
-    data =
-      resultado.data
-
+    return {
+      user: data.user,
+      usuario,
+      profile: usuario,
+      isOffline: false
+    }
   } catch (error) {
-
-    // Puede existir Wi-Fi pero no haber
-    // acceso real al servidor.
-    if (
-      esErrorDeRed(
-        error
-      )
-    ) {
-
-      return loginOffline(
-        correo,
-        password
-      )
-
+    if (esErrorDeRed(error)) {
+      return loginOffline(correo, password)
     }
-
-
     throw error
-
   }
-
-
-  const usuario =
-    await obtenerUsuarioRuta(
-      data.user
-    )
-
-
-  // Primero guardamos o actualizamos
-  // el contexto normal del usuario.
-  await guardarUsuarioContexto({
-
-    auth_uid:
-      data.user.id,
-
-    usuario_id:
-      usuario.id,
-
-    nombre:
-      usuario.nombre,
-
-    correo:
-      usuario.correo,
-
-    rol:
-      usuario.rol,
-
-    telefono:
-      usuario.telefono,
-
-    activo:
-      usuario.activo
-
-  })
-
-
-  // Sólo habilitamos autenticación offline
-  // para el técnico.
-  if (
-    usuario.rol ===
-      'tecnico'
-  ) {
-
-    const credencialOffline =
-      await crearCredencialOffline(
-        password
-      )
-
-
-    await guardarCredencialOffline(
-      data.user.id,
-      credencialOffline
-    )
-
-  }
-
-
-  localStorage.setItem(
-    ACTIVE_AUTH_UID_KEY,
-    data.user.id
-  )
-
-
-  localStorage.removeItem(
-    LOGOUT_PENDING_KEY
-  )
-
-
-  return {
-
-    user:
-      data.user,
-
-    usuario
-
-  }
-
 }
 
-
 // ============================================
-// OBTENER USUARIO DE RUTA
-// ============================================
-
-export async function obtenerUsuarioRuta(
-  usuarioAuth
-) {
-
-  if (
-    !usuarioAuth?.email
-  ) {
-
-    throw new Error(
-      'El usuario autenticado no tiene correo asociado.'
-    )
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabase
-      .from(
-        'usuarios'
-      )
-      .select(`
-        id,
-        nombre,
-        correo,
-        rol,
-        telefono,
-        activo
-      `)
-      .eq(
-        'correo',
-        usuarioAuth.email
-      )
-      .eq(
-        'activo',
-        true
-      )
-      .single()
-
-
-  if (error) {
-
-    throw error
-
-  }
-
-
-  if (!data) {
-
-    throw new Error(
-      'El usuario autenticado no existe en RUTA.'
-    )
-
-  }
-
-
-  return data
-
-}
-
-
-// ============================================
-// SESIÓN ACTIVA
+// OBTENER SESIÓN ACTIVA (AL REFRESCAR LA APP)
 // ============================================
 
 export async function getActiveSession() {
-
-  // ==========================================
-  // SIN CONEXIÓN
-  // ==========================================
-
+  // Modo offline
   if (!navigator.onLine) {
-
     return obtenerSesionLocalActiva()
-
   }
 
-
-  // ==========================================
-  // LOGOUT REALIZADO OFFLINE
-  // ==========================================
-
-  if (
-    localStorage.getItem(
-      LOGOUT_PENDING_KEY
-    ) === 'true'
-  ) {
-
+  // Procesar logout pendiente si se cerró sesión mientras estaba offline
+  if (localStorage.getItem(LOGOUT_PENDING_KEY) === 'true') {
     try {
-
-      await supabase.auth.signOut({
-        scope:
-          'local'
-      })
-
-    } catch (error) {
-
-      console.warn(
-        '[RUTA] No fue posible completar el cierre de sesión pendiente:',
-        error
-      )
-
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch (e) {
+      console.warn('[RUTA] Cierre de sesión pendiente sincronizado:', e)
     }
-
-
-    localStorage.removeItem(
-      LOGOUT_PENDING_KEY
-    )
-
-    localStorage.removeItem(
-      ACTIVE_AUTH_UID_KEY
-    )
-
-
+    localStorage.removeItem(LOGOUT_PENDING_KEY)
+    localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
     return null
-
   }
 
-
-  // ==========================================
-  // CON CONEXIÓN
-  // ==========================================
-
-  let session
-
-
+  // Modo online: consultar sesión en Supabase
   try {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) throw error
 
-    const {
-      data,
-      error
-    } =
-      await supabase.auth
-        .getSession()
-
-
-    if (error) {
-
-      throw error
-
+    const session = data?.session
+    if (!session?.user) {
+      localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
+      return null
     }
 
+    let usuario
+    try {
+      usuario = await obtenerUsuarioRuta(session.user)
+    } catch (err) {
+      if (esErrorDeRed(err)) return obtenerSesionLocalActiva()
+      throw err
+    }
 
-    session =
-      data.session
+    // Mantener actualizado el contexto local
+    await guardarUsuarioContexto({
+      auth_uid: session.user.id,
+      usuario_id: usuario.id,
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      rol: usuario.rol,
+      telefono: usuario.telefono,
+      activo: usuario.activo
+    })
 
+    localStorage.setItem(ACTIVE_AUTH_UID_KEY, session.user.id)
+
+    return {
+      user: session.user,
+      usuario,
+      profile: usuario,
+      isOffline: false
+    }
   } catch (error) {
-
-    // Si el navegador cree que hay conexión
-    // pero Supabase no responde, usamos
-    // la sesión local.
-    if (
-      esErrorDeRed(
-        error
-      )
-    ) {
-
+    if (esErrorDeRed(error)) {
       return obtenerSesionLocalActiva()
-
     }
-
-
     throw error
-
   }
-
-
-  if (
-    !session?.user
-  ) {
-
-    localStorage.removeItem(
-      ACTIVE_AUTH_UID_KEY
-    )
-
-    return null
-
-  }
-
-
-  let usuario
-
-
-  try {
-
-    usuario =
-      await obtenerUsuarioRuta(
-        session.user
-      )
-
-  } catch (error) {
-
-    if (
-      esErrorDeRed(
-        error
-      )
-    ) {
-
-      return obtenerSesionLocalActiva()
-
-    }
-
-
-    throw error
-
-  }
-
-
-  // Mantener actualizado el contexto
-  // sin destruir credencial_offline.
-  await guardarUsuarioContexto({
-
-    auth_uid:
-      session.user.id,
-
-    usuario_id:
-      usuario.id,
-
-    nombre:
-      usuario.nombre,
-
-    correo:
-      usuario.correo,
-
-    rol:
-      usuario.rol,
-
-    telefono:
-      usuario.telefono,
-
-    activo:
-      usuario.activo
-
-  })
-
-
-  localStorage.setItem(
-    ACTIVE_AUTH_UID_KEY,
-    session.user.id
-  )
-
-
-  return {
-
-    user:
-      session.user,
-
-    usuario
-
-  }
-
 }
-
 
 // ============================================
 // CERRAR SESIÓN
 // ============================================
 
 export async function logout() {
-
-  // Cerramos inmediatamente nuestra
-  // sesión local.
-  localStorage.removeItem(
-    ACTIVE_AUTH_UID_KEY
-  )
-
-
-  // ==========================================
-  // SIN CONEXIÓN
-  // ==========================================
+  localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
 
   if (!navigator.onLine) {
-
-    localStorage.setItem(
-      LOGOUT_PENDING_KEY,
-      'true'
-    )
-
+    localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
     return
-
   }
 
-
-  // ==========================================
-  // CON CONEXIÓN
-  // ==========================================
-
-  const {
-    error
-  } =
-    await supabase.auth.signOut({
-      scope:
-        'local'
-    })
-
-
-  if (error) {
-
-    if (
-      esErrorDeRed(
-        error
-      )
-    ) {
-
-      localStorage.setItem(
-        LOGOUT_PENDING_KEY,
-        'true'
-      )
-
-      return
-
+  try {
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
+    if (error) {
+      if (esErrorDeRed(error)) {
+        localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
+        return
+      }
+      throw error
     }
-
-
+    localStorage.removeItem(LOGOUT_PENDING_KEY)
+  } catch (error) {
+    if (esErrorDeRed(error)) {
+      localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
+      return
+    }
     throw error
-
   }
-
-
-  localStorage.removeItem(
-    LOGOUT_PENDING_KEY
-  )
-
 }
