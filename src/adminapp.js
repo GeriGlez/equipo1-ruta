@@ -38,11 +38,13 @@ app.innerHTML = `
         <div class="module-desc">HU-14: Inicio de sesión, roles (Admin/Técnico) y redirección de vistas.</div>
       </div>
 
-      <div class="module-card">
-        <div class="module-owner">Alexei</div>
-        <div class="module-title">2. Cuadrillas</div>
-        <div class="module-desc">HU-04: Armado de cuadrillas con técnicos disponibles.</div>
-      </div>
+      <a href="./src/modules/cuadrillas/cuadrillas.html" class="module-link">
+        <div class="module-card">
+          <div class="module-owner">Alexei</div>
+          <div class="module-title">2. Cuadrillas</div>
+          <div class="module-desc">HU-04: Armado de cuadrillas con técnicos disponibles.</div>
+        </div>
+      </a>
 
       <a href="./src/modules/condominios/condominios.html" class="module-link">
         <div class="module-card">

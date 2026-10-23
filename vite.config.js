@@ -74,6 +74,11 @@ export default defineConfig({
           process.cwd(),
           'src/modules/condominios/registrar-condominio.html'
         ),
+
+        cuadrillas: resolve(
+          process.cwd(),
+          'src/modules/cuadrillas/cuadrillas.html'
+        ),
       }
     }
   }
