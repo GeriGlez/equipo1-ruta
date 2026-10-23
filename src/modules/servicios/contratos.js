@@ -1,36 +1,5 @@
 import { supabase } from '../../services/supabase.js';
-import { getActiveSession } from '../auth/authService.js'; // <- Importar servicio de autenticación
-
-// ... Mantener todas las referencias DOM y variables globales ...
-
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    // Validar sesión y rol
-    const sesion = await getActiveSession();
-
-    if (!sesion?.usuario || sesion.usuario.rol !== 'administrador') {
-      window.location.href = '/';
-      return;
-    }
-
-    // Mostrar el nombre real del administrador en el header
-    const nombreUser = document.querySelector('.visitas-user-info strong');
-    if (nombreUser && sesion.usuario.nombre) {
-      nombreUser.textContent = sesion.usuario.nombre;
-    }
-
-    // Inicializar módulo de Contratos
-    await cargarServiciosSelect();
-    await cargarContratos();
-    initEventListeners();
-  } catch (error) {
-    console.error('Error al verificar sesión:', error);
-    window.location.href = '/';
-  }
-});
-
-
-import { supabase } from '../../services/supabase.js';
+import { getActiveSession } from '../auth/authService.js';
 
 // Referencias DOM
 const gridContratos = document.getElementById('grid-contratos');
@@ -67,10 +36,34 @@ let paginaActual = 1;
 const ITEMS_POR_PAGINA = 12;
 let contratoAEliminarId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  cargarServiciosSelect();
-  cargarContratos();
-  initEventListeners();
+document.addEventListener('DOMContentLoaded', async () => {
+  const appContainer = document.getElementById('app'); // 1. Obtener referencia
+
+  try {
+    const sesion = await getActiveSession();
+
+    if (!sesion?.usuario || sesion.usuario.rol !== 'administrador') {
+      window.location.href = '/';
+      return;
+    }
+
+    const nombreUser = document.querySelector('.visitas-user-info strong');
+    if (nombreUser && sesion.usuario.nombre) {
+      nombreUser.textContent = sesion.usuario.nombre;
+    }
+
+    // 2. Mostrar interfaz
+    if (appContainer) {
+      appContainer.style.display = 'block';
+    }
+
+    await cargarServiciosSelect();
+    await cargarContratos();
+    initEventListeners();
+  } catch (error) {
+    console.error('Error al verificar la sesión:', error);
+    window.location.href = '/';
+  }
 });
 
 function initEventListeners() {

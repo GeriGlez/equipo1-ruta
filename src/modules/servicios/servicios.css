@@ -1,3 +1,8 @@
+/* Oculta toda la app por defecto hasta que se valide la sesión */
+#app {
+  display: none;
+}
+
 /* Sobrescribe los estilos globales para calcar la maqueta RUTA */
 
 body {

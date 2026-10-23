@@ -1,7 +1,8 @@
 import { getActiveSession } from '../auth/authService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Validar sesión y rol de administrador
+  const appContainer = document.getElementById('app'); // 1. Obtener referencia del contenedor
+
   try {
     const sesion = await getActiveSession();
 
@@ -10,16 +11,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Actualizar nombre del usuario en el header
     const nombreUser = document.querySelector('.visitas-user-info strong');
     if (nombreUser && sesion.usuario.nombre) {
       nombreUser.textContent = sesion.usuario.nombre;
     }
+
+    // 2. Hacer visible la pantalla tras confirmar que es administrador
+    if (appContainer) {
+      appContainer.style.display = 'block';
+    }
+
+    const cardServicios = document.getElementById('card-servicios');
+    const cardContratos = document.getElementById('card-contratos');
+
+    if (cardServicios) {
+      cardServicios.addEventListener('click', () => {
+        window.location.href = './servicios.html';
+      });
+    }
+
+    if (cardContratos) {
+      cardContratos.addEventListener('click', () => {
+        window.location.href = './contratos.html';
+      });
+    }
   } catch (error) {
     console.error('Error al verificar la sesión:', error);
     window.location.href = '/';
-    return;
   }
+});
 
   // 2. Eventos de las tarjetas
   const cardServicios = document.getElementById('card-servicios');
@@ -36,19 +56,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.location.href = './contratos.html';
     });
   }
-});
 
-document.addEventListener('DOMContentLoaded', () => {
-  const cardServicios = document.getElementById('card-servicios');
-  const cardContratos = document.getElementById('card-contratos');
-
-  // Redirigir directamente a servicios.html
-  cardServicios.addEventListener('click', () => {
-    window.location.href = './servicios.html';
-  });
-
-
-cardContratos.addEventListener('click', () => {
-  window.location.href = './contratos.html';
-});
-});
