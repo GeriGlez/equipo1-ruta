@@ -99,7 +99,11 @@ export async function crearCuadrilla({ nombre, responsable_id, miembrosIds = [] 
     .from('cuadrilla_usuario')
     .insert(filasMiembros)
 
-  if (errorMiembros) throw errorMiembros
+  if (errorMiembros) {
+    // Tolerancia a fallos (NMX-I-25010): Rollback para no dejar cuadrilla huérfana
+    await supabase.from('cuadrillas').delete().eq('id', cuadrilla.id)
+    throw new Error(`Error al asignar miembros: ${errorMiembros.message}`)
+  }
 
   return cuadrilla
 }
@@ -126,8 +130,14 @@ export async function actualizarCuadrilla(id, { nombre, responsable_id, miembros
 
   if (errorUpdate) throw errorUpdate
 
-  // 2. Sincronizar miembros en tabla pivote
+  // 2. Sincronizar miembros en tabla pivote con respaldo para rollback
   const listaFinalMiembros = Array.from(new Set([responsable_id, ...miembrosIds]))
+
+  // Obtener miembros anteriores como respaldo
+  const { data: miembrosAnteriores } = await supabase
+    .from('cuadrilla_usuario')
+    .select('usuario_id, fecha_alta')
+    .eq('cuadrilla_id', id)
 
   // Eliminar miembros anteriores
   await supabase
@@ -146,7 +156,19 @@ export async function actualizarCuadrilla(id, { nombre, responsable_id, miembros
     .from('cuadrilla_usuario')
     .insert(filasMiembros)
 
-  if (errorInsert) throw errorInsert
+  if (errorInsert) {
+    // Restaurar respaldo anterior si falla la asignación
+    if (miembrosAnteriores && miembrosAnteriores.length > 0) {
+      await supabase.from('cuadrilla_usuario').insert(
+        miembrosAnteriores.map(m => ({
+          cuadrilla_id: id,
+          usuario_id: m.usuario_id,
+          fecha_alta: m.fecha_alta
+        }))
+      )
+    }
+    throw new Error(`Error al actualizar miembros: ${errorInsert.message}`)
+  }
 
   return true
 }
