@@ -15,7 +15,7 @@ const btnCancelarModal = document.getElementById('btn-cancelar-modal');
 const formModal = document.getElementById('form-modal-contrato');
 
 const inputId = document.getElementById('input-contrato-id');
-const inputCondominio = document.getElementById('input-condominio');
+const selectCondominio = document.getElementById('select-condominio');
 const selectServicio = document.getElementById('select-servicio');
 const inputTarifa = document.getElementById('input-tarifa');
 const selectFrecuencia = document.getElementById('select-frecuencia');
@@ -31,13 +31,12 @@ const textoConfirmarEliminar = document.getElementById('texto-confirmar-eliminar
 // Estado Global
 let contratosCache = [];
 let contratosFiltrados = [];
-let serviciosLista = [];
 let paginaActual = 1;
 const ITEMS_POR_PAGINA = 12;
 let contratoAEliminarId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const appContainer = document.getElementById('app'); // 1. Obtener referencia
+  const appContainer = document.getElementById('app');
 
   try {
     const sesion = await getActiveSession();
@@ -52,12 +51,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       nombreUser.textContent = sesion.usuario.nombre;
     }
 
-    // 2. Mostrar interfaz
     if (appContainer) {
       appContainer.style.display = 'block';
     }
 
-    await cargarServiciosSelect();
+    await cargarSelectsModal();
     await cargarContratos();
     initEventListeners();
   } catch (error) {
@@ -67,18 +65,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function initEventListeners() {
-  // Buscador en tiempo real
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
     contratosFiltrados = contratosCache.filter(c => 
-      c.nombre_condominio.toLowerCase().includes(query) || 
-      (c.servicio_nombre && c.servicio_nombre.toLowerCase().includes(query))
+      c.condominios?.nombre?.toLowerCase().includes(query) || 
+      c.servicios?.nombre?.toLowerCase().includes(query)
     );
     paginaActual = 1;
     renderTarjetas();
   });
 
-  // Abrir Modal Crear
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
@@ -86,7 +82,6 @@ function initEventListeners() {
     modalContrato.classList.remove('hidden');
   });
 
-  // Cerrar Modales
   const cerrarModal = () => modalContrato.classList.add('hidden');
   btnCloseModal.addEventListener('click', cerrarModal);
   btnCancelarModal.addEventListener('click', cerrarModal);
@@ -98,7 +93,6 @@ function initEventListeners() {
   btnCloseModalEliminar.addEventListener('click', cerrarModalEliminar);
   btnCancelarEliminar.addEventListener('click', cerrarModalEliminar);
 
-  // Confirmar Eliminación
   btnConfirmarEliminar.addEventListener('click', async () => {
     if (contratoAEliminarId) {
       await eliminarContrato(contratoAEliminarId);
@@ -106,34 +100,41 @@ function initEventListeners() {
     }
   });
 
-  // Guardar (Crear o Editar)
   formModal.addEventListener('submit', async (e) => {
     e.preventDefault();
     await guardarContrato();
   });
 }
 
-async function cargarServiciosSelect() {
+// Cargar catálogos de Condominios y Servicios para los Selects del Modal
+async function cargarSelectsModal() {
   try {
-    const { data } = await supabase
-      .from('servicios')
-      .select('id, nombre')
-      .order('nombre', { ascending: true });
+    const [{ data: condominios }, { data: servicios }] = await Promise.all([
+      supabase.from('condominios').select('id, nombre').order('nombre', { ascending: true }),
+      supabase.from('servicios').select('id, nombre').order('nombre', { ascending: true })
+    ]);
 
-    serviciosLista = data || [];
-    selectServicio.innerHTML = '<option value="" disabled selected>Selecciona un servicio...</option>';
-
-    serviciosLista.forEach(s => {
+    selectCondominio.innerHTML = '<option value="" disabled selected>Selecciona un condominio...</option>';
+    (condominios || []).forEach(c => {
       const opt = document.createElement('option');
-      opt.value = s.nombre;
+      opt.value = c.id;
+      opt.textContent = c.nombre;
+      selectCondominio.appendChild(opt);
+    });
+
+    selectServicio.innerHTML = '<option value="" disabled selected>Selecciona un servicio...</option>';
+    (servicios || []).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
       opt.textContent = s.nombre;
       selectServicio.appendChild(opt);
     });
   } catch (err) {
-    console.warn('No se pudieron cargar servicios para el selector:', err);
+    console.warn('Error al cargar catálogos para el modal:', err);
   }
 }
 
+// CONSULTAR DESDE TABLA RELACIONAL `condominio_servicio`
 async function cargarContratos() {
   gridContratos.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">Cargando contratos desde Supabase...</p>';
   paginacionContainer.innerHTML = '';
@@ -141,8 +142,18 @@ async function cargarContratos() {
 
   try {
     const { data, error } = await supabase
-      .from('contratos')
-      .select('*')
+      .from('condominio_servicio')
+      .select(`
+        id,
+        condominio_id,
+        servicio_id,
+        tarifa,
+        frecuencia,
+        dia_preferente,
+        created_at,
+        condominios ( id, nombre ),
+        servicios ( id, nombre )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -177,6 +188,9 @@ function renderTarjetas() {
   const paginaItems = contratosFiltrados.slice(inicio, fin);
 
   paginaItems.forEach(c => {
+    const nombreCondominio = c.condominios?.nombre || 'Condominio no especificado';
+    const nombreServicio = c.servicios?.nombre || 'Servicio no especificado';
+
     const card = document.createElement('div');
     card.className = 'card-ruta';
     card.innerHTML = `
@@ -184,7 +198,7 @@ function renderTarjetas() {
         <div class="card-contrato-header">
           <div class="condominio-title">
             <span>🏠</span>
-            <span>${c.nombre_condominio}</span>
+            <span>${nombreCondominio}</span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
             <button class="btn-edit-circle btn-editar-card" title="Editar contrato">✏️</button>
@@ -193,21 +207,21 @@ function renderTarjetas() {
         </div>
 
         <div class="contrato-servicio-box">
-          <div class="servicio-nombre-badge">${c.servicio_nombre}</div>
-          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> $${Number(c.tarifa_mensual || 0).toLocaleString('es-MX')}</div>
+          <div class="servicio-nombre-badge">${nombreServicio}</div>
+          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> $${Number(c.tarifa || 0).toLocaleString('es-MX')}</div>
           <div class="contrato-detalle-row"><strong>Frecuencia:</strong> ${c.frecuencia || 'N/A'}</div>
-          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> ${c.dias_preferenciales || 'N/A'}</div>
+          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> ${c.dia_preferente || 'N/A'}</div>
         </div>
       </div>
     `;
 
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = c.id;
-      inputCondominio.value = c.nombre_condominio;
-      selectServicio.value = c.servicio_nombre;
-      inputTarifa.value = c.tarifa_mensual;
+      selectCondominio.value = c.condominio_id;
+      selectServicio.value = c.servicio_id;
+      inputTarifa.value = c.tarifa;
       selectFrecuencia.value = c.frecuencia;
-      inputDias.value = c.dias_preferenciales;
+      inputDias.value = c.dia_preferente;
 
       modalTitle.textContent = 'Editar contrato';
       modalContrato.classList.remove('hidden');
@@ -215,7 +229,7 @@ function renderTarjetas() {
 
     card.querySelector('.btn-eliminar-card').addEventListener('click', () => {
       contratoAEliminarId = c.id;
-      textoConfirmarEliminar.textContent = `¿Estás seguro de que deseas eliminar el contrato de "${c.nombre_condominio}"? Esta acción no se puede deshacer.`;
+      textoConfirmarEliminar.textContent = `¿Estás seguro de que deseas eliminar el contrato de "${nombreCondominio}"? Esta acción no se puede deshacer.`;
       modalEliminar.classList.remove('hidden');
     });
 
@@ -274,28 +288,29 @@ function renderPaginacion() {
   paginacionContainer.appendChild(btnNext);
 }
 
+// GUARDAR / ACTUALIZAR EN `condominio_servicio`
 async function guardarContrato() {
   const id = inputId.value;
 
   const payload = {
-    nombre_condominio: inputCondominio.value.trim(),
-    servicio_nombre: selectServicio.value,
-    tarifa_mensual: parseFloat(inputTarifa.value) || 0,
+    condominio_id: selectCondominio.value,
+    servicio_id: selectServicio.value,
+    tarifa: parseFloat(inputTarifa.value) || 0,
     frecuencia: selectFrecuencia.value,
-    dias_preferenciales: inputDias.value.trim()
+    dia_preferente: inputDias.value.trim()
   };
 
   try {
     if (id) {
       const { error } = await supabase
-        .from('contratos')
+        .from('condominio_servicio')
         .update(payload)
         .eq('id', id);
 
       if (error) throw error;
     } else {
       const { error } = await supabase
-        .from('contratos')
+        .from('condominio_servicio')
         .insert([payload]);
 
       if (error) throw error;
@@ -308,10 +323,11 @@ async function guardarContrato() {
   }
 }
 
+// ELIMINAR REGISTRO DE `condominio_servicio`
 async function eliminarContrato(id) {
   try {
     const { error } = await supabase
-      .from('contratos')
+      .from('condominio_servicio')
       .delete()
       .eq('id', id);
 
