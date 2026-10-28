@@ -473,25 +473,52 @@
 
 }
 
+/* ============================================
+   BARRA DE NAVEGACIÓN
+============================================ */
+
+.visitas-backbar {
+  width: 100%;
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 3rem;
+
+  background-color: #dcebf3;
+}
+
 .visitas-back {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 
-  margin-bottom: 24px;
-
   color: #005b7f;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
 
   text-decoration: none;
 }
 
-.visitas-back span {
+.visitas-back span:first-child {
   font-size: 28px;
   line-height: 1;
 }
 
 .visitas-back:hover {
   text-decoration: underline;
+}
+
+.visitas-back:focus-visible {
+  outline: 2px solid #005b7f;
+  outline-offset: 4px;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 640px) {
+  .visitas-backbar {
+    min-height: 70px;
+    padding: 0 1rem;
+  }
 }
