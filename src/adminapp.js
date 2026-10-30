@@ -1,121 +1,126 @@
-// import './styles/main.css'
 
-export function renderAdminApp(
-  app,
-  onLogout
-) {
+import './styles/adminapp.css'
 
+const modulosAdministrador = [
+  {
+    titulo: 'Condominios y Áreas',
+    descripcion: 'Administra los condominios, áreas y notas de acceso',
+    estilo: 'condominios',
+    ruta: './src/modules/condominios/condominios.html'
+  },
+  {
+    titulo: 'Servicios Contratados',
+    descripcion: 'Define servicios, frecuencia y día preferente',
+    estilo: 'servicios'
+  },
+  {
+    titulo: 'Personal y Cuadrillas',
+    descripcion: 'Gestión de usuarios, técnicos y cuadrillas',
+    estilo: 'personal',
+    ruta: './src/modules/cuadrillas/cuadrillas.html'
+  },
+  {
+    titulo: 'Órdenes de Servicio',
+    descripcion: 'Programa, asigna y cancela órdenes',
+    estilo: 'ordenes'
+  },
+  {
+    titulo: 'Bitácora de Visitas',
+    descripcion: 'Registro de visitas en campo',
+    estilo: 'visitas',
+    ruta: './src/modules/visitas/Visitas_y_Bitacora_Escritorio.html'
+  },
+  {
+    titulo: 'Insumos y Consumo',
+    descripcion: 'Administra insumos y consulta su consumo',
+    estilo: 'insumos'
+  },
+  {
+    titulo: 'Incidencias',
+    descripcion: 'Revisa y resuelve incidencias reportadas',
+    estilo: 'incidencias'
+  },
+  {
+    titulo: 'Reportes',
+    descripcion: 'Consulta los reportes del sistema',
+    estilo: 'reportes'
+  }
+]
 
-// Vista inicial para validar que la base de Vite funciona
-app.innerHTML = `
-  <header class="header">
-    <div class="brand">
-      🧭 <span>RUTA</span>
-    </div>
-    <span class="badge badge-info">PWA Integrador</span>
-  </header>
+export function renderAdminApp(app, usuario, onLogout) {
+  const tarjetas = modulosAdministrador.map((modulo) => {
+    const contenido = `
+      <span class="admin-module-icon" aria-hidden="true">
+        <img src="/caja.png" alt="">
+      </span>
+      <span class="admin-module-arrow" aria-hidden="true">›</span>
+      <strong class="admin-module-title">${modulo.titulo}</strong>
+      <span class="admin-module-description">${modulo.descripcion}</span>
+    `
 
-  <main class="container">
-    <div class="card" style="margin-top: 1rem;">
-      <h2>🚀 Entorno Base Configurado con Éxito</h2>
-      <p style="color: var(--color-text-muted); margin: 0.5rem 0 1.25rem 0;">
-        Vite + Vanilla JS + Supabase Client listos para el Equipo #1. Cada integrante puede desarrollar su módulo en su respectiva carpeta dentro de <code>src/modules/</code>.
-      </p>
-      
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <button id="btn-logout" class="btn btn-primary">
-          Cerrar sesión
+    const clases = `admin-module admin-module--${modulo.estilo}`
+
+    return modulo.ruta
+      ? `<a class="${clases} admin-module--link" href="${modulo.ruta}">${contenido}</a>`
+      : `<div class="${clases}" aria-label="${modulo.titulo}: módulo aún no integrado">${contenido}</div>`
+  }).join('')
+
+  app.innerHTML = `
+    <div class="admin-app">
+      <header class="admin-header">
+        <div class="admin-brand">
+          <div class="admin-brand-main">
+            <img src="/logo-ruta.png" class="admin-logo" alt="">
+            <span class="admin-brand-name">RUTA</span>
+          </div>
+          <span class="admin-brand-subtitle">Gestión de servicios en campo</span>
+        </div>
+
+        <button
+          id="btn-logout"
+          class="admin-user"
+          type="button"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión de administrador"
+        >
+          <img src="/avatar.png" class="admin-avatar" alt="">
+          <strong id="admin-user-name">Usuario</strong>
+          <span>Administrador</span>
         </button>
-        <span id="env-status" class="badge badge-warning" style="align-self: center;">Verificando .env...</span>
-      </div>
+      </header>
+
+      <main class="admin-main">
+        <h1 class="admin-welcome">Hola <span id="admin-welcome-name">Administrador</span></h1>
+        <p class="admin-instruction">Selecciona un módulo</p>
+
+        <nav class="admin-modules" aria-label="Módulos del administrador">
+          ${tarjetas}
+        </nav>
+      </main>
     </div>
+  `
 
-    <h3 style="margin-top: 2rem; margin-bottom: 0.5rem;">Módulos del Sistema (7 Áreas)</h3>
-    <div class="grid-modules">
-      <div class="module-card">
-        <div class="module-owner">Alexei</div>
-        <div class="module-title">1. Autenticación y Roles</div>
-        <div class="module-desc">HU-14: Inicio de sesión, roles (Admin/Técnico) y redirección de vistas.</div>
-      </div>
+  // ============================================
+  // DATOS DEL ADMINISTRADOR
+  // ============================================
 
-      <a href="./src/modules/cuadrillas/cuadrillas.html" class="module-link">
-        <div class="module-card">
-          <div class="module-owner">Alexei</div>
-          <div class="module-title">2. Cuadrillas</div>
-          <div class="module-desc">HU-04: Armado de cuadrillas con técnicos disponibles.</div>
-        </div>
-      </a>
+  const nombre =
+    usuario?.nombre?.trim() || 'Administrador'
 
-      <a href="./src/modules/condominios/condominios.html" class="module-link">
-        <div class="module-card">
-          <div class="module-owner">André Sánchez</div>
-          <div class="module-title">3. Condominios y Áreas</div>
-          <div class="module-desc">HU-01, HU-02: Registro de condominios, áreas y notas de acceso.</div>
-        </div>
-      </a>
+  app.querySelector('#admin-user-name').textContent =
+    nombre
 
-      <div class="module-card">
-        <div class="module-owner">Jose (Pechu)</div>
-        <div class="module-title">4. Servicios Contratados</div>
-        <div class="module-desc">HU-03: Catálogo de servicios y asignación a condominios.</div>
-      </div>
+  app.querySelector('#admin-welcome-name').textContent =
+    nombre
 
-      <div class="module-card">
-        <div class="module-owner">Fernando Carrera</div>
-        <div class="module-title">5. Órdenes de Servicio</div>
-        <div class="module-desc">HU-05, HU-06, HU-07: Programación semanal y cancelación de órdenes.</div>
-      </div>
-    
-    <a href="./src/modules/visitas/Visitas_y_Bitacora_Escritorio.html"
-    class="module-link" >
-      <div class="module-card">
-        <div class="module-owner">Brayan Ascencio</div>
-        <div class="module-title">6. Visitas y Bitácora</div>
-        <div class="module-desc">HU-08, HU-09, HU-10: Modo offline, sincronización y captura de pH/cloro.</div>
-      </div>
-    </a>
+  app.querySelector('#btn-logout')?.addEventListener('click', async () => {
+    if (!window.confirm('¿Deseas cerrar sesión?')) return
 
-      <div class="module-card">
-        <div class="module-owner">Rooney</div>
-        <div class="module-title">7. Insumos y Consumo</div>
-        <div class="module-desc">HU-11: Catálogo y registro de consumo de productos por visita.</div>
-      </div>
-
-      <div class="module-card">
-        <div class="module-owner">Geraldine</div>
-        <div class="module-title">8. Incidencias</div>
-        <div class="module-desc">HU-12, HU-13: Levantamiento de incidencias en campo y resolución.</div>
-      </div>
-    </div>
-  </main>
-`
-
-// Comprobar variables de entorno
-const envBadge = document.querySelector('#env-status')
-if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  envBadge.className = 'badge badge-success'
-  envBadge.textContent = '✅ Supabase Conectado (.env detectado)'
-} else {
-  envBadge.className = 'badge badge-warning'
-  envBadge.textContent = '⚠️ Falta crear archivo .env'
-}
-
-const botonCerrarSesion =
-  app.querySelector('#btn-logout')
-
-if (botonCerrarSesion) {
-
-  botonCerrarSesion.addEventListener(
-    'click',
-    () => {
-
-      if (onLogout) {
-        onLogout()
-      }
-
+    try {
+      await onLogout?.()
+    } catch (error) {
+      console.error('[RUTA] No se pudo cerrar sesión:', error)
+      window.alert('No fue posible cerrar sesión. Inténtalo nuevamente.')
     }
-  )
-
-}
-
+  })
 }
