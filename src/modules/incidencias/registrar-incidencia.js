@@ -16,7 +16,7 @@ const actualizarEstadoRed = () => {
 
 window.addEventListener('online', actualizarEstadoRed);
 window.addEventListener('offline', actualizarEstadoRed);
-document.addEventListener('DOMContentLoaded', actualizarEstadoRed);
+//document.addEventListener('DOMContentLoaded', actualizarEstadoRed);
 
 // 2. Manejo del formulario
 form.addEventListener('submit', async (e) => {
@@ -58,6 +58,7 @@ form.addEventListener('submit', async (e) => {
       alert('Error de conexión con el servidor.');
     }
   }
+
 });
 
 //Menús desplegables para seleccionar el condominio, área y visita
@@ -81,6 +82,8 @@ const cargarCondominios = async () => {
 
     if (error) throw error;
 
+    console.log("Respuesta de Supabase:", condominios);
+
     // Resetea el select manteniendo solo la opción por defecto
     selectCondominio.innerHTML = '<option value="" selected disabled>Selecciona un condominio</option>';
 
@@ -98,7 +101,13 @@ const cargarCondominios = async () => {
 };
 
 // Modifica el EventListener que ya tenías para que también ejecute esta función
-document.addEventListener('DOMContentLoaded', () => {
-  actualizarEstadoRed(); 
-  cargarCondominios();
-});
+//document.addEventListener('DOMContentLoaded', () => {
+//  actualizarEstadoRed(); 
+//  cargarCondominios();
+//});
+
+
+// Ejecución directa al inicializar el módulo
+actualizarEstadoRed(); 
+cargarCondominios();
+
