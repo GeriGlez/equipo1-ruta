@@ -16,7 +16,8 @@ const modulosAdministrador = [
   {
     titulo: 'Personal y Cuadrillas',
     descripcion: 'Gestión de usuarios, técnicos y cuadrillas',
-    estilo: 'personal'
+    estilo: 'personal',
+    ruta: './src/modules/cuadrillas/cuadrillas.html'
   },
   {
     titulo: 'Órdenes de Servicio',
