@@ -1,0 +1,23 @@
+/* HU-02 · Recuadro de notas de acceso (se usa en pantallas del técnico) */
+.notas-acceso {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.notas-acceso strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.notas-acceso p {
+  margin: 0;
+  white-space: pre-line;
+}
