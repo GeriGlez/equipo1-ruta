@@ -1,0 +1,106 @@
+/* =========================================
+   MÓDULO 7: INCIDENCIAS (Vista Móvil)
+========================================= */
+
+.m7-mobile-content {
+  padding: 24px 20px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
+}
+
+/* Título principal */
+.m7-screen-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Contenedores de cada campo */
+.m7-field-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Etiquetas (Condominio, Área, etc.) */
+.m7-field-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 8px;
+}
+
+.m7-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.m7-counter {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* Inputs, Selects y Textarea */
+.m7-input, .m7-textarea {
+  width: 100%;
+  background-color: #f7f7f7;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #333333;
+  box-sizing: border-box;
+  appearance: none; /* Elimina el estilo por defecto del navegador */
+}
+
+/* Flecha personalizada para los selectores */
+select.m7-input {
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M4 7l6 6 6-6" stroke="%23333333" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 18px;
+  padding-right: 48px;
+}
+
+.m7-input::placeholder, .m7-textarea::placeholder {
+  color: #888888;
+}
+
+.m7-input:focus, .m7-textarea:focus {
+  outline: none;
+  border-color: #007bb5;
+}
+
+.m7-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Botón de Guardado */
+.m7-save-button {
+  width: 100%;
+  background-color: #5cf04b; /* Verde brillante según el diseño */
+  color: #000000;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  margin-top: 12px;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.m7-save-button:active {
+  background-color: #4bd93d;
+}
+
+/* Ocultar el estado de red si no está en el diseño original */
+.m7-register-connection {
+  display: none;
+}
