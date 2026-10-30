@@ -1,0 +1,130 @@
+@import url('./servicios.css'); /* Reutiliza los estilos base de servicios */
+
+/* Modal Estilo Exacto a la Maqueta de Contratos */
+.modal-card-contrato {
+  background-color: #E2E8F0;
+  border-radius: 20px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 480px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title-contrato {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #000000;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.modal-close-x-red {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #EF4444;
+  cursor: pointer;
+}
+
+.form-group-contrato {
+  margin-bottom: 1.1rem;
+}
+
+.label-contrato {
+  display: block;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #000000;
+  margin-bottom: 0.4rem;
+}
+
+.input-contrato {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #94A3B8;
+  background-color: #F8FAFC;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.input-contrato:focus {
+  border-color: #005C7A;
+  box-shadow: 0 0 0 2px rgba(0, 92, 122, 0.2);
+}
+
+.modal-actions-contrato {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1.8rem;
+  justify-content: center;
+}
+
+.btn-confirmar-green {
+  background-color: #00A859;
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.btn-cancelar-red {
+  background-color: #DC2626;
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Estilo para tarjetas de Contrato */
+.card-contrato-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.condominio-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.contrato-servicio-box {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.servicio-nombre-badge {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #000;
+  margin-bottom: 0.4rem;
+}
+
+.contrato-detalle-row {
+  font-size: 0.88rem;
+  color: #334155;
+  margin-bottom: 0.25rem;
+}

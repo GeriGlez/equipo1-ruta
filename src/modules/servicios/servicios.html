@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA · Servicios</title>
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="./servicios.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- Header RUTA -->
+    <!-- REEMPLAZAR ÚNICAMENTE ESTE BLOQUE <header> -->
+<header class="header-ruta">
+  <div class="brand-ruta">
+    <div class="logo-icon-ruta">
+      <svg width="38" height="38" viewBox="0 0 100 100" fill="none">
+        <path d="M50 5 L85 25 L85 75 L50 95 L15 75 L15 25 Z" fill="#00A859"/>
+        <path d="M50 15 L75 30 L75 70 L50 85 L25 70 L25 30 Z" fill="#FFB800"/>
+        <circle cx="50" cy="50" r="18" fill="#005C7A"/>
+      </svg>
+    </div>
+    <div class="brand-text-ruta">
+      <div class="brand-title">RUTA</div>
+      <div class="brand-subtitle">Gestión de servicios en campo</div>
+    </div>
+  </div>
+  <div class="user-profile-ruta">
+    <div class="avatar-circle">
+      <span style="font-size: 1.2rem;">👤</span>
+    </div>
+    <div class="user-info">
+      <span class="user-name">Usuario</span>
+      <span class="user-role">Administrador</span>
+    </div>
+  </div>
+</header>
+
+    <!-- Subheader Volver -->
+    <div class="sub-header-bar">
+      <button id="btn-volver" class="btn-back-ruta">← Volver</button>
+    </div>
+
+    <!-- Contenido Principal con padding justo para liberar el FAB sin estirar la vista -->
+    <main style="position: relative;">
+      <h1 style="text-align: center; margin-top: 1.25rem; font-size: 1.6rem; color: #0F172A;">Servicios</h1>
+
+      <!-- Buscador Ovalado -->
+      <div class="search-ruta-container">
+        <input type="text" id="busqueda-servicio" class="search-ruta-input" placeholder="🔍 Buscar servicio...">
+      </div>
+
+      <!-- Grilla de Tarjetas -->
+      <div id="grid-servicios" class="services-grid-ruta">
+        <!-- Generadas dinámicamente desde JS -->
+      </div>
+
+      <!-- Contenedor de Paginación -->
+      <div id="paginacion-servicios" style="display: none; justify-content: center; align-items: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        <!-- Botones de navegación generados por JS -->
+      </div>
+
+      <!-- Botón Flotante (+) -->
+      <button id="btn-fab-nuevo" class="fab-ruta" title="Crear nuevo servicio">+</button>
+
+      <!-- Modal Emergente (Crear / Editar) -->
+      <div id="modal-servicio" class="modal-overlay-ruta hidden">
+        <div class="modal-card-ruta">
+          <button id="btn-close-modal" class="modal-close-x">&times;</button>
+          <h2 id="modal-title" class="modal-title-ruta">Crear nuevo servicio</h2>
+
+          <form id="form-modal-servicio">
+            <input type="hidden" id="input-servicio-id">
+
+            <div class="form-group">
+              <label for="input-nombre" class="form-label">Servicio:</label>
+              <input type="text" id="input-nombre" class="form-input" required style="border-radius: 8px;" placeholder="Ej. Limpieza de Albercas">
+            </div>
+
+            <div class="form-group">
+              <label for="input-descripcion" class="form-label">Descripción:</label>
+              <textarea id="input-descripcion" class="form-input" rows="3" style="border-radius: 8px;" placeholder="Detalles o actividades del servicio..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="input-tiempo" class="form-label">Tiempo estimado en minutos:</label>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 10px; top: 8px;">🕒</span>
+                <input type="number" id="input-tiempo" class="form-input" min="1" required style="padding-left: 32px; border-radius: 8px;" placeholder="60">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+              <button type="submit" class="btn-ruta-confirm">Confirmar</button>
+              <button type="button" id="btn-cancelar-modal" class="btn-ruta-cancel">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Confirmar Eliminación -->
+      <div id="modal-confirmar-eliminar" class="modal-overlay-ruta hidden">
+        <div class="modal-card-ruta" style="max-width: 420px; text-align: center;">
+          <button id="btn-close-modal-eliminar" class="modal-close-x">&times;</button>
+          <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h2 class="modal-title-ruta" style="color: #DC2626; margin-bottom: 0.5rem;">¿Eliminar servicio?</h2>
+          <p id="texto-confirmar-eliminar" style="color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem;">
+            ¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.
+          </p>
+          <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button id="btn-confirmar-eliminar" class="btn-ruta-confirm" style="background-color: #DC2626; border-color: #DC2626;">Sí, eliminar</button>
+            <button id="btn-cancelar-eliminar" class="btn-ruta-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module" src="./servicios.js"></script>
+</body>
+</html>

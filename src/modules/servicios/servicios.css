@@ -1,0 +1,298 @@
+/* Sobrescribe los estilos globales para calcar la maqueta RUTA */
+
+body {
+  background-color: #EBF1F5 !important;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Header RUTA */
+.header {
+  background-color: #005C7A !important;
+  color: #ffffff !important;
+  padding: 0.8rem 1.5rem !important;
+  border-bottom: none !important;
+}
+
+.brand {
+  color: #ffffff !important;
+  font-size: 1.4rem;
+}
+
+.brand span {
+  color: #B0D4E3 !important;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+/* Sub-header / Volver */
+.sub-header-bar {
+  background-color: #D6E4EB;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid #C0D1DC;
+}
+
+.btn-back-ruta {
+  background: transparent;
+  border: none;
+  color: #003B50;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* Buscador Ovalado */
+.search-ruta-container {
+  max-width: 550px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.search-ruta-input {
+  width: 100%;
+  background-color: #CBD6DC !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 0.65rem 1.25rem !important;
+  font-size: 0.95rem;
+  color: #1E293B;
+  outline: none;
+}
+
+.search-ruta-input::placeholder {
+  color: #4A606A;
+}
+
+/* Grilla de Tarjetas */
+.services-grid-ruta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 0 1.5rem 6rem 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Tarjeta individual */
+.card-ruta {
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-ruta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.card-ruta-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0F172A;
+}
+
+.btn-edit-circle {
+  background-color: #005C7A;
+  color: white;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+/* Caja gris hundida para la descripción */
+.desc-box-ruta {
+  background-color: #D8E2E8;
+  border-radius: 8px;
+  padding: 0.85rem;
+  font-size: 0.85rem;
+  color: #334155;
+  min-height: 70px;
+  margin-bottom: 1rem;
+}
+
+/* Pie de la tarjeta */
+.card-ruta-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1E293B;
+  padding-top: 0.5rem;
+}
+
+main {
+  padding-bottom: 5.5rem !important; /* Libera exactamente el espacio del botón central */
+}
+
+/* Botón Flotante Verde (+) */
+.fab-ruta {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #00A859 !important;
+  color: white !important;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 2rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* Ventana Modal Gris */
+.modal-overlay-ruta {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card-ruta {
+  background-color: #D8E2E8;
+  width: 90%;
+  max-width: 440px;
+  border-radius: 16px;
+  padding: 1.75rem;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-close-x {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.75rem;
+  color: #DC2626;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-title-ruta {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: #0F172A;
+}
+
+/* Botones dentro del Modal */
+.btn-ruta-confirm {
+  background-color: #00A859 !important;
+  color: white !important;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-ruta-cancel {
+  background-color: #DC2626 !important;
+  color: white !important;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Estilos para el nuevo Encabezado Unificado --- */
+.header-ruta {
+  background-color: #005C7A;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-ruta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-text-ruta {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.brand-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.user-profile-ruta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #0284C7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #FFFFFF;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  color: #FFFFFF;
+}
+
+.hidden {
+  display: none !important;
+}
