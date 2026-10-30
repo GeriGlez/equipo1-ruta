@@ -59,3 +59,46 @@ form.addEventListener('submit', async (e) => {
     }
   }
 });
+
+//Menús desplegables para seleccionar el condominio, área y visita
+
+//---Condominio
+const selectCondominio = document.getElementById('condominio_id');
+
+const cargarCondominios = async () => {
+  // Si no hay conexión, se detiene para evitar errores de red
+  if (!navigator.onLine) {
+    console.warn('Sin conexión: No se pueden cargar los condominios.');
+    return;
+  }
+
+  try {
+    // Asumiendo que tus columnas se llaman 'id' y 'nombre'. Ajusta si es necesario.
+    const { data: condominios, error } = await supabase
+      .from('condominios')
+      .select('id, nombre')
+      .order('nombre', { ascending: true });
+
+    if (error) throw error;
+
+    // Resetea el select manteniendo solo la opción por defecto
+    selectCondominio.innerHTML = '<option value="" selected disabled>Selecciona un condominio</option>';
+
+    // Inyecta los datos de la base al HTML
+    condominios.forEach(condominio => {
+      const option = document.createElement('option');
+      option.value = condominio.id;
+      option.textContent = condominio.nombre;
+      selectCondominio.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error('Error al obtener los condominios:', error);
+  }
+};
+
+// Modifica el EventListener que ya tenías para que también ejecute esta función
+document.addEventListener('DOMContentLoaded', () => {
+  actualizarEstadoRed(); 
+  cargarCondominios();
+});

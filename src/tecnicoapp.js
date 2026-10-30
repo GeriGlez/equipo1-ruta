@@ -17,7 +17,10 @@ const RUTAS = {
     '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
 
   pendientes:
-    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html'
+    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
+
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html'
 
 }
 
@@ -415,6 +418,22 @@ export function renderTecnicoApp(
     }
   )
 
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
 
   const botonPendientes =
     app.querySelector(
@@ -440,7 +459,6 @@ export function renderTecnicoApp(
   const modulosPendientes = [
     'ordenes',
     'insumos',
-    'incidencias'
   ]
 
 
