@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA | Registrar incidencia</title>
+  
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/incidencias_movil.css">
+</head>
+<body>
+
+  <div class="m7-mobile-page m7-register-page">
+
+    <!-- =========================================
+         HEADER (Intacto del Módulo 5)
+    ========================================== -->
+    <header class="m5-mobile-header">
+      <div class="m5-brand">
+        <div class="m5-brand-main">
+          <img src="/logo-ruta.png" alt="Logotipo RUTA" class="m5-brand-logo">
+          <span class="m5-brand-name">RUTA</span>
+        </div>
+        <span class="m5-brand-subtitle">Gestión de servicios en campo</span>
+      </div>
+
+      <div class="m5-user">
+        <img src="/avatar.png" alt="Usuario técnico" class="m5-user-avatar">
+        <strong>Usuario</strong>
+        <span>Técnico</span>
+      </div>
+    </header>
+
+    <nav class="m5-backbar" aria-label="Navegación">
+      <button type="button" class="m5-back-button" aria-label="Volver a la pantalla anterior">
+        <span class="m5-back-arrow" aria-hidden="true">←</span>
+        <span>Volver</span>
+      </button>
+    </nav>
+
+    <!-- =========================================
+         CONTENIDO MÓDULO 7 (Incidencias)
+    ========================================== -->
+    <main class="m7-mobile-content">
+
+      <!-- ESTADO DE CONEXIÓN -->
+      <div class="m7-register-connection">
+        <span id="connection-status" class="m7-connection">
+          <span class="m7-connection-dot"></span>
+          Verificando conexión...
+        </span>
+      </div>
+
+      <!-- CABECERA DE PANTALLA -->
+      <div class="m7-screen-title">
+        <h1>Registrar incidencia</h1>
+      </div>
+
+      <!-- =========================================
+           FORMULARIO TÉCNICO
+      ========================================== -->
+      <form id="formIncidencia">
+
+        <!-- CONDOMINIO -->
+        <div class="form-group m7-field-group">
+          <label for="condominio_id" class="form-label m7-field-label">
+            Condominio
+          </label>
+          <select id="condominio_id" name="condominio_id" class="form-input m7-input" required>
+            <option value="" selected disabled>Selecciona un condominio</option>
+            <!-- Opciones pobladas dinámicamente -->
+          </select>
+        </div>
+
+        <!-- ÁREA -->
+        <div class="form-group m7-field-group">
+          <label for="area_id" class="form-label m7-field-label">
+            Área
+          </label>
+          <select id="area_id" name="area_id" class="form-input m7-input" required>
+            <option value="" selected disabled>Selecciona un área</option>
+            <!-- Opciones pobladas dinámicamente -->
+          </select>
+        </div>
+
+        <!-- VISITA -->
+        <div class="form-group m7-field-group">
+          <label for="visita_id" class="form-label m7-field-label">
+            Visita
+          </label>
+          <select id="visita_id" name="visita_id" class="form-input m7-input" required>
+            <option value="" selected disabled>Selecciona el número de visita</option>
+            <!-- Opciones pobladas dinámicamente -->
+          </select>
+        </div>
+
+        <!-- DESCRIPCIÓN -->
+        <div class="form-group m7-field-group">
+          <div class="m7-label-row">
+            <label for="descripcion" class="form-label m7-field-label">
+              Descripción
+            </label>
+            <span id="descripcion-counter" class="m7-counter">0/500</span>
+          </div>
+          <textarea 
+            id="descripcion" 
+            name="descripcion" 
+            class="form-input m7-textarea" 
+            maxlength="500" 
+            placeholder="Describe detalladamente cuál es la incidencia encontrada" 
+            required></textarea>
+        </div>
+
+        <!-- PRIORIDAD -->
+        <div class="form-group m7-field-group">
+          <label for="prioridad" class="form-label m7-field-label">
+            Prioridad
+          </label>
+          <select id="prioridad" name="prioridad" class="form-input m7-input" required>
+            <option value="" selected disabled>Selecciona el nivel de prioridad</option>
+            <option value="baja">Baja</option>
+            <option value="media">Media</option>
+            <option value="alta">Alta</option>
+          </select>
+        </div>
+
+        <!-- GUARDAR -->
+        <button id="save-incidencia" type="submit" class="btn btn-primary m7-save-button">
+          <span id="save-incidencia-label">Guardar incidencia</span>
+        </button>
+
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const descripcion = document.querySelector('#descripcion');
+    const descripcionCounter = document.querySelector('#descripcion-counter');
+
+    // Contador de caracteres para la descripción
+    descripcion.addEventListener('input', () => {
+      descripcionCounter.textContent = `${descripcion.value.length}/500`;
+    });
+  </script>
+
+</body>
+</html>
