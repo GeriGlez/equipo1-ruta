@@ -66,28 +66,6 @@
       ========================================== -->
       <form id="formIncidencia">
 
-        <!-- CONDOMINIO -->
-        <div class="form-group m7-field-group">
-          <label for="condominio_id" class="form-label m7-field-label">
-            Condominio
-          </label>
-          <select id="condominio_id" name="condominio_id" class="form-input m7-input" required>
-            <option value="" selected disabled>Selecciona un condominio</option>
-            <!-- Opciones pobladas dinámicamente -->
-          </select>
-        </div>
-
-        <!-- ÁREA -->
-        <div class="form-group m7-field-group">
-          <label for="area_id" class="form-label m7-field-label">
-            Área
-          </label>
-          <select id="area_id" name="area_id" class="form-input m7-input" required>
-            <option value="" selected disabled>Selecciona un área</option>
-            <!-- Opciones pobladas dinámicamente -->
-          </select>
-        </div>
-
         <!-- VISITA -->
         <div class="form-group m7-field-group">
           <label for="visita_id" class="form-label m7-field-label">
@@ -97,6 +75,24 @@
             <option value="" selected disabled>Selecciona el número de visita</option>
             <!-- Opciones pobladas dinámicamente -->
           </select>
+        </div>
+
+        <!-- Bloque Condominio -->
+        <div class="m7-field-group">
+          <div class="m7-label-row">
+            <label class="m7-field-label">Condominio</label>
+          </div>
+          <input type="hidden" id="condominio_id">
+          <input type="text" id="condominio_nombre" class="m7-input" readonly placeholder="Se autocompleta al elegir visita">
+        </div>
+
+        <!-- Bloque Área -->
+        <div class="m7-field-group">
+          <div class="m7-label-row">
+            <label class="m7-field-label">Área</label>
+          </div>
+          <input type="hidden" id="area_id">
+          <input type="text" id="area_nombre" class="m7-input" readonly placeholder="Se autocompleta al elegir visita">
         </div>
 
         <!-- DESCRIPCIÓN -->
