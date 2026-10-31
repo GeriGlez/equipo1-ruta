@@ -39,9 +39,75 @@ function escapar(texto) {
   return div.innerHTML
 }
 
+// Aviso flotante arriba de la pantalla; se oculta solo a los 6 segundos
+let temporizadorMensaje
 function mostrarMensaje(texto) {
+  clearTimeout(temporizadorMensaje)
   mensaje.textContent = texto
   mensaje.hidden = !texto
+  if (texto) temporizadorMensaje = setTimeout(() => { mensaje.hidden = true }, 6000)
+}
+
+// ---------- Errores junto a cada campo ----------
+
+// Pinta el campo en rojo y escribe el error justo debajo de él
+function marcarError(campo, texto) {
+  const grupo = campo.closest('.form-group')
+  campo.classList.add('reg-campo-error')
+  campo.setAttribute('aria-invalid', 'true')
+
+  let aviso = grupo.querySelector('.reg-error-texto')
+  if (!aviso) {
+    aviso = document.createElement('small')
+    aviso.className = 'reg-error-texto'
+    grupo.append(aviso)
+  }
+  aviso.textContent = texto
+}
+
+function quitarError(campo) {
+  campo.classList.remove('reg-campo-error')
+  campo.removeAttribute('aria-invalid')
+  campo.closest('.form-group')?.querySelector('.reg-error-texto')?.remove()
+}
+
+function limpiarErrores() {
+  formulario.querySelectorAll('.reg-campo-error').forEach(quitarError)
+}
+
+// Revisa los campos obligatorios antes de enviar. Devuelve true si todo está bien.
+function validarFormulario() {
+  limpiarErrores()
+  const errores = []
+
+  if (!formulario.nombre.value.trim()) {
+    errores.push([formulario.nombre, 'Escribe el nombre del condominio.'])
+  }
+  if (!formulario.direccion.value.trim()) {
+    errores.push([formulario.direccion, 'Escribe la dirección completa.'])
+  }
+  const telefono = campoTelefono.value
+  if (telefono && telefono.length !== 10) {
+    errores.push([campoTelefono, 'El teléfono debe tener exactamente 10 dígitos.'])
+  }
+  // Un área escrita pero que no se agregó a la lista
+  if (areaNombre.value.trim()) {
+    errores.push([areaNombre, 'Dale "+ Agregar a la lista" o borra el nombre.'])
+  }
+
+  if (errores.length === 0) return true
+
+  errores.forEach(([campo, texto]) => marcarError(campo, texto))
+
+  // Lleva la pantalla y el cursor al primer error
+  const [primero] = errores[0]
+  primero.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  primero.focus({ preventScroll: true })
+
+  mostrarMensaje(errores.length === 1
+    ? 'Revisa el campo marcado en rojo.'
+    : `Revisa los ${errores.length} campos marcados en rojo.`)
+  return false
 }
 
 function etiquetaTipo(valor) {
@@ -83,7 +149,7 @@ function agregarAreaALista() {
   const nombre = areaNombre.value.trim()
 
   if (!nombre) {
-    mostrarMensaje('Escribe el nombre del área antes de agregarla.')
+    marcarError(areaNombre, 'Escribe el nombre del área antes de agregarla.')
     areaNombre.focus()
     return
   }
@@ -91,7 +157,8 @@ function agregarAreaALista() {
   // Las marcadas para eliminar no cuentan como repetidas
   const repetida = areas.some(a => !a.eliminar && a.nombre.toLowerCase() === nombre.toLowerCase())
   if (repetida) {
-    mostrarMensaje(`Ya existe un área llamada "${nombre}" en este condominio.`)
+    marcarError(areaNombre, `Ya existe un área llamada "${nombre}" en este condominio.`)
+    areaNombre.focus()
     return
   }
 
@@ -101,6 +168,7 @@ function agregarAreaALista() {
     requiere_lecturas: areaLecturas.checked
   })
 
+  quitarError(areaNombre)
   mostrarMensaje('')
   dibujarAreas()
 
@@ -137,11 +205,7 @@ async function guardar(evento) {
   evento.preventDefault()
   mostrarMensaje('')
 
-  // Si el usuario escribió un área pero olvidó darle "Agregar", se la recordamos
-  if (areaNombre.value.trim()) {
-    mostrarMensaje('Tienes un área escrita sin agregar. Dale "+ Agregar a la lista" o borra el nombre.')
-    return
-  }
+  if (!validarFormulario()) return
 
   const datos = {
     nombre: formulario.nombre.value,
@@ -151,13 +215,6 @@ async function guardar(evento) {
     telefono: formulario.telefono.value,
     notas_acceso: formulario.notas_acceso.value,
     activo: formulario.activo.checked
-  }
-
-  const telefono = campoTelefono.value
-  if (telefono && telefono.length !== 10) {
-    mostrarMensaje('El teléfono debe tener exactamente 10 dígitos, solo números.')
-    campoTelefono.focus()
-    return
   }
 
   const areasNuevas = areas.filter(a => !a.id)
@@ -237,6 +294,11 @@ listaAreas.addEventListener('click', (evento) => {
 // Teléfono: al escribir o pegar se quitan letras y símbolos, máximo 10 dígitos
 campoTelefono.addEventListener('input', () => {
   campoTelefono.value = campoTelefono.value.replace(/\D/g, '').slice(0, 10)
+})
+
+// Al corregir un campo marcado, su error desaparece
+formulario.addEventListener('input', (evento) => {
+  if (evento.target.classList.contains('reg-campo-error')) quitarError(evento.target)
 })
 
 formulario.addEventListener('submit', guardar)
