@@ -54,6 +54,7 @@ form.addEventListener('submit', async (e) => {
     try {
       const { data: authData } = await supabase.auth.getUser();
       incidenciaData.reportada_por = authData.user.id;
+      console.log("ID intentando guardar:", authData.user.id);
 
       const { error } = await supabase.from('incidencias').insert([incidenciaData]);
       if (error) throw error;
@@ -84,6 +85,7 @@ const cargarVisitas = async () => {
       .order('id', { ascending: false }); 
 
     if (error) throw error;
+    console.log("Datos de visitas recibidos:", visitas);
 
     selectVisita.innerHTML = '<option value="" selected disabled>Selecciona el número de visita</option>';
     
