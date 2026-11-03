@@ -54,7 +54,7 @@ form.addEventListener('submit', async (e) => {
     try {
       const { data: authData } = await supabase.auth.getUser();
       incidenciaData.reportada_por = authData.user.id;
-      console.log("ID intentando guardar:", authData.user.id);
+      //console.log("ID intentando guardar:", authData.user.id);
 
       const { error } = await supabase.from('incidencias').insert([incidenciaData]);
       if (error) throw error;
@@ -69,7 +69,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// 3. Cargar Visitas (con join a ordenes de servicio)
+// 3. Cargar Visitas (Join profundo para traer los nombres por adelantado)
 const cargarVisitas = async () => {
   if (!navigator.onLine) return;
   try {
@@ -79,13 +79,14 @@ const cargarVisitas = async () => {
         id,
         ordenes_servicio (
           condominio_id,
-          area_id
+          area_id,
+          condominios ( nombre ),
+          areas ( nombre )
         )
       `)
       .order('id', { ascending: false }); 
 
     if (error) throw error;
-    console.log("Datos de visitas recibidos:", visitas);
 
     selectVisita.innerHTML = '<option value="" selected disabled>Selecciona el número de visita</option>';
     
@@ -96,8 +97,12 @@ const cargarVisitas = async () => {
       
       const orden = visita.ordenes_servicio;
       if (orden) {
-        option.dataset.condominio = orden.condominio_id;
-        option.dataset.area = orden.area_id;
+        // Guardamos IDs
+        option.dataset.condominioId = orden.condominio_id;
+        option.dataset.areaId = orden.area_id;
+        // Guardamos nombres consultados en el join anidado
+        option.dataset.condominioNombre = orden.condominios ? orden.condominios.nombre : 'Desconocido';
+        option.dataset.areaNombre = orden.areas ? orden.areas.nombre : 'Desconocida';
       }
       
       selectVisita.appendChild(option);
@@ -107,36 +112,21 @@ const cargarVisitas = async () => {
   }
 };
 
-// 4. Autocompletado (Consulta los nombres y asigna los IDs)
-selectVisita.addEventListener('change', async (e) => {
+// 4. Autocompletado (Instantáneo y 100% offline-friendly)
+selectVisita.addEventListener('change', (e) => {
   const opcionSeleccionada = e.target.options[e.target.selectedIndex];
   
-  const idCondominio = opcionSeleccionada.dataset.condominio;
-  const idArea = opcionSeleccionada.dataset.area;
+  const idCondominio = opcionSeleccionada.dataset.condominioId;
+  const idArea = opcionSeleccionada.dataset.areaId;
 
   if (idCondominio && idArea) {
-    // 4.1 Guardamos los IDs reales en los campos ocultos para la BD
+    // 4.1 Asignamos IDs reales
     inputCondominioId.value = idCondominio;
     inputAreaId.value = idArea;
 
-    // 4.2 Mostramos un texto temporal mientras traemos los nombres
-    inputCondominioNombre.value = "Cargando...";
-    inputAreaNombre.value = "Cargando...";
-
-    if (navigator.onLine) {
-      try {
-        const { data: condominioData } = await supabase.from('condominios').select('nombre').eq('id', idCondominio).single();
-        const { data: areaData } = await supabase.from('areas').select('nombre').eq('id', idArea).single();
-
-        // 4.3 Inyectamos los textos visuales
-        inputCondominioNombre.value = condominioData ? condominioData.nombre : 'Desconocido';
-        inputAreaNombre.value = areaData ? areaData.nombre : 'Desconocida';
-      } catch (error) {
-        console.error("Error al obtener nombres:", error);
-        inputCondominioNombre.value = 'Error al cargar nombre';
-        inputAreaNombre.value = 'Error al cargar nombre';
-      }
-    }
+    // 4.2 Mostramos textos al instante leyendo los atributos
+    inputCondominioNombre.value = opcionSeleccionada.dataset.condominioNombre;
+    inputAreaNombre.value = opcionSeleccionada.dataset.areaNombre;
   }
 });
 
