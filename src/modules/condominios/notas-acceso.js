@@ -5,7 +5,9 @@
 //   import { mostrarNotasAcceso } from '../condominios/notas-acceso.js'
 //   mostrarNotasAcceso(contenedor, contexto.condominio)
 
-import { supabase } from '../../services/supabase.js'
+// Vite permite importar CSS desde JS: quien use el componente
+// recibe sus estilos sin tocar su HTML
+import './notas-acceso.css'
 
 // Sin conexión las notas vienen dentro del contexto guardado en IndexedDB.
 // Con conexión, si no vienen, se consultan (RLS solo deja ver las de sus órdenes).
@@ -13,17 +15,23 @@ async function obtenerNotas(condominio) {
   if (condominio?.notas_acceso !== undefined) return condominio.notas_acceso
   if (!condominio?.id || !navigator.onLine) return null
 
-  const { data, error } = await supabase
-    .from('condominios')
-    .select('notas_acceso')
-    .eq('id', condominio.id)
-    .maybeSingle()
+  try {
+    // Import dinámico: Supabase solo se carga si hace falta,
+    // así la pantalla abre aunque no haya conexión
+    const { supabase } = await import('../../services/supabase.js')
 
-  if (error) {
+    const { data, error } = await supabase
+      .from('condominios')
+      .select('notas_acceso')
+      .eq('id', condominio.id)
+      .maybeSingle()
+
+    if (error) throw error
+    return data?.notas_acceso ?? null
+  } catch (error) {
     console.warn('[Condominios] No se pudieron obtener las notas de acceso:', error)
     return null
   }
-  return data?.notas_acceso ?? null
 }
 
 export async function mostrarNotasAcceso(contenedor, condominio) {
