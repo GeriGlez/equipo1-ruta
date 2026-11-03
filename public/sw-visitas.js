@@ -39,13 +39,6 @@ const RECURSOS = [
   '/src/modules/visitas/pendientes-sincronizacion.js',
   '/src/modules/visitas/visitas-bitacora.js',
 
-  // Órdenes de servicio y programación semanal
-  '/src/modules/ordenes/index.html',
-  '/src/modules/ordenes/ordenes.css',
-  '/src/modules/ordenes/ordenes.js',
-  '/src/modules/ordenes/ordenes-db.js',
-  '/src/modules/ordenes/programacion-semanal.js',
-
   // Estilos
   '/src/styles/main.css',
   '/src/styles/tecnicoapp.css',

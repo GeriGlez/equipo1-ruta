@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 7;
+const DB_VERSION = 6;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -62,7 +62,7 @@ export function abrirBD() {
           db.createObjectStore(
             "usuario_contexto",
             {
-              keyPath: "auth_uid" 
+              keyPath: "auth_uid"
             }
           );
 
@@ -87,63 +87,6 @@ export function abrirBD() {
           "correo_normalizado",
           {
             unique: false
-          }
-        );
-
-      }
-
-      if (!db.objectStoreNames.contains("ordenes_admin")) {
-
-        const storeOrdenesAdmin = db.createObjectStore(
-          "ordenes_admin",
-          {
-            keyPath: "clave_local"
-          }
-        );
-
-        storeOrdenesAdmin.createIndex(
-          "fecha_programada",
-          "fecha_programada",
-          { unique: false }
-        );
-
-        storeOrdenesAdmin.createIndex(
-          "clave_programacion",
-          "clave_programacion",
-          { unique: false }
-        );
-
-      }
-
-      if (!db.objectStoreNames.contains("ordenes_cola_sync")) {
-
-        const storeColaOrdenes = db.createObjectStore(
-          "ordenes_cola_sync",
-          {
-            keyPath: "op_id"
-          }
-        );
-
-        storeColaOrdenes.createIndex(
-          "clave_local",
-          "clave_local",
-          { unique: false }
-        );
-
-        storeColaOrdenes.createIndex(
-          "estado_sync",
-          "estado_sync",
-          { unique: false }
-        );
-
-      }
-
-      if (!db.objectStoreNames.contains("ordenes_catalogos")) {
-
-        db.createObjectStore(
-          "ordenes_catalogos",
-          {
-            keyPath: "catalogo"
           }
         );
 
