@@ -16,7 +16,3 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
-
-# Antigravity agent tools (no son código del proyecto)
-.agents/
-skills-lock.json

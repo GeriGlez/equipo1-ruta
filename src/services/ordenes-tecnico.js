@@ -1,6 +1,6 @@
 import {
   supabase
-} from './supabase.js'
+} from './supabase.js' 
 
 import {
   reemplazarOrdenesContextoTecnico,
