@@ -71,21 +71,21 @@ async function showApp() {
   const { usuario } = session
 
 
+
 if (usuario?.rol === 'administrador') {
 
   renderAdminApp(
     app,
+    usuario,
     async () => {
-
       await logout()
-
       showApp()
-
     }
   )
 
   return
 }
+
 
 if (
   usuario?.rol === 'tecnico'
