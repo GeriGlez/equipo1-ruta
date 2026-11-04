@@ -6,7 +6,7 @@ import {
   obtenerVisitasLocales,
   obtenerContextoOrden,
   guardarVisitasServidor
-} from './db-local.js'
+} from '../pendientes_sync/db-local.js'
 
 import {
   supabase

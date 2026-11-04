@@ -1,6 +1,6 @@
 import {
   obtenerVisitasPendientes
-} from './modules/visitas/db-local.js'
+} from './modules/pendientes_sync/db-local.js'
 
 
 
