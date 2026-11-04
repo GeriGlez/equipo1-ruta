@@ -79,6 +79,11 @@ export default defineConfig({
           process.cwd(),
           'src/modules/cuadrillas/cuadrillas.html'
         ),
+
+        ordenes: resolve(
+          process.cwd(),
+          'src/modules/ordenes/index.html'
+        ),
       }
     }
   }
