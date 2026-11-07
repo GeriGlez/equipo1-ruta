@@ -54,12 +54,42 @@
     minmax(140px, 1fr)
     minmax(140px, 1fr)
     minmax(140px, 1fr)
+    auto
     auto;
 
   gap: 1rem;
   align-items: end;
 
   margin-bottom: 2rem;
+}
+
+.ins-report-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+
+  padding: 0 1.5rem;
+
+  border-radius: var(--radius-md);
+
+  background-color: #005b7f;
+  color: #ffffff;
+
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.ins-report-button:hover {
+  background-color: #004561;
+}
+
+.ins-report-button:focus-visible {
+  outline: 3px solid #1597d4;
+  outline-offset: 3px;
 }
 
 .ins-add-button {
@@ -597,7 +627,8 @@ body:has(dialog[open]) {
   }
 
   .visitas-search,
-  .ins-add-button {
+  .ins-add-button,
+  .ins-report-button {
     grid-column: 1 / -1;
   }
 

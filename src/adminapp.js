@@ -45,7 +45,8 @@ const modulosAdministrador = [
   {
     titulo: 'Reportes',
     descripcion: 'Consulta los reportes del sistema',
-    estilo: 'reportes'
+    estilo: 'reportes',
+    ruta: './src/modules/insumos/Reporte_Insumos_Escritorio.html'
   }
 ]
 

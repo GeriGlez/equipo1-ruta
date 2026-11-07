@@ -34,8 +34,15 @@ import {
 
       const visitas = await obtenerVisitasPendientes();
 
-      // Actualizar contador
-      const cantidad = visitas.length;
+      let consumosPendientes = [];
+      try {
+        const { obtenerConsumosPendientes } =
+          await import('../insumos/insumos-local.js');
+        consumosPendientes = await obtenerConsumosPendientes();
+      } catch (_) {}
+
+      // Actualizar contador (visitas + consumos de insumos)
+      const cantidad = visitas.length + consumosPendientes.length;
       cantidadPendientes = cantidad;
 
       contador.textContent = cantidad === 1
@@ -492,6 +499,14 @@ import {
         visita
       );
 
+    }
+
+    try {
+      const { sincronizarConsumosPendientes } =
+        await import('../insumos/insumos-service.js');
+      await sincronizarConsumosPendientes();
+    } catch (errorInsumos) {
+      console.warn('[RUTA] Advertencia al sincronizar consumos de insumos:', errorInsumos);
     }
 
 
