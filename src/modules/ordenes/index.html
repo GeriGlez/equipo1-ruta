@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUTA | Órdenes de Servicio</title>
+    <!-- Estilos globales de RUTA y estilos del módulo de órdenes -->
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="./ordenes.css">
+</head>
+<body>
+
+    <!-- BARRA DE NAVEGACIÓN --> 
+    <nav class="navbar">
+        <div class="logo">
+            <img src="/logo-ruta.png" alt="RUTA" class="navbar-logo-img">
+            <div>
+                <span>RUTA</span>
+                <span class="subtitle">Gestión de servicios en campo</span>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <div id="estado-conexion-ordenes" class="conn-pill conn-online" role="status">
+                <span class="conn-dot"></span>
+                <span id="texto-conexion-ordenes">En línea</span>
+            </div>
+
+            <button type="button" id="btn-sincronizar-ordenes" class="btn-sync-ordenes" hidden>
+                🔄 Sincronizar pendientes (<span id="badge-pendientes-sync">0</span>)
+            </button>
+
+            <div class="user-profile">
+                <img src="/avatar.png" alt="Avatar" class="avatar">
+                <div class="user-info">
+                    <div><strong id="nombre-usuario-orden">Administrador</strong></div>
+                    <div style="font-size: 12px;">Administrador</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- SUBBARRA VOLVER -->
+    <div class="ordenes-subbar">
+        <a href="/" class="ordenes-back-link">← Volver al panel principal</a>
+        <span id="resumen-sincronizacion-barra" class="sync-status-hint"></span>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container">
+        <div class="header-actions">
+            <div>
+                <h1>Órdenes de Servicio</h1>
+                <p class="header-subtitle">Consulta, programa individualmente o genera la programación semanal a partir de los contratos.</p>
+            </div>
+            <div class="header-buttons">
+                <button type="button" class="btn-primary-ruta" id="btn-abrir-programacion-semanal">
+                    📅 Programación semanal automática
+                </button>
+                <button type="button" class="btn-success" id="btn-abrir-nueva-orden">
+                    ⊕ Programar una nueva orden
+                </button>
+            </div>
+        </div>
+
+        <!-- AVISO / BANNER DE ESTADO Y ERRORES -->
+        <div id="alerta-ordenes" class="alerta-banner" role="alert" hidden></div>
+
+        <!-- BARRA DE FILTROS -->
+        <section class="filtros-ordenes" aria-label="Filtros de órdenes">
+            <div class="filtro-item filtro-busqueda">
+                <label for="filtro-busqueda-orden">Buscar:</label>
+                <input type="search" id="filtro-busqueda-orden" placeholder="Condominio, área, servicio, #ID o motivo...">
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-condominio-orden">Condominio:</label>
+                <select id="filtro-condominio-orden">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-estado-orden">Estado:</label>
+                <select id="filtro-estado-orden">
+                    <option value="">Todos</option>
+                    <option value="programada">Programada</option>
+                    <option value="asignada">Asignada</option>
+                    <option value="en_proceso">En proceso</option>
+                    <option value="completada">Completada</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-fecha-orden">Fecha:</label>
+                <input type="date" id="filtro-fecha-orden">
+            </div>
+            <div class="filtro-item filtro-acciones">
+                <button type="button" id="btn-limpiar-filtros" class="btn-secondary-sm">Limpiar filtros</button>
+            </div>
+        </section>
+
+        <!-- TABLA DE ÓRDENES -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID / Origen</th>
+                        <th>Condominio</th>
+                        <th>Área</th>
+                        <th>Servicio</th>
+                        <th>Fecha Programada</th>
+                        <th>Estado</th>
+                        <th>Sincronización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-tabla-ordenes">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL 1: NUEVA / EDITAR ORDEN -->
+    <div id="modal-nueva-orden" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content">
+            <h2 id="titulo-modal-orden">Nueva Orden de Servicio</h2>
+            <p id="error-modal-orden" class="modal-inline-error" hidden></p>
+            <form id="form-orden">
+                <div class="form-group">
+                    <label for="input-condominio">Condominio:</label>
+                    <select id="input-condominio" required>
+                        <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-area">Área:</label>
+                    <select id="input-area" required>
+                        <option value="">Selecciona primero un condominio</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-servicio">Servicio:</label>
+                    <select id="input-servicio" required>
+                        <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-fecha">Fecha:</label>
+                    <input type="date" id="input-fecha" required>
+                </div>
+                <div id="nota-estado-inicial" class="estado-inicial-hint">
+                    La orden nacerá en estado: <strong>PROGRAMADA</strong>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cancelar</button>
+                    <button type="button" class="btn-success" id="btn-guardar-orden">☑ Guardar Orden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CANCELAR ORDEN -->
+    <div id="modal-cancelar-orden" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content">
+            <h2>⚠️ Cancelar Orden</h2>
+            <p class="warning-text">¿Estás seguro de que deseas cancelar esta orden?<br>La orden permanecerá en el historial con estado cancelada.</p>
+            <p id="error-modal-cancelar" class="modal-inline-error" hidden></p>
+            <form id="form-cancelar-orden">
+                <div>
+                    <label for="input-motivo-cancelacion" style="font-size: 12px; font-weight: bold;">Motivo de cancelación (Obligatorio):</label>
+                    <textarea id="input-motivo-cancelacion" placeholder="Describe el motivo por el cual se cancela la orden..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cerrar</button>
+                    <button type="button" class="btn-success" id="btn-confirmar-cancelacion">☑ Confirmar cancelación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ELIMINAR ORDEN -->
+    <div id="modal-eliminar-orden" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content">
+            <h2>🗑️ Eliminar Orden de Servicio</h2>
+            <p class="warning-text" id="texto-eliminar-orden">
+                ¿Estás seguro de que deseas eliminar permanentemente esta orden?
+            </p>
+            <p style="font-size: 13px; color: #475569; text-align: center; margin-bottom: 12px;">
+                Nota: Esta acción elimina el registro (distinto de cancelar). Solo se permite para órdenes que no estén en proceso, completadas ni tengan visitas registradas.
+            </p>
+            <p id="error-modal-eliminar" class="modal-inline-error" hidden></p>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary-sm btn-cerrar-modal">Volver</button>
+                <button type="button" class="btn-danger" id="btn-confirmar-eliminacion">🗑️ Sí, eliminar orden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: PROGRAMACIÓN SEMANAL AUTOMÁTICA DESDE CONTRATOS -->
+    <div id="modal-programacion-semanal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content modal-content-xl">
+            <div class="modal-header-row">
+                <div>
+                    <h2 style="text-align: left; margin-bottom: 4px;">📅 Programación Semanal de Órdenes (Desde Contratos)</h2>
+                    <p style="font-size: 13px; color: #475569;">
+                        Selecciona la semana a programar, revisa las órdenes propuestas por contrato, asigna el área cuando se requiera y confirma la generación.
+                    </p>
+                </div>
+                <button type="button" class="btn-close-x btn-cerrar-modal" aria-label="Cerrar">&times;</button>
+            </div>
+
+            <!-- Controles de selección de semana -->
+            <div class="semana-toolbar">
+                <div class="semana-control-group">
+                    <label for="input-semana-programacion">Semana ISO:</label>
+                    <input type="week" id="input-semana-programacion">
+                </div>
+                <div class="semana-control-group">
+                    <label for="input-fecha-referencia-semana">O elegir fecha de la semana:</label>
+                    <input type="date" id="input-fecha-referencia-semana">
+                </div>
+                <button type="button" id="btn-generar-vista-previa" class="btn-primary-ruta">
+                    🔍 Consultar contratos y generar vista previa
+                </button>
+                <button type="button" id="btn-autocompletar-areas" class="btn-secondary-sm" title="Asignar áreas sugeridas por tipo de servicio">
+                    ✨ Usar áreas sugeridas
+                </button>
+            </div>
+
+            <div id="rango-semana-banner" class="rango-semana-banner"></div>
+
+            <!-- Resumen de conteos de la vista previa -->
+            <div class="resumen-previa-grid">
+                <div class="resumen-card resumen-card-ok">
+                    <span class="resumen-num" id="resumen-propuestas-count">0</span>
+                    <span class="resumen-label">Órdenes nuevas propuestas</span>
+                </div>
+                <div class="resumen-card resumen-card-info">
+                    <span class="resumen-num" id="resumen-existentes-count">0</span>
+                    <span class="resumen-label">Ya existían en la semana</span>
+                </div>
+                <div class="resumen-card resumen-card-warn">
+                    <span class="resumen-num" id="resumen-errores-count">0</span>
+                    <span class="resumen-label">Contratos con datos incompletos</span>
+                </div>
+                <div class="resumen-card resumen-card-muted">
+                    <span class="resumen-num" id="resumen-omitidos-count">0</span>
+                    <span class="resumen-label">Frecuencia no aplicable esta semana</span>
+                </div>
+            </div>
+
+            <!-- Resultado después de confirmar generación -->
+            <div id="resultado-programacion-semanal" class="resultado-generacion-box" hidden></div>
+
+            <!-- Tabla de vista previa editable -->
+            <div class="previa-table-wrap">
+                <table class="previa-table">
+                    <thead>
+                        <tr>
+                            <th>Generar</th>
+                            <th>Contrato / Frecuencia</th>
+                            <th>Condominio</th>
+                            <th>Servicio Contratado</th>
+                            <th>Área Asignada (Obligatoria)</th>
+                            <th>Fecha Programada</th>
+                            <th>Estado en Vista Previa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-vista-previa-semanal">
+                        <tr>
+                            <td colspan="7" style="padding: 24px; color: #64748b;">
+                                Selecciona una semana y pulsa "Consultar contratos y generar vista previa".
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Detalle de contratos que no pudieron generar propuestas -->
+            <div id="seccion-no-generables" class="detalle-incidencias-contratos" hidden>
+                <h3>⚠️ Contratos que no pudieron programarse (datos insuficientes o inconsistentes)</h3>
+                <ul id="lista-contratos-no-generables"></ul>
+            </div>
+
+            <!-- Detalle de contratos quincenales / mensuales que no corresponden a la semana -->
+            <div id="seccion-omitidos-frecuencia" class="detalle-omitidos-contratos" hidden>
+                <h3>ℹ️ Contratos quincenales/mensuales que no corresponden en esta semana</h3>
+                <ul id="lista-contratos-omitidos"></ul>
+            </div>
+
+            <div class="modal-actions modal-actions-spread">
+                <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cerrar</button>
+                <button type="button" class="btn-success" id="btn-confirmar-programacion-semanal">
+                    ☑ Confirmar y guardar órdenes válidas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica modular con Vite y cliente compartido de Supabase -->
+    <script type="module" src="./ordenes.js"></script>
+</body>
+</html>

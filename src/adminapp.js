@@ -22,7 +22,8 @@ const modulosAdministrador = [
   {
     titulo: 'Órdenes de Servicio',
     descripcion: 'Programa, asigna y cancela órdenes',
-    estilo: 'ordenes'
+    estilo: 'ordenes',
+    ruta: './src/modules/ordenes/index.html'
   },
   {
     titulo: 'Bitácora de Visitas',
