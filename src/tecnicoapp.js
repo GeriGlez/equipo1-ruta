@@ -20,7 +20,10 @@ const RUTAS = {
     '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
 
   ordenes:
-    '/src/modules/ordenes/index.html'
+    '/src/modules/ordenes/index.html',
+
+  insumos:
+    '/src/modules/insumos/Registrar_Insumos_Movil.html'
 
 }
 
@@ -453,12 +456,28 @@ export function renderTecnicoApp(
   )
 
 
+  const botonInsumos =
+    app.querySelector(
+      '[data-module="insumos"]'
+    )
+
+
+  botonInsumos.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.insumos
+
+    }
+  )
+
+
   // ==========================================
   // MÓDULOS AÚN NO INTEGRADOS
   // ==========================================
 
   const modulosPendientes = [
-    'insumos',
     'incidencias'
   ]
 

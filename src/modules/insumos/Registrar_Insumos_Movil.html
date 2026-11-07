@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Registrar insumos</title>
+
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/visitas_movil.css">
+  <link rel="stylesheet" href="./insumos.css">
+</head>
+
+<body>
+
+  <div class="m5-mobile-page ins-mobile-page">
+
+    <header class="m5-mobile-header">
+
+      <div class="m5-brand">
+        <div class="m5-brand-main">
+          <img src="/logo-ruta.png" alt="Logotipo RUTA" class="m5-brand-logo">
+          <span class="m5-brand-name">RUTA</span>
+        </div>
+        <span class="m5-brand-subtitle">Gestión de servicios en campo</span>
+      </div>
+
+      <div class="m5-user">
+        <img src="/avatar.png" alt="Usuario técnico" class="m5-user-avatar">
+        <strong>Usuario</strong>
+        <span>Técnico</span>
+      </div>
+
+    </header>
+
+    <nav class="m5-backbar" aria-label="Navegación">
+      <button type="button" class="m5-back-button" aria-label="Volver a la pantalla anterior">
+        <span class="m5-back-arrow" aria-hidden="true">←</span>
+        <span>Volver</span>
+      </button>
+    </nav>
+
+    <main class="m5-mobile-content">
+
+      <div class="m5-register-connection">
+        <span id="connection-status" class="m5-connection">
+          <span class="m5-connection-dot"></span>
+          Verificando conexión...
+        </span>
+      </div>
+
+      <div class="m5-screen-title">
+        <h1>Registrar insumos</h1>
+      </div>
+
+      <!-- SIN VISITAS -->
+      <div id="sin-visitas" class="m5-info-box" role="status" hidden>
+        <span class="m5-info-icon">ⓘ</span>
+        <p>
+          Aún no tienes visitas registradas en este dispositivo.
+          Registra una visita primero para poder asignarle insumos.
+        </p>
+      </div>
+
+      <form id="form-insumos" novalidate>
+
+        <!-- VISITA -->
+        <div class="m5-field-group">
+          <label for="select-visita" class="m5-field-label">
+            <img src="/ubicacion.png" alt="" aria-hidden="true" class="m5-label-icon-img">
+            Visita
+          </label>
+          <select id="select-visita" class="form-input m5-input" required>
+            <option value="" selected disabled>Selecciona la visita</option>
+          </select>
+        </div>
+
+        <!-- LÍNEAS DE INSUMOS -->
+        <div id="panel-insumos" class="ins-panel" hidden>
+
+          <div id="lineas"></div>
+
+          <div class="ins-add-line-row">
+            <button type="button" id="agregar-linea" class="ins-add-line" aria-label="Agregar otro insumo">+</button>
+          </div>
+
+        </div>
+
+        <datalist id="lista-insumos"></datalist>
+
+        <p id="insumos-error" class="ins-message ins-message--error" role="alert" hidden></p>
+
+        <button type="submit" id="guardar-insumos" class="btn btn-primary m5-save-button ins-save" disabled>
+          <img src="/caja.png" alt="" aria-hidden="true" class="m5-label-icon-img-save">
+          <span>Registra tus insumos</span>
+        </button>
+
+      </form>
+
+    </main>
+
+  </div>
+
+  <script type="module" src="./registrar-insumos.js"></script>
+
+</body>
+
+</html>

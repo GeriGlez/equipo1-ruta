@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RUTA | Reporte de insumos</title>
+
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/visitas_escritorio.css">
+  <link rel="stylesheet" href="./insumos.css">
+</head>
+
+<body>
+
+  <div class="visitas-page">
+
+    <header class="visitas-header">
+      <div class="visitas-brand">
+        <img src="/logo-ruta.png" alt="RUTA" class="visitas-logo">
+        <span class="visitas-brand-text">Gestión de servicios en campo</span>
+      </div>
+      <div class="visitas-user">
+        <img src="/avatar.png" alt="Usuario administrador" class="visitas-avatar">
+        <div class="visitas-user-info">
+          <strong id="admin-name">Usuario</strong>
+          <span>Admin</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="visitas-container">
+
+      <a href="/" class="visitas-back" aria-label="Volver al panel de administración">
+        <span aria-hidden="true">←</span>
+        Volver
+      </a>
+
+      <h1 class="ins-report-title">Reporte de Insumos</h1>
+
+      <div class="visitas-search ins-report-search">
+        <span class="visitas-search-icon" aria-hidden="true">⌕</span>
+        <input
+          id="buscar-reporte"
+          class="form-input visitas-search-input"
+          type="search"
+          placeholder="Buscar por condominio, área, responsable o insumo"
+          aria-label="Buscar en el reporte"
+        >
+      </div>
+
+      <p id="reporte-mensaje" class="ins-message" role="status" hidden></p>
+
+      <section id="reporte-lista" class="ins-cards" aria-live="polite"></section>
+
+    </main>
+
+    <footer class="visitas-footer">
+      <div class="visitas-footer-group">
+        <strong>RUTA</strong><span>|</span><strong>Equipo #1</strong>
+      </div>
+      <div class="visitas-footer-group">
+        <strong>Versión: 1.0.0</strong><span>|</span><strong>Octubre 2026</strong>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- DETALLE DE UNA VISITA -->
+  <dialog id="dialogo-detalle" class="ins-dialog ins-dialog--wide" aria-labelledby="detalle-titulo">
+
+    <button type="button" class="ins-dialog-close" id="cerrar-detalle" aria-label="Cerrar">×</button>
+
+    <h2 id="detalle-titulo" class="ins-dialog-title"></h2>
+
+    <p id="detalle-meta" class="ins-detail-meta"></p>
+
+    <table class="ins-detail-table">
+      <thead>
+        <tr>
+          <th>Insumo</th>
+          <th>Cantidad utilizada</th>
+        </tr>
+      </thead>
+      <tbody id="detalle-cuerpo"></tbody>
+    </table>
+
+  </dialog>
+
+  <script type="module" src="./reporte-insumos.js"></script>
+
+</body>
+
+</html>
