@@ -88,8 +88,23 @@ export default defineConfig({
         registrarIncidencia: resolve(
           process.cwd(),
           'src/modules/incidencias/Registrar_Incidencia_Movil.html'
+        ),
+
+        modulosServicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/modulos.html'
+        ),
+
+        servicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/servicios.html'
+        ),
+
+        contratos: resolve(
+          process.cwd(),
+          'src/modules/servicios/contratos.html'
         )
-        
+
       }
     }
   }

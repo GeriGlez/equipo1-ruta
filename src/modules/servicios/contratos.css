@@ -1,4 +1,9 @@
-@import url('./servicios.css'); /* Reutiliza los estilos base de servicios */
+@import url('./servicios.css'); /* ¡Debe ir en la primera línea para que el navegador lo cargue! */
+
+/* Oculta toda la app por defecto hasta que se valide la sesión */
+#app {
+  display: none;
+}
 
 /* Modal Estilo Exacto a la Maqueta de Contratos */
 .modal-card-contrato {

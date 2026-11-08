@@ -1,10 +1,10 @@
 import { supabase } from '../../services/supabase.js';
+import { getActiveSession } from '../auth/authService.js';
 
 // Referencias DOM
 const gridServicios = document.getElementById('grid-servicios');
 const paginacionContainer = document.getElementById('paginacion-servicios');
 const busquedaInput = document.getElementById('busqueda-servicio');
-const btnVolver = document.getElementById('btn-volver');
 
 // Modal Crear/Editar
 const fabNuevo = document.getElementById('btn-fab-nuevo');
@@ -33,17 +33,36 @@ let paginaActual = 1;
 const ITEMS_POR_PAGINA = 12;
 let servicioAEliminarId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  cargarServicios();
-  initEventListeners();
+document.addEventListener('DOMContentLoaded', async () => {
+  const appContainer = document.getElementById('app'); // 1. Obtener referencia
+
+  try {
+    const sesion = await getActiveSession();
+
+    if (!sesion?.usuario || sesion.usuario.rol !== 'administrador') {
+      window.location.href = '/';
+      return;
+    }
+
+    const nombreUser = document.querySelector('.visitas-user-info strong');
+    if (nombreUser && sesion.usuario.nombre) {
+      nombreUser.textContent = sesion.usuario.nombre;
+    }
+
+    // 2. Mostrar interfaz
+    if (appContainer) {
+      appContainer.style.display = 'block';
+    }
+
+    await cargarServicios();
+    initEventListeners();
+  } catch (error) {
+    console.error('Error al verificar sesión:', error);
+    window.location.href = '/';
+  }
 });
 
 function initEventListeners() {
-  // Botón Volver
-  btnVolver.addEventListener('click', () => {
-  window.location.href = './index.html';
-});
-
   // Buscador
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
@@ -117,7 +136,10 @@ async function cargarServicios() {
     renderTarjetas();
   } catch (err) {
     console.error('Error al consultar Supabase:', err.message);
-    gridServicios.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444; padding: 2rem;">Error al cargar datos: ${err.message}</p>`;
+    const pError = document.createElement('p');
+    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
+    pError.textContent = `Error al cargar datos: ${err.message}`;
+    gridServicios.replaceChildren(pError);
   }
 }
 
@@ -146,7 +168,7 @@ function renderTarjetas() {
         <div class="card-ruta-header">
           <div class="card-ruta-title">
             <span>📄</span>
-            <span>${s.nombre}</span>
+            <span class="servicio-nombre"></span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
             <button class="btn-edit-circle btn-editar-card" title="Editar servicio">✏️</button>
@@ -155,13 +177,18 @@ function renderTarjetas() {
         </div>
         <div class="desc-box-ruta">
           <strong>Descripción:</strong><br>
-          ${s.descripcion || 'Sin descripción disponible.'}
+          <span class="servicio-descripcion"></span>
         </div>
       </div>
       <div class="card-ruta-footer">
-        <div>🕒 Tiempo estimado en minutos: <strong>${s.duracion_estimada_min || 0} min</strong></div>
+        <div>🕒 Tiempo estimado en minutos: <strong class="servicio-duracion"></strong></div>
       </div>
     `;
+
+    // Los datos de la BD se asignan con textContent: el navegador los trata como texto, nunca como HTML (evita XSS almacenado)
+    card.querySelector('.servicio-nombre').textContent = s.nombre;
+    card.querySelector('.servicio-descripcion').textContent = s.descripcion || 'Sin descripción disponible.';
+    card.querySelector('.servicio-duracion').textContent = `${s.duracion_estimada_min || 0} min`;
 
     // Clic Editar
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
