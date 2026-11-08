@@ -137,6 +137,7 @@ body {
 }
 
 main {
+  position: relative;
   padding-bottom: 5.5rem !important; /* Libera exactamente el espacio del botón central */
 }
 
@@ -362,4 +363,127 @@ main {
 .visitas-user-info span {
   font-size: 0.75rem;
   opacity: 0.8;
+}
+/* Aviso de error dentro del modal (validaciones y duplicados) */
+.form-error-ruta {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+  font-size: 0.9rem;
+}
+
+/* ==================================================
+   Clases que reemplazan estilos en línea (servicios y contratos)
+=================================================== */
+.titulo-pagina {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 1.6rem;
+  color: #0F172A;
+}
+
+/* Textos de "Cargando..." y "No se encontraron..." */
+.estado-vacio {
+  text-align: center;
+  width: 100%;
+  color: #64748b;
+  padding: 2rem;
+}
+
+/* Oculta por defecto; el JS le pone display:flex cuando hay varias páginas */
+.paginacion-ruta {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Botones editar / eliminar de cada tarjeta */
+.card-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.btn-delete-circle {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Campos del formulario de servicios */
+#input-nombre,
+#input-descripcion,
+#input-tiempo {
+  border-radius: 8px;
+}
+
+#input-tiempo {
+  padding-left: 32px; /* deja espacio al icono del reloj */
+}
+
+.input-con-icono {
+  position: relative;
+}
+
+.icono-input {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+}
+
+/* Botones al pie del modal */
+.modal-acciones {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-acciones-fin {
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.modal-acciones-centro {
+  justify-content: center;
+}
+
+/* Modal de confirmar eliminación */
+.modal-card-confirmar {
+  max-width: 420px;
+  text-align: center;
+}
+
+.modal-icono-alerta {
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-title-peligro {
+  color: #DC2626;
+  margin-bottom: 0.5rem;
+}
+
+.texto-confirmar {
+  color: #475569;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-ruta-confirm.btn-peligro {
+  background-color: #DC2626 !important;
+  border-color: #DC2626;
 }
