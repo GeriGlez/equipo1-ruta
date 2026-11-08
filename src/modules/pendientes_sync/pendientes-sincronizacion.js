@@ -2,6 +2,9 @@ import {
     obtenerVisitasPendientes,
     marcarVisitaComoEnviada
   } from './db-local.js';
+import {
+    getActiveSession
+  } from '../auth/authService.js';
 
   const contador = document.querySelector('#pending-count');
   const mensaje = document.querySelector('#pending-message');
@@ -27,12 +30,13 @@ import {
   };
 
   let cantidadPendientes = 0;
+  let tecnicoActualId = null;
 
   async function cargarPendientes() {
 
     try {
 
-      const visitas = await obtenerVisitasPendientes();
+      const visitas = await obtenerVisitasPendientes(tecnicoActualId);
 
       // Actualizar contador
       const cantidad = visitas.length;
@@ -133,6 +137,10 @@ import {
 
       errorMensaje.hidden = false;
 
+      cantidadPendientes = 0;
+      lista.replaceChildren();
+      actualizarEstadoConexion();
+
     }
 
   }
@@ -164,8 +172,10 @@ import {
   `;
 
   botonSincronizar.disabled =
-    !enLinea || cantidadPendientes === 0;
-}
+    !enLinea ||
+    tecnicoActualId === null ||
+    cantidadPendientes === 0;
+  }
 
   // ==============================================
   // SUPABASE - CARGA SOLO AL SINCRONIZAR
@@ -434,100 +444,134 @@ import {
 
     // Solo se marca como enviada después
     // de que Supabase confirmó INSERT o UPDATE.
-    await marcarVisitaComoEnviada(
+    const resultadoLocal = await marcarVisitaComoEnviada(
       visita.id,
-      visitaServidorId
+      visitaServidorId,
+      visita.revision_local ?? null
     );
 
 
     return {
-      id: visitaServidorId
+      id: visitaServidorId,
+      pendiente: resultadoLocal.estado_envio === 'pendiente'
     };
 
   }
 
-  async function sincronizarPendientes() {
-
+  
+async function sincronizarPendientes() {
   if (!navigator.onLine) {
-
     actualizarEstadoConexion();
     return;
   }
 
-
-  const pendientes =
-    await obtenerVisitasPendientes();
-
-  if (pendientes.length === 0) {
-
-    await cargarPendientes();
-    return;
-  }
-
-
   botonSincronizar.disabled = true;
 
   const textoBoton =
-    botonSincronizar.querySelector('span');
+    botonSincronizar.querySelector('span:last-child');
 
-  const textoOriginal =
-    textoBoton.textContent;
+  const textoOriginal = textoBoton.textContent;
 
-  textoBoton.textContent =
-    'Sincronizando...';
-
+  textoBoton.textContent = 'Sincronizando...';
   errorSincronizacion.hidden = true;
 
-
   try {
-    
-    const supabase =
-      await obtenerClienteSupabase();
+    if (tecnicoActualId === null) {
+      throw new Error('No hay una sesión técnica activa.');
+    }
 
+    // Comprobar nuevamente la sesión al iniciar el envío.
+    const sesion = await getActiveSession();
+
+    const sesionValida =
+      sesion?.usuario?.rol === 'tecnico' &&
+      String(sesion.usuario.id) ===
+        String(tecnicoActualId) &&
+      Boolean(sesion.user?.id);
+
+    if (!sesionValida) {
+      tecnicoActualId = null;
+      cantidadPendientes = 0;
+      lista.replaceChildren();
+
+      throw new Error(
+        'La sesión del técnico cambió o dejó de estar disponible.'
+      );
+    }
+
+    const supabase = await obtenerClienteSupabase();
+
+    // Antes de escribir, validar la identidad remota.
+    const {
+      data: datosAuth,
+      error: errorAuth
+    } = await supabase.auth.getUser();
+
+    if (
+      errorAuth ||
+      !datosAuth?.user ||
+      datosAuth.user.id !== sesion.user.id
+    ) {
+      tecnicoActualId = null;
+      cantidadPendientes = 0;
+      lista.replaceChildren();
+
+      throw new Error(
+        'No se pudo confirmar la identidad en Supabase.'
+      );
+    }
+
+    // Consultar exclusivamente los registros de este técnico.
+    const pendientes =
+      await obtenerVisitasPendientes(tecnicoActualId);
+
+    if (pendientes.length === 0) {
+      await cargarPendientes();
+      return;
+    }
 
     for (const visita of pendientes) {
-
       await sincronizarVisita(
         supabase,
         visita
       );
-
     }
-
 
     await cargarPendientes();
 
-
-    alert(
-      'Los registros pendientes se sincronizaron correctamente.'
-    );
+    if (cantidadPendientes > 0) {
+      alert(
+        'Se enviaron los registros disponibles, pero todavía ' +
+        'quedan cambios pendientes de sincronización.'
+      );
+    } else {
+      alert(
+        'Los registros pendientes se sincronizaron correctamente.'
+      );
+    }
 
   } catch (error) {
-
     console.error(
-      'Error sincronizando visitas:',
+      '[RUTA] Error sincronizando visitas:',
       error
     );
 
     errorSincronizacion.hidden = false;
 
     alert(
-      'No fue posible enviar algunos registros. ' +
-      'Tus datos permanecen guardados en este dispositivo.'
+      'No fue posible completar la sincronización. ' +
+      'Verifica tu sesión y conexión. ' +
+      'Los registros locales no se eliminaron.'
     );
 
     await cargarPendientes();
 
   } finally {
-
-    textoBoton.textContent =
-      textoOriginal;
-
+    textoBoton.textContent = textoOriginal;
     actualizarEstadoConexion();
-
   }
-
 }
+
 
   window.addEventListener(
     'online',
@@ -563,5 +607,55 @@ botonVolver?.addEventListener(
   }
 );
 
-  actualizarEstadoConexion();
-  cargarPendientes();
+
+async function inicializarPendientes() {
+  try {
+    const sesion = await getActiveSession();
+
+    if (
+      sesion?.usuario?.rol !== 'tecnico' ||
+      sesion.usuario.id === null ||
+      sesion.usuario.id === undefined
+    ) {
+      window.location.replace('/');
+      return;
+    }
+
+    tecnicoActualId = sesion.usuario.id;
+
+    // Mostrar el nombre del técnico autenticado.
+    const nombreTecnico = document.querySelector(
+      '#tecnico-profile-name'
+    );
+
+    if (nombreTecnico) {
+      nombreTecnico.textContent =
+        String(sesion.usuario.nombre || '').trim() ||
+        'Técnico';
+    }
+
+    await cargarPendientes();
+
+  } catch (error) {
+    console.error(
+      '[RUTA] No fue posible validar la sesión:',
+      error
+    );
+
+    tecnicoActualId = null;
+    cantidadPendientes = 0;
+
+    lista.replaceChildren();
+
+    contador.textContent = 'No disponible';
+    mensaje.textContent =
+      'No fue posible verificar la sesión.';
+
+    errorMensaje.hidden = false;
+
+  } finally {
+    actualizarEstadoConexion();
+  }
+}
+
+inicializarPendientes();

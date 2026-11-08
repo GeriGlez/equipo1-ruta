@@ -180,7 +180,7 @@ export function abrirBD() {
 export async function guardarVisita(datosVisita) {
 
   const db = await abrirBD();
-
+  
   return new Promise((resolve, reject) => {
 
     const transaction = db.transaction(
@@ -192,6 +192,8 @@ export async function guardarVisita(datosVisita) {
 
     const visita = {
       ...datosVisita,
+
+      revision_local: crypto.randomUUID(),
 
       id: crypto.randomUUID(),
 
@@ -231,46 +233,62 @@ export async function guardarVisita(datosVisita) {
 // OBTENER VISITAS PENDIENTES
 // ==============================================
 
-export async function obtenerVisitasPendientes() {
 
+export async function obtenerVisitasPendientes(tecnicoId) {
+  if (
+    tecnicoId === null ||
+    tecnicoId === undefined ||
+    String(tecnicoId).trim() === ''
+  ) {
+    throw new Error(
+      'Se requiere el identificador del técnico.'
+    );
+  }
+
+  const idTecnico = String(tecnicoId);
   const db = await abrirBD();
 
   return new Promise((resolve, reject) => {
-
     let transaction;
 
     try {
-
       transaction = db.transaction(
-        "visitas",
-        "readonly"
+        'visitas',
+        'readonly'
       );
 
-      const store = transaction.objectStore("visitas");
+      const store = transaction.objectStore('visitas');
+      const indice = store.index('estado_envio');
 
-      const indice = store.index("estado_envio");
-
-      // Buscar únicamente registros pendientes
-      const request = indice.getAll("pendiente");
+      const request = indice.getAll('pendiente');
 
       let visitas = [];
 
       request.onsuccess = () => {
-        visitas = request.result;
+        visitas = (request.result || []).filter(
+          visita =>
+            String(visita.tecnico_id) === idTecnico
+        );
       };
 
-      // Confirmar que la transacción terminó
       transaction.oncomplete = () => {
         db.close();
         resolve(visitas);
       };
 
-      transaction.onabort = () => {
+      transaction.onerror = () => {
         db.close();
-
         reject(
           transaction.error ||
-          new Error("Error al consultar visitas pendientes")
+          new Error('No fue posible consultar los pendientes.')
+        );
+      };
+
+      transaction.onabort = () => {
+        db.close();
+        reject(
+          transaction.error ||
+          new Error('Error al consultar visitas pendientes.')
         );
       };
 
@@ -278,10 +296,9 @@ export async function obtenerVisitasPendientes() {
       db.close();
       reject(error);
     }
-
   });
-
 }
+
 
 // ==============================================
 // OBTENER TODAS LAS VISITAS LOCALES
@@ -777,6 +794,8 @@ export async function actualizarVisitaLocal(
 
           ...cambios,
 
+          revision_local: crypto.randomUUID(),
+
           // Nunca cambiar el identificador local.
           id:
             visita.id,
@@ -878,8 +897,14 @@ export async function actualizarVisitaLocal(
 
 export async function marcarVisitaComoEnviada(
   visitaId,
-  visitaServidorId = null
+  visitaServidorId,
+  revisionEnviada
 ) {
+  if (revisionEnviada === undefined) {
+    throw new Error(
+      'Se requiere la revisión enviada de la visita.'
+    );
+  }
 
   const db = await abrirBD();
 
@@ -899,12 +924,12 @@ export async function marcarVisitaComoEnviada(
     let visitaActualizada = null;
     let errorPropio = null;
 
+    
     request.onsuccess = () => {
 
       const visita = request.result;
 
       if (!visita) {
-
         errorPropio = new Error(
           "No se encontró la visita local."
         );
@@ -913,24 +938,38 @@ export async function marcarVisitaComoEnviada(
         return;
       }
 
+      // Comprobar si la visita cambió durante el envío.
+      const revisionActual = visita.revision_local ?? null;
+
+      const mismaRevision =
+        revisionActual === revisionEnviada;
+
       visitaActualizada = {
         ...visita,
 
-        estado_envio: "enviado",
+        // Conservar el ID confirmado por Supabase.
+        visita_servidor_id: visitaServidorId,
 
-        pendiente_envio: false,
+        // Confirmar únicamente la revisión enviada.
+        estado_envio: mismaRevision
+          ? 'enviado'
+          : 'pendiente',
 
-        operacion_pendiente: null,
+        pendiente_envio: !mismaRevision,
 
-        sincronizado_en:
-          new Date().toISOString(),
+        // Conservar cambios nuevos para el siguiente envío.
+        operacion_pendiente: mismaRevision
+          ? null
+          : 'actualizar',
 
-        visita_servidor_id:
-          visitaServidorId
+        ...(mismaRevision
+          ? { sincronizado_en: new Date().toISOString() }
+          : {})
       };
 
       store.put(visitaActualizada);
     };
+
 
     request.onerror = () => {
 
