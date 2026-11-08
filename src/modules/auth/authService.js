@@ -4,7 +4,7 @@ import {
   obtenerUsuarioContexto,
   obtenerUsuarioContextoPorCorreo,
   guardarCredencialOffline
-} from '../visitas/db-local.js'
+} from '../pendientes_sync/db-local.js'
 
 // Constantes de almacenamiento local
 const ACTIVE_AUTH_UID_KEY = 'ruta_active_auth_uid'

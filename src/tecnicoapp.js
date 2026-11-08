@@ -1,6 +1,6 @@
 import {
   obtenerVisitasPendientes
-} from './modules/visitas/db-local.js'
+} from './modules/pendientes_sync/db-local.js'
 
 
 
@@ -18,6 +18,9 @@ const RUTAS = {
 
   pendientes:
     '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
+
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
 
   ordenes:
     '/src/modules/ordenes/index.html'
@@ -418,6 +421,22 @@ export function renderTecnicoApp(
     }
   )
 
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
 
   const botonPendientes =
     app.querySelector(
@@ -459,7 +478,6 @@ export function renderTecnicoApp(
 
   const modulosPendientes = [
     'insumos',
-    'incidencias'
   ]
 
 

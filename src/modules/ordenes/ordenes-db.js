@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { supabase } from '../../services/supabase.js';
-import { abrirBD } from '../visitas/db-local.js';
+import { abrirBD } from '../pendientes_sync/db-local.js';
 
 const STORE_ORDENES = 'ordenes_admin';
 const STORE_COLA = 'ordenes_cola_sync';

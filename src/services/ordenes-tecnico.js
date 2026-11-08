@@ -5,7 +5,7 @@ import {
 import {
   reemplazarOrdenesContextoTecnico,
   obtenerOrdenesContextoTecnico
-} from '../modules/visitas/db-local.js'
+} from '../modules/pendientes_sync/db-local.js'
 
 
 // ============================================
