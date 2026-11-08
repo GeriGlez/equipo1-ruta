@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA · Personal y Cuadrillas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="./cuadrillas.css">
+</head>
+<body>
+
+  <!-- HEADER CORPORATIVO RUTA -->
+  <header class="header-ruta">
+    <div class="brand-ruta">
+      <img src="/logo-ruta.png" alt="RUTA Logo" class="logo-ruta-img">
+      <div>
+        <div class="brand-title">RUTA</div>
+        <div class="brand-subtitle">Gestión de servicios en campo</div>
+      </div>
+    </div>
+    <div class="user-profile-ruta">
+      <div class="user-info">
+        <span id="header-user-name" class="user-name">Administrador</span>
+        <span class="user-role">Oficina</span>
+      </div>
+      <div class="avatar-circle">👤</div>
+    </div>
+  </header>
+
+  <!-- SUBBAR DE NAVEGACIÓN -->
+  <div class="subbar-ruta">
+    <a href="/" class="btn-back-ruta" id="btn-volver-dashboard">
+      ← Volver al Panel
+    </a>
+    <span style="font-size: 0.85rem; font-weight: 600; color: #004D73;">Módulo 3: Personal y Cuadrillas</span>
+  </div>
+
+  <!-- PESTAÑAS (TABS) -->
+  <nav class="tabs-container">
+    <button id="tab-btn-cuadrillas" class="tab-btn active" type="button">
+      Equipos y Cuadrillas
+    </button>
+    <button id="tab-btn-personal" class="tab-btn" type="button">
+      Personal y Técnicos
+    </button>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
+
+    <!-- SECCIÓN 1: CUADRILLAS -->
+    <section id="sec-cuadrillas">
+      <div class="section-header">
+        <h1 class="main-title">Organiza a los técnicos en equipos de trabajo</h1>
+        <p class="main-subtitle">Configura cuadrillas operativas y asigna a sus técnicos responsables</p>
+      </div>
+
+      <div class="actions-bar">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="buscar-cuadrilla" class="search-input" placeholder="Buscar cuadrilla, responsable o técnico...">
+        </div>
+        <button id="btn-abrir-nueva-cuadrilla" class="btn-crear" type="button">
+          + Nueva cuadrilla
+        </button>
+      </div>
+
+      <!-- GRID DE TARJETAS (FIGMA) -->
+      <div id="grid-cuadrillas" class="cuadrillas-grid">
+        <div class="empty-state">Cargando cuadrillas...</div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: PERSONAL / TÉCNICOS -->
+    <section id="sec-personal" style="display: none;">
+      <div class="section-header">
+        <h1 class="main-title">Directorio de Empleados y Personal</h1>
+        <p class="main-subtitle">Gestión de técnicos disponibles y roles dentro de la plataforma</p>
+      </div>
+
+      <div class="actions-bar">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="buscar-personal" class="search-input" placeholder="Buscar por nombre, correo, rol o teléfono...">
+        </div>
+        <button id="btn-abrir-nuevo-empleado" class="btn-crear" type="button" style="background-color: #16a34a;">
+          + Agregar Empleado
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Contacto</th>
+              <th>Rol</th>
+              <th>Cuadrillas Asignadas</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-personal-body">
+            <tr><td colspan="4" class="empty-state">Cargando personal...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       MODAL 1: ARMAR / EDITAR CUADRILLA
+       ========================================== -->
+  <div id="modal-cuadrilla" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-cuadrilla-title" class="modal-title">Armar Nueva Cuadrilla</h2>
+        <p class="modal-subtitle">Datos generales y asignación de equipo</p>
+      </div>
+
+      <div id="alert-cuadrilla" class="alert-box alert-danger"></div>
+
+      <form id="form-cuadrilla">
+        <input type="hidden" id="cuadrilla-id">
+
+        <div class="form-group">
+          <label class="form-label" for="cuadrilla-nombre">Nombre de la cuadrilla *</label>
+          <input type="text" id="cuadrilla-nombre" class="form-input" placeholder="Ej. Cuadrilla 1 - Jardinería" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cuadrilla-responsable">Técnico Responsable * (Obligatorio)</label>
+          <select id="cuadrilla-responsable" class="form-select" required>
+            <option value="">Selecciona un técnico responsable...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Miembros de la cuadrilla (Técnicos de apoyo)</label>
+          <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">
+            Un técnico puede pertenecer a más de una cuadrilla simultáneamente.
+          </p>
+          <div id="lista-miembros-checkboxes" class="tech-selection-box">
+            <span style="font-size: 0.85rem; color: #94a3b8; padding: 0.5rem;">Cargando técnicos...</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-eliminar-cuadrilla" class="btn-danger" style="display: none;">
+            Eliminar
+          </button>
+          <button type="button" id="btn-cerrar-modal-cuadrilla" class="btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-guardar-cuadrilla" class="btn-primary">
+            Guardar Cuadrilla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: AGREGAR NUEVO EMPLEADO (FIGMA)
+       ========================================== -->
+  <div id="modal-empleado" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Agregar Nuevo Empleado</h2>
+        <p class="modal-subtitle">Registra a un nuevo técnico o administrativo en la plataforma</p>
+      </div>
+
+      <div id="alert-empleado" class="alert-box alert-danger"></div>
+
+      <form id="form-empleado">
+        <div class="form-group">
+          <label class="form-label" for="empleado-nombre">Nombre Completo *</label>
+          <input type="text" id="empleado-nombre" class="form-input" placeholder="Ej. Carlos Mendoza" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="empleado-correo">Correo Electrónico *</label>
+          <input type="email" id="empleado-correo" class="form-input" placeholder="ejemplo@empresa.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="empleado-telefono">Teléfono *</label>
+          <input type="tel" id="empleado-telefono" class="form-input" placeholder="+52 322 123 4567" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="empleado-rol">Rol en la Empresa *</label>
+          <select id="empleado-rol" class="form-select" required>
+            <option value="tecnico">Técnico / Operativo</option>
+            <option value="administrador">Administrador</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-cerrar-modal-empleado" class="btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-guardar-empleado" class="btn-primary" style="background-color: #16a34a;">
+            Guardar Registro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./cuadrillas.js"></script>
+</body>
+</html>

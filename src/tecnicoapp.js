@@ -1,6 +1,6 @@
 import {
   obtenerVisitasPendientes
-} from './modules/visitas/db-local.js'
+} from './modules/pendientes_sync/db-local.js'
 
 
 
@@ -17,7 +17,13 @@ const RUTAS = {
     '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
 
   pendientes:
-    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html'
+    '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
+
+  ordenes:
+    '/src/modules/ordenes/index.html'
 
 }
 
@@ -415,6 +421,22 @@ export function renderTecnicoApp(
     }
   )
 
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
 
   const botonPendientes =
     app.querySelector(
@@ -433,14 +455,29 @@ export function renderTecnicoApp(
   )
 
 
+  const botonOrdenes =
+    app.querySelector(
+      '[data-module="ordenes"]'
+    )
+
+
+  botonOrdenes.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.ordenes
+
+    }
+  )
+
+
   // ==========================================
   // MÓDULOS AÚN NO INTEGRADOS
   // ==========================================
 
   const modulosPendientes = [
-    'ordenes',
     'insumos',
-    'incidencias'
   ]
 
 

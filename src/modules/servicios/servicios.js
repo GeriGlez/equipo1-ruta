@@ -136,7 +136,10 @@ async function cargarServicios() {
     renderTarjetas();
   } catch (err) {
     console.error('Error al consultar Supabase:', err.message);
-    gridServicios.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444; padding: 2rem;">Error al cargar datos: ${err.message}</p>`;
+    const pError = document.createElement('p');
+    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
+    pError.textContent = `Error al cargar datos: ${err.message}`;
+    gridServicios.replaceChildren(pError);
   }
 }
 
@@ -165,7 +168,7 @@ function renderTarjetas() {
         <div class="card-ruta-header">
           <div class="card-ruta-title">
             <span>📄</span>
-            <span>${s.nombre}</span>
+            <span class="servicio-nombre"></span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
             <button class="btn-edit-circle btn-editar-card" title="Editar servicio">✏️</button>
@@ -174,13 +177,18 @@ function renderTarjetas() {
         </div>
         <div class="desc-box-ruta">
           <strong>Descripción:</strong><br>
-          ${s.descripcion || 'Sin descripción disponible.'}
+          <span class="servicio-descripcion"></span>
         </div>
       </div>
       <div class="card-ruta-footer">
-        <div>🕒 Tiempo estimado en minutos: <strong>${s.duracion_estimada_min || 0} min</strong></div>
+        <div>🕒 Tiempo estimado en minutos: <strong class="servicio-duracion"></strong></div>
       </div>
     `;
+
+    // Los datos de la BD se asignan con textContent: el navegador los trata como texto, nunca como HTML (evita XSS almacenado)
+    card.querySelector('.servicio-nombre').textContent = s.nombre;
+    card.querySelector('.servicio-descripcion').textContent = s.descripcion || 'Sin descripción disponible.';
+    card.querySelector('.servicio-duracion').textContent = `${s.duracion_estimada_min || 0} min`;
 
     // Clic Editar
     card.querySelector('.btn-editar-card').addEventListener('click', () => {

@@ -169,7 +169,10 @@ async function cargarContratos() {
     renderTarjetas();
   } catch (err) {
     console.error('Error al consultar Supabase:', err.message);
-    gridContratos.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444; padding: 2rem;">Error al cargar datos: ${err.message}</p>`;
+    const pError = document.createElement('p');
+    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
+    pError.textContent = `Error al cargar datos: ${err.message}`;
+    gridContratos.replaceChildren(pError);
   }
 }
 
@@ -198,7 +201,7 @@ function renderTarjetas() {
         <div class="card-contrato-header">
           <div class="condominio-title">
             <span>🏠</span>
-            <span>${nombreCondominio}</span>
+            <span class="contrato-condominio"></span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
             <button class="btn-edit-circle btn-editar-card" title="Editar contrato">✏️</button>
@@ -207,13 +210,20 @@ function renderTarjetas() {
         </div>
 
         <div class="contrato-servicio-box">
-          <div class="servicio-nombre-badge">${nombreServicio}</div>
-          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> $${Number(c.tarifa || 0).toLocaleString('es-MX')}</div>
-          <div class="contrato-detalle-row"><strong>Frecuencia:</strong> ${c.frecuencia || 'N/A'}</div>
-          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> ${c.dia_preferente || 'N/A'}</div>
+          <div class="servicio-nombre-badge"></div>
+          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> <span class="contrato-tarifa"></span></div>
+          <div class="contrato-detalle-row"><strong>Frecuencia:</strong> <span class="contrato-frecuencia"></span></div>
+          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> <span class="contrato-dia"></span></div>
         </div>
       </div>
     `;
+
+    // Los datos de la BD se asignan con textContent: el navegador los trata como texto, nunca como HTML (evita XSS almacenado)
+    card.querySelector('.contrato-condominio').textContent = nombreCondominio;
+    card.querySelector('.servicio-nombre-badge').textContent = nombreServicio;
+    card.querySelector('.contrato-tarifa').textContent = `$${Number(c.tarifa || 0).toLocaleString('es-MX')}`;
+    card.querySelector('.contrato-frecuencia').textContent = c.frecuencia || 'N/A';
+    card.querySelector('.contrato-dia').textContent = c.dia_preferente || 'N/A';
 
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = c.id;
