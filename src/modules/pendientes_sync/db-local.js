@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -147,6 +147,10 @@ export function abrirBD() {
           }
         );
 
+      }
+
+      if (!db.objectStoreNames.contains("catalogo_m7")) {
+        db.createObjectStore("catalogo_m7", { keyPath: "id" });
       }
 
     }; // cierra request.onupgradeneeded
@@ -1695,4 +1699,33 @@ export async function eliminarUsuarioContexto(
     }
   );
 
+}
+
+// ==============================================
+// CATÁLOGO OFFLINE M7 (INCIDENCIAS)
+// ==============================================
+export async function guardarCatalogoM7(visitas) {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readwrite");
+    const store = tx.objectStore("catalogo_m7");
+    
+    store.clear(); // Borramos el catálogo viejo
+    visitas.forEach(visita => store.put(visita)); // Insertamos el catálogo fresco
+    
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function obtenerCatalogoM7() {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readonly");
+    const store = tx.objectStore("catalogo_m7");
+    const request = store.getAll();
+    
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
 }

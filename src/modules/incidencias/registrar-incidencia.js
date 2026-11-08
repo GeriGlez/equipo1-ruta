@@ -69,24 +69,13 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// 3. Cargar Visitas (Join profundo para traer los nombres por adelantado)
-const cargarVisitas = async () => {
-  if (!navigator.onLine) return;
-  try {
-    const { data: visitas, error } = await supabase
-      .from('visitas')
-      .select(`
-        id,
-        ordenes_servicio (
-          condominio_id,
-          area_id,
-          condominios ( nombre ),
-          areas ( nombre )
-        )
-      `)
-      .order('id', { ascending: false }); 
+import { obtenerCatalogoM7 } from '../pendientes_sync/db-local.js'; // Ajusta la ruta
 
-    if (error) throw error;
+// 3. Cargar Visitas (Lectura 100% Offline)
+const cargarVisitas = async () => {
+  try {
+    // ¡Adiós a Supabase! Leemos directamente del disco duro del navegador
+    const visitas = await obtenerCatalogoM7();
 
     selectVisita.innerHTML = '<option value="" selected disabled>Selecciona el número de visita</option>';
     
@@ -97,10 +86,8 @@ const cargarVisitas = async () => {
       
       const orden = visita.ordenes_servicio;
       if (orden) {
-        // Guardamos IDs
         option.dataset.condominioId = orden.condominio_id;
         option.dataset.areaId = orden.area_id;
-        // Guardamos nombres consultados en el join anidado
         option.dataset.condominioNombre = orden.condominios ? orden.condominios.nombre : 'Desconocido';
         option.dataset.areaNombre = orden.areas ? orden.areas.nombre : 'Desconocida';
       }
@@ -108,7 +95,7 @@ const cargarVisitas = async () => {
       selectVisita.appendChild(option);
     });
   } catch (error) {
-    console.error('Error al cargar las visitas:', error);
+    console.error('Error al cargar las visitas desde IndexedDB:', error);
   }
 };
 
