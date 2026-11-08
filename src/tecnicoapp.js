@@ -17,7 +17,7 @@ const RUTAS = {
     '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
 
   pendientes:
-    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
+    '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
 
   incidencias:
     '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
