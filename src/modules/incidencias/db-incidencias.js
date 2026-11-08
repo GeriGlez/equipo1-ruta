@@ -1,4 +1,4 @@
-// db-local.js
+// db-incidencias.js
 
 // 1. Inicializa y configura la base de datos local
 export const iniciarBDOFFline = () => {

@@ -1,4 +1,4 @@
-import { guardarIncidenciaOffline } from './db-local.js';
+import { guardarIncidenciaOffline } from './db-incidencias.js';
 import { supabase } from '../../services/supabase.js';
 
 const form = document.getElementById('formIncidencia');

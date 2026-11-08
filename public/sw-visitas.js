@@ -4,7 +4,7 @@
 // HU-08
 // ============================================
 
-const CACHE_NAME = 'ruta-app-v4';
+const CACHE_NAME = 'ruta-app-v5';
 
 const RECURSOS = [
 
@@ -26,17 +26,17 @@ const RECURSOS = [
   '/src/services/ordenes-tecnico.js',
 
   // IndexedDB
-  '/src/modules/visitas/db-local.js',
+  '/src/modules/pendientes_sync/db-local.js',
+  '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+  '/src/modules/pendientes_sync/pendientes-sincronizacion.js',
 
   // Pantallas del módulo 5
   '/src/modules/visitas/Registrar_Visita_Movil.html',
-  '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
   '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
   '/src/modules/visitas/Visitas_y_Bitacora_Escritorio.html',
 
   // JS del módulo 5
   '/src/modules/visitas/registrar-visita.js',
-  '/src/modules/visitas/pendientes-sincronizacion.js',
   '/src/modules/visitas/visitas-bitacora.js',
 
   // Órdenes de servicio y programación semanal
@@ -45,6 +45,12 @@ const RECURSOS = [
   '/src/modules/ordenes/ordenes.js',
   '/src/modules/ordenes/ordenes-db.js',
   '/src/modules/ordenes/programacion-semanal.js',
+
+  // Pantallas del módulo 7 (Incidencias)
+  '/src/modules/incidencias/Registrar_Incidencia_Movil.html', 
+  
+  // JS del módulo 7
+  '/src/modules/incidencias/registrar-incidencia.js',
 
   // Estilos
   '/src/styles/main.css',
