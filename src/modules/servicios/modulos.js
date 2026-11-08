@@ -40,20 +40,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '/';
   }
 });
-
-  // 2. Eventos de las tarjetas
-  const cardServicios = document.getElementById('card-servicios');
-  const cardContratos = document.getElementById('card-contratos');
-
-  if (cardServicios) {
-    cardServicios.addEventListener('click', () => {
-      window.location.href = './servicios.html';
-    });
-  }
-
-  if (cardContratos) {
-    cardContratos.addEventListener('click', () => {
-      window.location.href = './contratos.html';
-    });
-  }
-
