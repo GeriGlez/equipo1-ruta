@@ -511,7 +511,8 @@ export function renderTecnicoApp(
   // ==========================================
 
   actualizarPendientes(
-    app
+    app,
+    usuario
   )
 
   actualizarOrdenesTecnico(
@@ -527,7 +528,8 @@ export function renderTecnicoApp(
 // ============================================
 
 async function actualizarPendientes(
-  app
+  app,
+  usuario
 ) {
 
   const contador =
@@ -539,7 +541,7 @@ async function actualizarPendientes(
   try {
 
     const pendientes =
-      await obtenerVisitasPendientes()
+      await obtenerVisitasPendientes(usuario?.id)
 
 
     const cantidad =
