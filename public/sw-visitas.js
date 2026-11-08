@@ -4,7 +4,7 @@
 // HU-08
 // ============================================
 
-const CACHE_NAME = 'ruta-app-v4';
+const CACHE_NAME = 'ruta-app-v5';
 
 const RECURSOS = [
 
@@ -45,6 +45,12 @@ const RECURSOS = [
   '/src/modules/ordenes/ordenes.js',
   '/src/modules/ordenes/ordenes-db.js',
   '/src/modules/ordenes/programacion-semanal.js',
+
+  // Pantallas del módulo 7 (Incidencias)
+  '/src/modules/incidencias/Registrar_Incidencia_Movil.html', 
+  
+  // JS del módulo 7
+  '/src/modules/incidencias/registrar-incidencia.js',
 
   // Estilos
   '/src/styles/main.css',
