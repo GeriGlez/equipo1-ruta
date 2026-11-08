@@ -20,7 +20,10 @@ const RUTAS = {
     '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
 
   incidencias:
-    '/src/modules/incidencias/Registrar_Incidencia_Movil.html'
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
+
+  ordenes:
+    '/src/modules/ordenes/index.html'
 
 }
 
@@ -452,12 +455,28 @@ export function renderTecnicoApp(
   )
 
 
+  const botonOrdenes =
+    app.querySelector(
+      '[data-module="ordenes"]'
+    )
+
+
+  botonOrdenes.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.ordenes
+
+    }
+  )
+
+
   // ==========================================
   // MÓDULOS AÚN NO INTEGRADOS
   // ==========================================
 
   const modulosPendientes = [
-    'ordenes',
     'insumos',
   ]
 
