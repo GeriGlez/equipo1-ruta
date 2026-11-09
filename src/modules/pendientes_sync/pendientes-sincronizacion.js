@@ -1,7 +1,10 @@
 import {
     obtenerVisitasPendientes,
-    marcarVisitaComoEnviada
+    marcarVisitaComoEnviada,
+    obtenerIncidenciasPendientes, 
+    marcarIncidenciaComoEnviada   
   } from './db-local.js';
+
 import {
     getActiveSession
   } from '../auth/authService.js';
@@ -33,117 +36,87 @@ import {
   let tecnicoActualId = null;
 
   async function cargarPendientes() {
+  try {
+    const visitas = await obtenerVisitasPendientes(tecnicoActualId);
+    const incidencias = await obtenerIncidenciasPendientes();
 
-    try {
+    // Unimos ambos arreglos y les ponemos una etiqueta para diferenciarlos
+    const listaPendientes = [
+      ...visitas.map(v => ({ ...v, tipo_registro: 'visita' })),
+      ...incidencias.map(i => ({ ...i, tipo_registro: 'incidencia' }))
+    ];
 
-      const visitas = await obtenerVisitasPendientes(tecnicoActualId);
+    cantidadPendientes = listaPendientes.length;
 
-      // Actualizar contador
-      const cantidad = visitas.length;
-      cantidadPendientes = cantidad;
+    contador.textContent = cantidadPendientes === 1
+      ? '1 registro pendiente'
+      : `${cantidadPendientes} registros pendientes`;
 
-      contador.textContent = cantidad === 1
-        ? '1 registro pendiente'
-        : `${cantidad} registros pendientes`;
+    mensaje.textContent = cantidadPendientes > 0
+      ? 'Estos registros están pendientes de envío.'
+      : 'No hay nada que sincronizar';
 
-      mensaje.textContent = cantidad > 0
-        ? 'Estos registros están pendientes de envío.'
-        : 'No hay nada que sincronizar';
+    lista.replaceChildren();
+    errorMensaje.hidden = true;
 
-      // Limpiar contenido anterior
-      lista.replaceChildren();
-      errorMensaje.hidden = true;
+    // Generar tarjetas dinámicamente
+    listaPendientes.forEach(item => {
+      const tarjeta = document.createElement('article');
+      tarjeta.className = 'm5-pending-card';
 
-      // Generar tarjetas
-      visitas.forEach(visita => {
-
-        const tarjeta = document.createElement('article');
-
-        tarjeta.className = 'm5-pending-card';
+      if (item.tipo_registro === 'visita') {
+        // --- TARJETA DE VISITAS (Original de tu compañero) ---
+        const fecha = new Date(item.creado_localmente_en);
+        const fechaValida = !Number.isNaN(fecha.getTime());
 
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main">
-
-            <div class="m5-pending-card-icon">
-              <img
-                src="/hoja-de-calculo.png"
-                alt=""
-              >
-            </div>
-
+            <div class="m5-pending-card-icon"><img src="/hoja-de-calculo.png" alt=""></div>
             <div class="m5-pending-card-info">
-
               <div class="m5-pending-card-header">
-                <strong>Visita</strong>
-                <span class="m5-pending-badge">
-                  Pendiente
-                </span>
+                <strong>Visita</strong> <span class="m5-pending-badge">Pendiente</span>
               </div>
-
-              <h3 class="m5-pending-order"></h3>
-
-              <p class="m5-pending-area"></p>
-
+              <h3 class="m5-pending-order">${item.orden_referencia || 'Orden sin referencia'}</h3>
+              <p class="m5-pending-area">${nombresAreas[item.area_tipo] || item.area_tipo || 'Área no especificada'}</p>
             </div>
-
           </div>
-
           <div class="m5-pending-card-footer">
-            <span class="m5-pending-date"></span>
-            <span class="m5-pending-hours"></span>
+            <span class="m5-pending-date">${fechaValida ? `Registrada: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
+            <span class="m5-pending-hours">${item.hora_entrada}\n${item.hora_salida}</span>
           </div>
         `;
+      } 
+      else if (item.tipo_registro === 'incidencia') {
+        // --- TARJETA DE INCIDENCIAS (Tuya, con borde rojo) ---
+        tarjeta.innerHTML = `
+          <div class="m5-pending-card-main" style="border-left: 4px solid #f44336;">
+            <div class="m5-pending-card-icon"><img src="/advertencia.png" alt=""></div>
+            <div class="m5-pending-card-info">
+              <div class="m5-pending-card-header">
+                <strong>Incidencia</strong> <span class="m5-pending-badge" style="background:#f44336; color:white;">Pendiente</span>
+              </div>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                ${item.descripcion || 'Sin descripción'}
+              </h3>
+              <p class="m5-pending-area">Visita #${item.visita_id}</p>
+            </div>
+          </div>
+        `;
+      }
 
-        // Insertar los datos almacenados
-        tarjeta.querySelector('.m5-pending-order')
-          .textContent = visita.orden_referencia
-            || 'Orden sin referencia';
+      lista.appendChild(tarjeta);
+    });
 
-        tarjeta.querySelector('.m5-pending-area')
-          .textContent = nombresAreas[visita.area_tipo]
-            || visita.area_tipo
-            || 'Área no especificada';
+    console.log('Registros pendientes cargados:', cantidadPendientes);
+    actualizarEstadoConexion();
 
-        tarjeta.querySelector('.m5-pending-hours')
-          .textContent =
-            `${visita.hora_entrada} - ${visita.hora_salida}`;
-
-        // Fecha de creación local
-        const fecha = new Date(visita.creado_localmente_en);
-
-        const fechaValida = !Number.isNaN(fecha.getTime());
-
-        tarjeta.querySelector('.m5-pending-date')
-          .textContent = fechaValida
-            ? `Registrada: ${fecha.toLocaleDateString('es-MX')}`
-            : 'Fecha no disponible';
-
-        lista.appendChild(tarjeta);
-
-      });
-
-      console.log('Visitas pendientes cargadas:', cantidad);
-
-      actualizarEstadoConexion();
-
-    } catch (error) {
-
-      console.error('Error consultando IndexedDB:', error);
-
-      contador.textContent = 'No disponible';
-
-      mensaje.textContent =
-        'No fue posible cargar los registros locales.';
-
-      errorMensaje.hidden = false;
-
-      cantidadPendientes = 0;
-      lista.replaceChildren();
-      actualizarEstadoConexion();
-
-    }
-
+  } catch (error) {
+    console.error('Error consultando IndexedDB:', error);
+    contador.textContent = 'No disponible';
+    mensaje.textContent = 'No fue posible cargar los registros locales.';
+    errorMensaje.hidden = false;
   }
+}
 
   function actualizarEstadoConexion() {
 
@@ -458,7 +431,30 @@ import {
 
   }
 
-  
+async function sincronizarIncidencia(supabase, incidencia) {
+  // Nos aseguramos de incluir reportada_por explícitamente si viniera separada, 
+  // o dejamos que el objeto la mande completa si ya la trae dentro.
+  const datosServidor = {
+    condominio_id: incidencia.condominio_id,
+    area_id: incidencia.area_id,
+    visita_id: incidencia.visita_id,
+    descripcion: incidencia.descripcion,
+    prioridad: incidencia.prioridad,
+    reportada_por: incidencia.reportada_por || tecnicoActualId // <--- ¡Vital para superar la política RLS!
+  };
+
+  const { data, error } = await supabase
+    .from('incidencias')
+    .insert([datosServidor])
+    .select('id')
+    .single();
+
+  if (error) throw error;
+
+  await marcarIncidenciaComoEnviada(incidencia.id, data.id);
+  return { id: data.id };
+}
+
 async function sincronizarPendientes() {
   if (!navigator.onLine) {
     actualizarEstadoConexion();
@@ -467,9 +463,7 @@ async function sincronizarPendientes() {
 
   botonSincronizar.disabled = true;
 
-  const textoBoton =
-    botonSincronizar.querySelector('span:last-child');
-
+  const textoBoton = botonSincronizar.querySelector('span:last-child') || botonSincronizar;
   const textoOriginal = textoBoton.textContent;
 
   textoBoton.textContent = 'Sincronizando...';
@@ -480,92 +474,68 @@ async function sincronizarPendientes() {
       throw new Error('No hay una sesión técnica activa.');
     }
 
-    // Comprobar nuevamente la sesión al iniciar el envío.
     const sesion = await getActiveSession();
 
     const sesionValida =
       sesion?.usuario?.rol === 'tecnico' &&
-      String(sesion.usuario.id) ===
-        String(tecnicoActualId) &&
+      String(sesion.usuario.id) === String(tecnicoActualId) &&
       Boolean(sesion.user?.id);
 
     if (!sesionValida) {
       tecnicoActualId = null;
       cantidadPendientes = 0;
       lista.replaceChildren();
-
-      throw new Error(
-        'La sesión del técnico cambió o dejó de estar disponible.'
-      );
+      throw new Error('La sesión del técnico cambió o dejó de estar disponible.');
     }
 
     const supabase = await obtenerClienteSupabase();
 
-    // Antes de escribir, validar la identidad remota.
-    const {
-      data: datosAuth,
-      error: errorAuth
-    } = await supabase.auth.getUser();
+    const { data: datosAuth, error: errorAuth } = await supabase.auth.getUser();
 
-    if (
-      errorAuth ||
-      !datosAuth?.user ||
-      datosAuth.user.id !== sesion.user.id
-    ) {
+    if (errorAuth || !datosAuth?.user || datosAuth.user.id !== sesion.user.id) {
       tecnicoActualId = null;
       cantidadPendientes = 0;
       lista.replaceChildren();
-
-      throw new Error(
-        'No se pudo confirmar la identidad en Supabase.'
-      );
+      throw new Error('No se pudo confirmar la identidad en Supabase.');
     }
 
-    // Consultar exclusivamente los registros de este técnico.
-    const pendientes =
-      await obtenerVisitasPendientes(tecnicoActualId);
+    // --- AQUÍ INICIA LA UNIFICACIÓN ---
+    const visitasLocales = await obtenerVisitasPendientes(tecnicoActualId);
+    const incidenciasLocales = await obtenerIncidenciasPendientes();
+
+    const pendientes = [
+      ...visitasLocales.map(v => ({ ...v, tipo_registro: 'visita' })),
+      ...incidenciasLocales.map(i => ({ ...i, tipo_registro: 'incidencia' }))
+    ];
 
     if (pendientes.length === 0) {
       await cargarPendientes();
       return;
     }
 
-    for (const visita of pendientes) {
-      await sincronizarVisita(
-        supabase,
-        visita
-      );
+    // Enrutador de sincronización
+    for (const item of pendientes) {
+      if (item.tipo_registro === 'visita') {
+        await sincronizarVisita(supabase, item);
+      } else if (item.tipo_registro === 'incidencia') {
+        await sincronizarIncidencia(supabase, item);
+      }
     }
+    // --- FIN DE LA UNIFICACIÓN ---
 
     await cargarPendientes();
 
     if (cantidadPendientes > 0) {
-      alert(
-        'Se enviaron los registros disponibles, pero todavía ' +
-        'quedan cambios pendientes de sincronización.'
-      );
+      alert('Se enviaron los registros disponibles, pero todavía quedan cambios pendientes de sincronización.');
     } else {
-      alert(
-        'Los registros pendientes se sincronizaron correctamente.'
-      );
+      alert('Los registros pendientes se sincronizaron correctamente.');
     }
 
   } catch (error) {
-    console.error(
-      '[RUTA] Error sincronizando visitas:',
-      error
-    );
-
+    console.error('[RUTA] Error sincronizando registros:', error);
     errorSincronizacion.hidden = false;
-
-    alert(
-      'No fue posible completar la sincronización. ' +
-      'Verifica tu sesión y conexión. ' +
-      'Los registros locales no se eliminaron.'
-    );
-
+    alert('No fue posible completar la sincronización. Verifica tu sesión y conexión. Los registros locales no se eliminaron.');
     await cargarPendientes();
-
   } finally {
     textoBoton.textContent = textoOriginal;
     actualizarEstadoConexion();

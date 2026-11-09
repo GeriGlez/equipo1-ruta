@@ -1,4 +1,4 @@
-import { guardarIncidenciaOffline } from './db-incidencias.js';
+import { guardarIncidenciaLocal, obtenerCatalogoM7 } from '../pendientes_sync/db-local.js';
 import { supabase } from '../../services/supabase.js';
 
 const form = document.getElementById('formIncidencia');
@@ -23,11 +23,9 @@ const actualizarEstadoRed = () => {
 window.addEventListener('online', actualizarEstadoRed);
 window.addEventListener('offline', actualizarEstadoRed);
 
-// 2. Manejo del formulario
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Validación extra por si intentan guardar sin haber elegido visita
   if (!inputCondominioId.value || !inputAreaId.value) {
     alert('Por favor selecciona un número de visita válido.');
     return;
@@ -41,21 +39,29 @@ form.addEventListener('submit', async (e) => {
     prioridad: document.getElementById('prioridad').value
   };
 
+  // Obtenemos el ID del usuario desde la sesión local (funciona offline y online)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      incidenciaData.reportada_por = session.user.id;
+    }
+  } catch (error) {
+    console.warn('No se pudo obtener la sesión local:', error);
+  }
+
   if (!navigator.onLine) {
-    const guardadoExitoso = await guardarIncidenciaOffline(incidenciaData);
-    if (guardadoExitoso) {
+    try {
+      await guardarIncidenciaLocal(incidenciaData);
+
       alert('Sin red: La incidencia se guardó en el dispositivo y está pendiente de envío.');
       form.reset();
       document.getElementById('descripcion-counter').textContent = '0/500';
-    } else {
+    } catch (error) {
+      console.error('Error al guardar localmente:', error);
       alert('Ocurrió un error al guardar en el dispositivo.');
     }
   } else {
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      incidenciaData.reportada_por = authData.user.id;
-      //console.log("ID intentando guardar:", authData.user.id);
-
       const { error } = await supabase.from('incidencias').insert([incidenciaData]);
       if (error) throw error;
 
@@ -69,12 +75,9 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-import { obtenerCatalogoM7 } from '../pendientes_sync/db-local.js'; // Ajusta la ruta
-
 // 3. Cargar Visitas (Lectura 100% Offline)
 const cargarVisitas = async () => {
   try {
-    // ¡Adiós a Supabase! Leemos directamente del disco duro del navegador
     const visitas = await obtenerCatalogoM7();
 
     selectVisita.innerHTML = '<option value="" selected disabled>Selecciona el número de visita</option>';
@@ -107,11 +110,9 @@ selectVisita.addEventListener('change', (e) => {
   const idArea = opcionSeleccionada.dataset.areaId;
 
   if (idCondominio && idArea) {
-    // 4.1 Asignamos IDs reales
     inputCondominioId.value = idCondominio;
     inputAreaId.value = idArea;
 
-    // 4.2 Mostramos textos al instante leyendo los atributos
     inputCondominioNombre.value = opcionSeleccionada.dataset.condominioNombre;
     inputAreaNombre.value = opcionSeleccionada.dataset.areaNombre;
   }
