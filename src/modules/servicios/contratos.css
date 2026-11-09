@@ -133,3 +133,13 @@
   color: #334155;
   margin-bottom: 0.25rem;
 }
+/* Aviso de error dentro del modal (validaciones y duplicados) */
+.form-error-ruta {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+  font-size: 0.9rem;
+}

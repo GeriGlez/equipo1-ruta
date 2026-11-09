@@ -20,6 +20,7 @@ const selectServicio = document.getElementById('select-servicio');
 const inputTarifa = document.getElementById('input-tarifa');
 const selectFrecuencia = document.getElementById('select-frecuencia');
 const inputDias = document.getElementById('input-dias');
+const formError = document.getElementById('form-error');
 
 // Modal Eliminar
 const modalEliminar = document.getElementById('modal-confirmar-eliminar');
@@ -64,6 +65,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Aviso de error dentro del modal (textContent: nunca se interpreta como HTML)
+function mostrarError(mensaje) {
+  formError.textContent = mensaje;
+  formError.hidden = false;
+}
+
+function limpiarError() {
+  formError.textContent = '';
+  formError.hidden = true;
+}
+
 function initEventListeners() {
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
@@ -78,11 +90,15 @@ function initEventListeners() {
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
+    limpiarError();
     modalTitle.textContent = 'Nuevo contrato';
     modalContrato.classList.remove('hidden');
   });
 
-  const cerrarModal = () => modalContrato.classList.add('hidden');
+  const cerrarModal = () => {
+    modalContrato.classList.add('hidden');
+    limpiarError();
+  };
   btnCloseModal.addEventListener('click', cerrarModal);
   btnCancelarModal.addEventListener('click', cerrarModal);
 
@@ -136,7 +152,7 @@ async function cargarSelectsModal() {
 
 // CONSULTAR DESDE TABLA RELACIONAL `condominio_servicio`
 async function cargarContratos() {
-  gridContratos.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">Cargando contratos desde Supabase...</p>';
+  gridContratos.innerHTML = '<p class="estado-vacio">Cargando contratos desde Supabase...</p>';
   paginacionContainer.innerHTML = '';
   paginacionContainer.style.display = 'none';
 
@@ -180,7 +196,7 @@ function renderTarjetas() {
   gridContratos.innerHTML = '';
 
   if (contratosFiltrados.length === 0) {
-    gridContratos.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">No se encontraron contratos.</p>';
+    gridContratos.innerHTML = '<p class="estado-vacio">No se encontraron contratos.</p>';
     paginacionContainer.innerHTML = '';
     paginacionContainer.style.display = 'none';
     return;
@@ -203,9 +219,9 @@ function renderTarjetas() {
             <span>🏠</span>
             <span class="contrato-condominio"></span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
+          <div class="card-acciones">
             <button class="btn-edit-circle btn-editar-card" title="Editar contrato">✏️</button>
-            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar contrato" style="background: #FEE2E2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">🗑️</button>
+            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar contrato">🗑️</button>
           </div>
         </div>
 
@@ -225,6 +241,10 @@ function renderTarjetas() {
     card.querySelector('.contrato-frecuencia').textContent = c.frecuencia || 'N/A';
     card.querySelector('.contrato-dia').textContent = c.dia_preferente || 'N/A';
 
+    // aria-label con datos de la BD, asignado aquí y no en la plantilla
+    card.querySelector('.btn-editar-card').setAttribute('aria-label', `Editar contrato de ${nombreCondominio}: ${nombreServicio}`);
+    card.querySelector('.btn-eliminar-card').setAttribute('aria-label', `Eliminar contrato de ${nombreCondominio}: ${nombreServicio}`);
+
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = c.id;
       selectCondominio.value = c.condominio_id;
@@ -233,6 +253,7 @@ function renderTarjetas() {
       selectFrecuencia.value = c.frecuencia;
       inputDias.value = c.dia_preferente;
 
+      limpiarError();
       modalTitle.textContent = 'Editar contrato';
       modalContrato.classList.remove('hidden');
     });
@@ -301,11 +322,19 @@ function renderPaginacion() {
 // GUARDAR / ACTUALIZAR EN `condominio_servicio`
 async function guardarContrato() {
   const id = inputId.value;
+  limpiarError();
+
+  // Number() en lugar de parseFloat(...) || 0: un valor vacío o inválido ya no se convierte en 0 en silencio
+  const tarifa = Number(inputTarifa.value);
+  if (!Number.isFinite(tarifa) || tarifa <= 0) {
+    mostrarError('La tarifa debe ser un número mayor a 0.');
+    return;
+  }
 
   const payload = {
     condominio_id: selectCondominio.value,
     servicio_id: selectServicio.value,
-    tarifa: parseFloat(inputTarifa.value) || 0,
+    tarifa,
     frecuencia: selectFrecuencia.value,
     dia_preferente: inputDias.value.trim()
   };
@@ -329,7 +358,12 @@ async function guardarContrato() {
     modalContrato.classList.add('hidden');
     await cargarContratos();
   } catch (err) {
-    alert('Error al guardar en Supabase: ' + err.message);
+    // 23505 = violación de UNIQUE (condominio_id, servicio_id): ese condominio ya tiene ese servicio
+    if (err.code === '23505') {
+      mostrarError('Este condominio ya tiene contratado ese servicio. Edita el contrato existente en lugar de crear otro.');
+    } else {
+      mostrarError('No se pudo guardar el contrato: ' + err.message);
+    }
   }
 }
 
