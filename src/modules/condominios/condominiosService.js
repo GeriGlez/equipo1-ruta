@@ -113,12 +113,18 @@ export async function listarCondominios({
 export async function obtenerCondominio(id) {
   const { data, error } = await supabase
     .from('condominios')
-    .select('*, areas(id, nombre, tipo, requiere_lecturas)')
+    // ordenes_servicio(count) trae cuántas órdenes tiene cada área
+    .select('*, areas(id, nombre, tipo, requiere_lecturas, ordenes_servicio(count))')
     .eq('id', id)
     .order('nombre', { referencedTable: 'areas' })
     .single()
 
   if (error) throw error
+
+  data.areas = data.areas.map(({ ordenes_servicio, ...area }) => ({
+    ...area,
+    total_ordenes: ordenes_servicio?.[0]?.count ?? 0
+  }))
   return data
 }
 
@@ -215,4 +221,38 @@ export async function eliminarAreas(ids) {
   if (error) throw error
   // Igual que en update: si RLS bloquea el delete, no hay error, solo 0 filas
   if (data.length < ids.length) throw new Error('No tienes permiso para eliminar estas áreas.')
+}
+
+// ---------- Editar áreas ya registradas ----------
+
+// El nombre y "requiere lecturas" siempre se pueden corregir.
+// El tipo NO se puede cambiar si el área ya tiene órdenes: cambiaría el sentido
+// de su historial (un jardín con visitas que de pronto "es" alberca).
+export async function actualizarArea(id, area) {
+  const { condominio_id, ...cambios } = prepararArea(area, null)
+
+  const { data: actual, error: errorActual } = await supabase
+    .from('areas')
+    .select('tipo, ordenes_servicio(count)')
+    .eq('id', id)
+    .single()
+
+  if (errorActual) throw errorActual
+
+  const totalOrdenes = actual.ordenes_servicio?.[0]?.count ?? 0
+  if (cambios.tipo !== actual.tipo && totalOrdenes > 0) {
+    throw new Error(
+      `No se puede cambiar el tipo de "${cambios.nombre}": ya tiene órdenes de servicio registradas.`
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('areas')
+    .update(cambios)
+    .eq('id', id)
+    .select('id')
+
+  if (error) throw error
+  // Si RLS bloquea el update, no hay error, solo 0 filas
+  if (data.length === 0) throw new Error('No tienes permiso para editar esta área.')
 }

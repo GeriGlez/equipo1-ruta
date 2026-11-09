@@ -105,10 +105,18 @@
             Requiere lecturas
           </label>
 
-          <button type="button" id="btn-agregar-area" class="btn btn-primary reg-btn-agregar">
-            + Agregar a la lista
-          </button>
+          <div class="reg-area-botones">
+            <button type="button" id="btn-agregar-area" class="btn btn-primary reg-btn-agregar">
+              + Agregar a la lista
+            </button>
+            <button type="button" id="btn-cancelar-area" class="condo-link" hidden>
+              Cancelar edición
+            </button>
+          </div>
         </div>
+        <p id="area-aviso-tipo" class="reg-aviso-tipo" hidden>
+          El tipo no se puede cambiar porque esta área ya tiene órdenes de servicio.
+        </p>
 
         <table class="reg-tabla-areas">
           <thead>
