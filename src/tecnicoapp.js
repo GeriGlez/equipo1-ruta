@@ -1,6 +1,6 @@
 import {
   obtenerVisitasPendientes
-} from './modules/visitas/db-local.js'
+} from './modules/pendientes_sync/db-local.js'
 
 
 
@@ -17,7 +17,10 @@ const RUTAS = {
     '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
 
   pendientes:
-    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html',
+    '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
 
   ordenes:
     '/src/modules/ordenes/index.html',
@@ -421,6 +424,22 @@ export function renderTecnicoApp(
     }
   )
 
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
 
   const botonPendientes =
     app.querySelector(
@@ -478,7 +497,11 @@ export function renderTecnicoApp(
   // ==========================================
 
   const modulosPendientes = [
+<<<<<<< HEAD
     'incidencias'
+=======
+    'insumos',
+>>>>>>> origin/Build
   ]
 
 
@@ -512,7 +535,8 @@ export function renderTecnicoApp(
   // ==========================================
 
   actualizarPendientes(
-    app
+    app,
+    usuario
   )
 
   actualizarOrdenesTecnico(
@@ -528,7 +552,8 @@ export function renderTecnicoApp(
 // ============================================
 
 async function actualizarPendientes(
-  app
+  app,
+  usuario
 ) {
 
   const contador =
@@ -540,7 +565,7 @@ async function actualizarPendientes(
   try {
 
     const pendientes =
-      await obtenerVisitasPendientes()
+      await obtenerVisitasPendientes(usuario?.id)
 
 
     const cantidad =
