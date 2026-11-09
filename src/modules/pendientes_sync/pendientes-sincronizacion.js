@@ -6,8 +6,9 @@ import {
   } from './db-local.js';
 
 import {
-    getActiveSession
-  } from '../auth/authService.js';
+  getActiveSession,
+  obtenerSesionRemotaVerificada
+} from '../auth/authService.js';
 
   const contador = document.querySelector('#pending-count');
   const mensaje = document.querySelector('#pending-message');
@@ -34,6 +35,7 @@ import {
 
   let cantidadPendientes = 0;
   let tecnicoActualId = null;
+  let sesionRemotaDisponible = false;
 
   async function cargarPendientes() {
   try {
@@ -146,9 +148,35 @@ import {
 
   botonSincronizar.disabled =
     !enLinea ||
+    !sesionRemotaDisponible ||
     tecnicoActualId === null ||
     cantidadPendientes === 0;
   }
+
+  async function revisarAutenticacionRemota() {
+  sesionRemotaDisponible = false;
+  actualizarEstadoConexion();
+
+  if (!navigator.onLine || tecnicoActualId === null) {
+    return;
+  }
+
+  try {
+    const sesion = await obtenerSesionRemotaVerificada(
+      tecnicoActualId
+    );
+
+    sesionRemotaDisponible = Boolean(sesion);
+
+  } catch (error) {
+    console.warn(
+      '[RUTA] No hay autenticación remota disponible:',
+      error
+    );
+  } finally {
+    actualizarEstadoConexion();
+  }
+}
 
   // ==============================================
   // SUPABASE - CARGA SOLO AL SINCRONIZAR
@@ -474,30 +502,20 @@ async function sincronizarPendientes() {
       throw new Error('No hay una sesión técnica activa.');
     }
 
-    const sesion = await getActiveSession();
+    const sesion = await obtenerSesionRemotaVerificada(
+      tecnicoActualId
+    );
 
-    const sesionValida =
-      sesion?.usuario?.rol === 'tecnico' &&
-      String(sesion.usuario.id) === String(tecnicoActualId) &&
-      Boolean(sesion.user?.id);
+    if (!sesion) {
+      sesionRemotaDisponible = false;
 
-    if (!sesionValida) {
-      tecnicoActualId = null;
-      cantidadPendientes = 0;
-      lista.replaceChildren();
-      throw new Error('La sesión del técnico cambió o dejó de estar disponible.');
+      throw new Error(
+        'No hay una sesión remota válida para sincronizar.'
+      );
     }
 
     const supabase = await obtenerClienteSupabase();
 
-    const { data: datosAuth, error: errorAuth } = await supabase.auth.getUser();
-
-    if (errorAuth || !datosAuth?.user || datosAuth.user.id !== sesion.user.id) {
-      tecnicoActualId = null;
-      cantidadPendientes = 0;
-      lista.replaceChildren();
-      throw new Error('No se pudo confirmar la identidad en Supabase.');
-    }
 
     // --- AQUÍ INICIA LA UNIFICACIÓN ---
     const visitasLocales = await obtenerVisitasPendientes(tecnicoActualId);
@@ -545,13 +563,13 @@ async function sincronizarPendientes() {
 
   window.addEventListener(
     'online',
-    actualizarEstadoConexion
+    revisarAutenticacionRemota
   );
 
-  window.addEventListener(
-    'offline',
-    actualizarEstadoConexion
-  );
+  window.addEventListener('offline', () => {
+    sesionRemotaDisponible = false;
+    actualizarEstadoConexion();
+  });
 
   botonSincronizar.addEventListener(
     'click',
@@ -605,6 +623,8 @@ async function inicializarPendientes() {
     }
 
     await cargarPendientes();
+
+    await revisarAutenticacionRemota();
 
   } catch (error) {
     console.error(

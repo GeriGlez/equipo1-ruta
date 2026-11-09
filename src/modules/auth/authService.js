@@ -139,6 +139,19 @@ async function obtenerSesionLocalActiva() {
   return construirSesion(usuarioLocal)
 }
 
+async function recuperarSesionLocalSinAuthRemota() {
+  const sesionLocal = await obtenerSesionLocalActiva();
+
+  if (sesionLocal?.usuario?.rol !== 'tecnico') {
+    return null;
+  }
+
+  return {
+    ...sesionLocal,
+    requiereAutenticacionOnline: true
+  };
+}
+
 // ============================================
 // LOGIN OFFLINE
 // ============================================
@@ -165,8 +178,10 @@ async function loginOffline(email, password) {
   }
 
   localStorage.setItem(ACTIVE_AUTH_UID_KEY, usuarioLocal.auth_uid)
-  localStorage.removeItem(LOGOUT_PENDING_KEY)
 
+  // No borrar LOGOUT_PENDING_KEY.
+  // Puede existir una sesión remota anterior
+  // que todavía necesite cerrarse.
   return construirSesion(usuarioLocal)
 }
 
@@ -231,97 +246,225 @@ export async function login(email, password) {
 // OBTENER SESIÓN ACTIVA (AL REFRESCAR LA APP)
 // ============================================
 
+
 export async function getActiveSession() {
-  // Modo offline
   if (!navigator.onLine) {
-    return obtenerSesionLocalActiva()
+    return obtenerSesionLocalActiva();
   }
 
-  // Procesar logout pendiente si se cerró sesión mientras estaba offline
+  // Procesar primero cualquier cierre offline pendiente.
   if (localStorage.getItem(LOGOUT_PENDING_KEY) === 'true') {
     try {
-      await supabase.auth.signOut({ scope: 'local' })
-    } catch (e) {
-      console.warn('[RUTA] Cierre de sesión pendiente sincronizado:', e)
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
+      });
+
+      if (error) throw error;
+
+      localStorage.removeItem(LOGOUT_PENDING_KEY);
+    } catch (error) {
+      console.warn(
+        '[RUTA] Cierre remoto todavía pendiente:',
+        error
+      );
     }
-    localStorage.removeItem(LOGOUT_PENDING_KEY)
-    localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
-    return null
+
+    // Conservar la sesión local del técnico actual.
+    return recuperarSesionLocalSinAuthRemota();
   }
 
-  // Modo online: consultar sesión en Supabase
+  const authUidInicial = localStorage.getItem(
+    ACTIVE_AUTH_UID_KEY
+  );
+
+  let userRemoto;
+
   try {
-    const { data, error } = await supabase.auth.getSession()
-    if (error) throw error
+    // Supabase renueva los tokens cuando es necesario.
+    const { data, error } = await supabase.auth.getSession();
 
-    const session = data?.session
-    if (!session?.user) {
-      localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
-      return null
+    if (error) throw error;
+
+    if (!data?.session?.user) {
+      return recuperarSesionLocalSinAuthRemota();
     }
 
-    let usuario
+    // Confirmar la identidad contra Supabase Auth.
+    const {
+      data: validacion,
+      error: errorValidacion
+    } = await supabase.auth.getUser();
+
+    if (errorValidacion) throw errorValidacion;
+
+    if (!validacion?.user?.id) {
+      return recuperarSesionLocalSinAuthRemota();
+    }
+
+    userRemoto = validacion.user;
+
+  } catch (error) {
+    console.warn(
+      '[RUTA] Autenticación remota no recuperada:',
+      error
+    );
+
+    return recuperarSesionLocalSinAuthRemota();
+  }
+
+  // Comprobar si cambió el usuario durante la solicitud.
+  if (
+    localStorage.getItem(ACTIVE_AUTH_UID_KEY) !==
+    authUidInicial
+  ) {
+    return recuperarSesionLocalSinAuthRemota();
+  }
+
+  // Impedir reutilizar una sesión remota de otro técnico.
+  if (
+    authUidInicial &&
+    userRemoto.id !== authUidInicial
+  ) {
+    localStorage.setItem(LOGOUT_PENDING_KEY, 'true');
+
     try {
-      usuario = await obtenerUsuarioRuta(session.user)
-    } catch (err) {
-      if (esErrorDeRed(err)) return obtenerSesionLocalActiva()
-      throw err
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
+      });
+
+      if (error) throw error;
+
+      localStorage.removeItem(LOGOUT_PENDING_KEY);
+    } catch (error) {
+      console.warn(
+        '[RUTA] No se pudo limpiar la sesión remota ajena:',
+        error
+      );
     }
 
-    // Mantener actualizado el contexto local
-    await guardarUsuarioContexto({
-      auth_uid: session.user.id,
-      usuario_id: usuario.id,
-      nombre: usuario.nombre,
-      correo: usuario.correo,
-      rol: usuario.rol,
-      telefono: usuario.telefono,
-      activo: usuario.activo
-    })
+    return recuperarSesionLocalSinAuthRemota();
+  }
 
-    localStorage.setItem(ACTIVE_AUTH_UID_KEY, session.user.id)
+  let usuario;
 
-    return {
-      user: session.user,
-      usuario,
-      profile: usuario,
-      isOffline: false
-    }
+  try {
+    usuario = await obtenerUsuarioRuta(userRemoto);
   } catch (error) {
     if (esErrorDeRed(error)) {
-      return obtenerSesionLocalActiva()
+      return recuperarSesionLocalSinAuthRemota();
     }
-    throw error
+
+    // No omitir errores de autorización o perfil.
+    throw error;
   }
+
+  if (
+    localStorage.getItem(ACTIVE_AUTH_UID_KEY) !==
+    authUidInicial
+  ) {
+    return recuperarSesionLocalSinAuthRemota();
+  }
+
+  await guardarUsuarioContexto({
+    auth_uid: userRemoto.id,
+    usuario_id: usuario.id,
+    nombre: usuario.nombre,
+    correo: usuario.correo,
+    rol: usuario.rol,
+    telefono: usuario.telefono,
+    activo: usuario.activo
+  });
+
+  if (
+    localStorage.getItem(ACTIVE_AUTH_UID_KEY) !==
+    authUidInicial
+  ) {
+    return recuperarSesionLocalSinAuthRemota();
+  }
+
+  localStorage.setItem(
+    ACTIVE_AUTH_UID_KEY,
+    userRemoto.id
+  );
+
+  return {
+    user: userRemoto,
+    usuario,
+    profile: usuario,
+    isOffline: false,
+    requiereAutenticacionOnline: false
+  };
 }
+
+
+export async function obtenerSesionRemotaVerificada(tecnicoId = null) {
+  if (!navigator.onLine) return null;
+
+  const sesion = await getActiveSession();
+
+  if (
+    sesion?.isOffline !== false ||
+    sesion?.requiereAutenticacionOnline === true ||
+    sesion?.usuario?.rol !== 'tecnico' ||
+    !sesion?.user?.id
+  ) {
+    return null;
+  }
+
+  if (
+    tecnicoId !== null &&
+    String(sesion.usuario.id) !== String(tecnicoId)
+  ) {
+    return null;
+  }
+
+  const uid = sesion.user.id;
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || data?.user?.id !== uid) {
+    return null;
+  }
+
+  if (localStorage.getItem(ACTIVE_AUTH_UID_KEY) !== uid) {
+    return null;
+  }
+
+  return sesion;
+}
+
+
 
 // ============================================
 // CERRAR SESIÓN
 // ============================================
 
-export async function logout() {
-  localStorage.removeItem(ACTIVE_AUTH_UID_KEY)
 
-  if (!navigator.onLine) {
-    localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
-    return
-  }
+export async function logout() {
+  // Registrar el cierre antes de intentar la red.
+  localStorage.setItem(LOGOUT_PENDING_KEY, 'true');
+
+  // Terminar inmediatamente el acceso local.
+  localStorage.removeItem(ACTIVE_AUTH_UID_KEY);
+
+  if (!navigator.onLine) return;
 
   try {
-    const { error } = await supabase.auth.signOut({ scope: 'local' })
-    if (error) {
-      if (esErrorDeRed(error)) {
-        localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
-        return
-      }
-      throw error
-    }
-    localStorage.removeItem(LOGOUT_PENDING_KEY)
+    const { error } = await supabase.auth.signOut({
+      scope: 'local'
+    });
+
+    if (error) throw error;
+
+    localStorage.removeItem(LOGOUT_PENDING_KEY);
+
   } catch (error) {
-    if (esErrorDeRed(error)) {
-      localStorage.setItem(LOGOUT_PENDING_KEY, 'true')
-      return
-    }
-    throw error
+    // El usuario ya salió de RUTA.
+    // Se conserva la limpieza remota pendiente.
+    console.warn(
+      '[RUTA] Cierre remoto pendiente de reintento:',
+      error
+    );
   }
 }
+

@@ -1,5 +1,6 @@
 import { guardarIncidenciaLocal, obtenerCatalogoM7 } from '../pendientes_sync/db-local.js';
 import { supabase } from '../../services/supabase.js';
+import { getActiveSession } from '../auth/authService.js';
 
 const form = document.getElementById('formIncidencia');
 const statusText = document.getElementById('connection-status');
@@ -78,7 +79,19 @@ form.addEventListener('submit', async (e) => {
 // 3. Cargar Visitas (Lectura 100% Offline)
 const cargarVisitas = async () => {
   try {
-    const visitas = await obtenerCatalogoM7();
+    const sesion = await getActiveSession();
+
+    if (sesion?.usuario?.rol !== 'tecnico') {
+      throw new Error('No hay una sesión técnica activa.');
+    }
+
+    const catalogo = await obtenerCatalogoM7();
+
+    const visitas = catalogo.filter(
+      visita =>
+        String(visita.tecnico_id) ===
+        String(sesion.usuario.id)
+    );
 
     selectVisita.innerHTML = '<option value="" selected disabled>Selecciona el número de visita</option>';
     
@@ -118,6 +131,27 @@ selectVisita.addEventListener('change', (e) => {
   }
 });
 
+async function mostrarNombreTecnico() {
+  const elementoNombre = document.querySelector('.m5-user strong');
+
+  if (!elementoNombre) return;
+
+  try {
+    const sesion = await getActiveSession();
+
+    if (sesion?.usuario?.rol === 'tecnico') {
+      elementoNombre.textContent =
+        sesion.usuario.nombre?.trim() || 'Técnico';
+    }
+  } catch (error) {
+    console.warn(
+      '[RUTA] No se pudo recuperar el nombre del técnico:',
+      error
+    );
+  }
+}
+
 // 5. Inicialización
-actualizarEstadoRed(); 
+actualizarEstadoRed();
+mostrarNombreTecnico();
 cargarVisitas();

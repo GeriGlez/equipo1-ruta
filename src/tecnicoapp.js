@@ -1,6 +1,9 @@
 import {
   obtenerVisitasPendientes
 } from './modules/pendientes_sync/db-local.js'
+import {
+  obtenerSesionRemotaVerificada
+} from './modules/auth/authService.js';
 
 
 
@@ -519,6 +522,9 @@ export function renderTecnicoApp(
     usuario
   )
 
+  descargarCatalogosOffline(usuario);
+
+
 }
 
 
@@ -609,18 +615,32 @@ import { supabase } from './services/supabase.js';
 import { guardarCatalogoM7 } from './modules/pendientes_sync/db-local.js';
 
 // Ejecutar silenciosamente en segundo plano
-async function descargarCatalogosOffline() {
-  if (!navigator.onLine) return;
+async function descargarCatalogosOffline(usuario) {
+  if (
+    !navigator.onLine ||
+    usuario?.rol !== 'tecnico' ||
+    !usuario?.id
+  ) {
+    return;
+  }
 
   try {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) return;
+    const sesion = await obtenerSesionRemotaVerificada(
+      usuario.id
+    );
 
-    // Traemos las visitas anidadas igual que lo hacías en tu módulo
+    if (!sesion) {
+      console.info(
+        '[RUTA] Catálogo M7: esperando autenticación remota.'
+      );
+      return;
+    }
+
     const { data: visitas, error } = await supabase
       .from('visitas')
       .select(`
         id,
+        tecnico_id,
         ordenes_servicio (
           condominio_id,
           area_id,
@@ -628,19 +648,55 @@ async function descargarCatalogosOffline() {
           areas ( nombre )
         )
       `)
-      .eq('tecnico_id', authData.user.id)
-      .order('id', { ascending: false }); 
+      .eq('tecnico_id', usuario.id)
+      .order('id', { ascending: false });
 
     if (error) throw error;
 
-    // Guardamos en la base de datos local
-    await guardarCatalogoM7(visitas);
-    console.log('Catálogo M7 descargado exitosamente para uso offline.');
-    
+    // Evitar persistir información si cambió la sesión.
+    const sesionVigente =
+      await obtenerSesionRemotaVerificada(usuario.id);
+
+    if (
+      !sesionVigente ||
+      sesionVigente.user.id !== sesion.user.id
+    ) {
+      return;
+    }
+
+    await guardarCatalogoM7(visitas || []);
+
+    console.log(
+      '[RUTA] Catálogo M7 descargado:',
+      visitas?.length || 0,
+      'visitas del técnico'
+    );
+
   } catch (error) {
-    console.error('Error descargando catálogo M7:', error);
+    console.error(
+      '[RUTA] Error al descargar catálogo M7:',
+      error
+    );
   }
 }
 
 // Llamar a la función al cargar el dashboard
-descargarCatalogosOffline();
+// descargarCatalogosOffline();
+
+
+
+
+window.addEventListener('online', async () => {
+  try {
+    const sesion = await obtenerSesionRemotaVerificada();
+
+    if (sesion) {
+      await descargarCatalogosOffline(sesion.usuario);
+    }
+  } catch (error) {
+    console.warn(
+      '[RUTA] Catálogo M7 pendiente de actualización:',
+      error
+    );
+  }
+});

@@ -1,16 +1,21 @@
 import {
-  getActiveSession
-} from '../auth/authService.js'
+  getActiveSession,
+  obtenerSesionRemotaVerificada
+} from '../auth/authService.js';
 
 import {
   obtenerVisitasLocales,
-  obtenerContextoOrden,
-  guardarVisitasServidor
-} from '../pendientes_sync/db-local.js'
+  obtenerContextoOrden
+} from '../pendientes_sync/db-local.js';
+
+// import {
+//   supabase
+// } from '../../services/supabase.js'
 
 import {
-  supabase
-} from '../../services/supabase.js'
+  completarContextosFaltantes,
+  precargarBitacoraTecnico
+} from '../../services/precarga-bitacora.js';
 
 
 
@@ -59,11 +64,11 @@ const plantillaVisita =
   )
 
 
-let usuarioActual =
-  null;
+let usuarioActual =  null;
 
-let sincronizacionEnCurso =
-  false;
+let authUidActual = null;
+
+let sincronizacionEnCurso =  false;
 
 // ============================================
 // FORMATEAR FECHA
@@ -332,9 +337,44 @@ async function cargarVisitasLocales(
     errorBitacora.hidden =
       true;
 
+    
+    // Mostrar primero las visitas locales.
     await renderizarVisitas(
-        visitasTecnico
+      visitasTecnico
     );
+
+    // Recuperar automáticamente los datos de sus órdenes.
+    if (navigator.onLine && visitasTecnico.length > 0) {
+      try {
+        const sesionRemota =
+          await obtenerSesionRemotaVerificada(usuario.id);
+
+        const recuperados = sesionRemota
+          ? await completarContextosFaltantes(
+              visitasTecnico,
+              usuario,
+              sesionRemota.user.id
+            )
+          : 0;
+
+        if (recuperados > 0) {
+          // Mostrar los nombres recién almacenados.
+          await renderizarVisitas(visitasTecnico);
+
+          console.log(
+            '[RUTA] Contextos recuperados:',
+            recuperados
+          );
+        }
+
+      } catch (errorContexto) {
+        console.warn(
+          '[RUTA] No fue posible recuperar el contexto de las órdenes:',
+          errorContexto
+        );
+      }
+    }
+
 
 
     console.log(
@@ -371,102 +411,57 @@ async function cargarVisitasLocales(
 
 }
 
+
+
 // ============================================
 // ACTUALIZAR BITÁCORA DESDE SUPABASE
 // ============================================
 
-async function actualizarDesdeSupabase(
-  usuario
-) {
 
-  if (
-    !navigator.onLine ||
-    sincronizacionEnCurso
-  ) {
-
+async function actualizarDesdeSupabase(usuario) {
+  if (!navigator.onLine || sincronizacionEnCurso) {
     return;
-
   }
 
-
-  sincronizacionEnCurso =
-    true;
-
+  sincronizacionEnCurso = true;
 
   try {
+    // Obtener únicamente una sesión remota confirmada
+    // que corresponda al técnico de esta bitácora.
+    const sesionRemota =
+      await obtenerSesionRemotaVerificada(usuario.id);
 
-    const {
-      data,
-      error
-    } = await supabase
-      .from('visitas')
-      .select(`
-        id,
-        id_local,
-        orden_id,
-        tecnico_id,
-        hora_entrada,
-        hora_salida,
-        ph,
-        cloro,
-        observaciones,
-        quien_recibio,
-        pendiente_envio,
-        created_at
-      `)
-      .eq(
-        'tecnico_id',
-        usuario.id
-      )
-      .order(
-        'hora_entrada',
-        {
-          ascending: false
-        }
+    if (!sesionRemota) {
+      console.info(
+        '[RUTA] Sin autenticación remota; ' +
+        'se conservan las visitas locales.'
       );
-
-
-    if (error) {
-      throw error;
+      return;
     }
 
+    // Servicio compartido: descarga las visitas y
+    // sus contextos sin sobrescribir cambios pendientes.
+    await precargarBitacoraTecnico(sesionRemota);
 
-    await guardarVisitasServidor(
-      data || []
-    );
-
-
-    // Volvemos a leer IndexedDB.
-    // La interfaz nunca depende directamente
-    // de la respuesta de Supabase.
-    await cargarVisitasLocales(
-      usuario
-    );
-
+    // Actualizar la interfaz desde IndexedDB.
+    await cargarVisitasLocales(usuario);
 
     console.log(
-      '[RUTA] Bitácora actualizada desde Supabase:',
-      data?.length || 0
+      '[RUTA] Bitácora actualizada con sesión verificada.'
     );
 
   } catch (error) {
-
-    // No destruimos la vista local si
-    // la actualización online falla.
+    // Nunca borrar las visitas locales por un error remoto.
     console.error(
-      '[RUTA] No fue posible actualizar ' +
-      'la bitácora desde Supabase:',
+      '[RUTA] No fue posible actualizar la bitácora:',
       error
     );
 
   } finally {
-
-    sincronizacionEnCurso =
-      false;
-
+    sincronizacionEnCurso = false;
   }
-
 }
+
 
 
 // ============================================
@@ -570,6 +565,8 @@ async function inicializarBitacora() {
 
   usuarioActual =
     sesion.usuario;
+
+  authUidActual = sesion.user?.id ?? null;
 
 
   nombreUsuario.textContent =
