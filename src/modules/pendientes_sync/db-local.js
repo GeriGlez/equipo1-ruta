@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 7;
+const DB_VERSION = 9;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -147,6 +147,15 @@ export function abrirBD() {
           }
         );
 
+      }
+
+      if (!db.objectStoreNames.contains("catalogo_m7")) {
+        db.createObjectStore("catalogo_m7", { keyPath: "id" });
+      }
+
+      if (!db.objectStoreNames.contains("incidencias")) {
+        const storeIncidencias = db.createObjectStore("incidencias", { keyPath: "id" });
+        storeIncidencias.createIndex("estado_envio", "estado_envio", { unique: false });
       }
 
     }; // cierra request.onupgradeneeded
@@ -1695,4 +1704,117 @@ export async function eliminarUsuarioContexto(
     }
   );
 
+}
+
+// ==============================================
+// CATÁLOGO OFFLINE M7 (INCIDENCIAS)
+// ==============================================
+export async function guardarCatalogoM7(visitas) {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readwrite");
+    const store = tx.objectStore("catalogo_m7");
+    
+    store.clear(); // Borramos el catálogo viejo
+    visitas.forEach(visita => store.put(visita)); // Insertamos el catálogo fresco
+    
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function obtenerCatalogoM7() {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readonly");
+    const store = tx.objectStore("catalogo_m7");
+    const request = store.getAll();
+    
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ==============================================
+// OBTENER INCIDENCIAS PENDIENTES
+// ==============================================
+export async function obtenerIncidenciasPendientes() {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readonly");
+    const store = tx.objectStore("incidencias");
+    
+    // Asume que creaste el índice "estado_envio" en tu tabla incidencias
+    const request = store.index("estado_envio").getAll("pendiente");
+    
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ==============================================
+// MARCAR INCIDENCIA COMO ENVIADA
+// ==============================================
+export async function marcarIncidenciaComoEnviada(idLocal, idServidor) {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readwrite");
+    const store = tx.objectStore("incidencias");
+    const request = store.get(idLocal);
+    
+    request.onsuccess = () => {
+      const incidencia = request.result;
+      if (!incidencia) return resolve();
+      
+      incidencia.estado_envio = "enviado";
+      incidencia.pendiente_envio = false;
+      incidencia.id_servidor = idServidor;
+      
+      store.put(incidencia);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ==============================================
+// GUARDAR INCIDENCIA LOCAL (M7)
+// ==============================================
+export async function guardarIncidenciaLocal(datosIncidencia) {
+  const db = await abrirBD();
+  
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readwrite");
+    const store = tx.objectStore("incidencias");
+
+    const uuidLocal = crypto.randomUUID();
+
+    const incidencia = {
+      ...datosIncidencia,
+      // Como aún no va a Supabase, le damos un ID temporal UUID para que IndexedDB no falle
+      id: uuidLocal, 
+      id_local: uuidLocal,
+      estado_envio: "pendiente",
+      pendiente_envio: true,
+      tipo_registro: "incidencia",
+      creado_localmente_en: new Date().toISOString()
+    };
+
+    store.put(incidencia);
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve(incidencia);
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+    
+    tx.onabort = () => {
+      db.close();
+      reject(tx.error || new Error("No se pudo guardar la incidencia localmente."));
+    };
+  });
 }
