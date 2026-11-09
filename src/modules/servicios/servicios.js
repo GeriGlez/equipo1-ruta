@@ -18,6 +18,7 @@ const inputId = document.getElementById('input-servicio-id');
 const inputNombre = document.getElementById('input-nombre');
 const inputDescripcion = document.getElementById('input-descripcion');
 const inputTiempo = document.getElementById('input-tiempo');
+const formError = document.getElementById('form-error');
 
 // Modal Eliminar
 const modalEliminar = document.getElementById('modal-confirmar-eliminar');
@@ -62,6 +63,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Aviso de error dentro del modal (textContent: nunca se interpreta como HTML)
+function mostrarError(mensaje) {
+  formError.textContent = mensaje;
+  formError.hidden = false;
+}
+
+function limpiarError() {
+  formError.textContent = '';
+  formError.hidden = true;
+}
+
 function initEventListeners() {
   // Buscador
   busquedaInput.addEventListener('input', (e) => {
@@ -78,12 +90,16 @@ function initEventListeners() {
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
+    limpiarError();
     modalTitle.textContent = 'Crear nuevo servicio';
     modalServicio.classList.remove('hidden');
   });
 
   // Cerrar Modales
-  const cerrarModal = () => modalServicio.classList.add('hidden');
+  const cerrarModal = () => {
+    modalServicio.classList.add('hidden');
+    limpiarError();
+  };
   btnCloseModal.addEventListener('click', cerrarModal);
   btnCancelarModal.addEventListener('click', cerrarModal);
 
@@ -113,7 +129,7 @@ function initEventListeners() {
 // 1. CONSULTAR SERVICIOS (READ)
 // ------------------------------------------------------------------
 async function cargarServicios() {
-  gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">Cargando servicios desde Supabase...</p>';
+  gridServicios.innerHTML = '<p class="estado-vacio">Cargando servicios desde Supabase...</p>';
   paginacionContainer.innerHTML = '';
   paginacionContainer.style.display = 'none';
 
@@ -150,7 +166,7 @@ function renderTarjetas() {
   gridServicios.innerHTML = '';
 
   if (serviciosFiltrados.length === 0) {
-    gridServicios.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">No se encontraron servicios.</p>';
+    gridServicios.innerHTML = '<p class="estado-vacio">No se encontraron servicios.</p>';
     paginacionContainer.innerHTML = '';
     paginacionContainer.style.display = 'none';
     return;
@@ -170,9 +186,9 @@ function renderTarjetas() {
             <span>📄</span>
             <span class="servicio-nombre"></span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
+          <div class="card-acciones">
             <button class="btn-edit-circle btn-editar-card" title="Editar servicio">✏️</button>
-            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar servicio" style="background: #FEE2E2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">🗑️</button>
+            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar servicio">🗑️</button>
           </div>
         </div>
         <div class="desc-box-ruta">
@@ -190,6 +206,10 @@ function renderTarjetas() {
     card.querySelector('.servicio-descripcion').textContent = s.descripcion || 'Sin descripción disponible.';
     card.querySelector('.servicio-duracion').textContent = `${s.duracion_estimada_min || 0} min`;
 
+    // aria-label con el nombre del servicio (dato de la BD, por eso se asigna aquí y no en la plantilla)
+    card.querySelector('.btn-editar-card').setAttribute('aria-label', `Editar servicio ${s.nombre}`);
+    card.querySelector('.btn-eliminar-card').setAttribute('aria-label', `Eliminar servicio ${s.nombre}`);
+
     // Clic Editar
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = s.id;
@@ -197,6 +217,7 @@ function renderTarjetas() {
       inputDescripcion.value = s.descripcion || '';
       inputTiempo.value = s.duracion_estimada_min || 0;
 
+      limpiarError();
       modalTitle.textContent = 'Editar servicio';
       modalServicio.classList.remove('hidden');
     });
@@ -271,11 +292,19 @@ function renderPaginacion() {
 // ------------------------------------------------------------------
 async function guardarServicio() {
   const id = inputId.value;
+  limpiarError();
+
+  // Number() (no parseInt) para que 1.5 NO se trunque a 1 en silencio: se rechaza
+  const duracion = Number(inputTiempo.value);
+  if (!Number.isInteger(duracion) || duracion < 1) {
+    mostrarError('El tiempo estimado debe ser un número entero de minutos, mayor o igual a 1.');
+    return;
+  }
 
   const payload = {
     nombre: inputNombre.value.trim(),
     descripcion: inputDescripcion.value.trim(),
-    duracion_estimada_min: parseInt(inputTiempo.value, 10)
+    duracion_estimada_min: duracion
   };
 
   try {
