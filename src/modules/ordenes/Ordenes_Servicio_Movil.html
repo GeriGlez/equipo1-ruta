@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUTA | Órdenes de Servicio - Técnico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #cbd5e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Contenedor principal simulando pantalla móvil */
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        }
+
+        @media (min-width: 640px) {
+            #app-container {
+                max-width: 420px;
+                height: 92vh;
+                min-height: auto;
+                max-height: 860px;
+                border-radius: 28px;
+                border: 6px solid #1e293b;
+            }
+        }
+
+        /* Animación suave para el acordeón */
+        .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .accordion-content.is-open {
+            grid-template-rows: 1fr;
+        }
+
+        .accordion-inner {
+            overflow: hidden;
+        }
+
+        /* Scrollbar discreto */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- Encabezado Principal (#045174) -->
+        <header class="bg-[#045174] text-white px-5 py-3.5 flex justify-between items-center z-20 shrink-0">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2.5">
+                    <img
+                        src="/logo-ruta.png"
+                        alt="Logotipo RUTA"
+                        class="w-12 h-12 rounded-full object-contain bg-white/10 p-0.5 shadow-md"
+                    >
+                    <span class="font-extrabold text-3xl tracking-wider">RUTA</span>
+                </div>
+                <p class="text-[11px] text-sky-100 font-medium mt-1 tracking-tight">Gestión de servicios en campo</p>
+            </div>
+            
+            <!-- Perfil Usuario -->
+            <div class="flex flex-col items-center">
+                <div class="w-12 h-12 rounded-full border-2 border-[#0099ff] overflow-hidden shadow-md bg-slate-800">
+                    <img
+                        src="/avatar.png"
+                        alt="Avatar Técnico"
+                        class="w-full h-full object-cover"
+                    >
+                </div>
+                <span id="tecnico-nombre-header" class="text-xs font-bold mt-1 leading-tight max-w-[110px] truncate">Usuario</span>
+                <span class="text-[10px] text-sky-200 leading-tight">Técnico</span>
+            </div>
+        </header>
+
+        <!-- Barra de Navegación Secundaria (#dce7ed) -->
+        <div class="bg-[#dce7ed] px-4 py-2 flex items-center justify-between border-b border-slate-300 shrink-0">
+            <button id="btn-volver-inicio" type="button" class="flex items-center text-[#045174] font-bold text-xs hover:opacity-80 transition-opacity">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Volver
+            </button>
+
+            <div class="flex items-center gap-2">
+                <span id="conn-badge-movil" class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-sm">
+                    <span id="conn-dot-movil" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="conn-text-movil">Con conexión</span>
+                </span>
+                <button id="btn-contraer-todas" type="button" class="text-[10px] text-[#045174] font-bold underline hover:opacity-80">
+                    Contraer
+                </button>
+            </div>
+        </div>
+
+        <!-- Encabezado de Fecha Fijo y Filtro Rápido -->
+        <div class="bg-white pt-3 pb-2.5 px-4 text-center border-b border-gray-100 shrink-0">
+            <h2 id="titulo-fecha-actual" class="text-[17px] font-extrabold text-black tracking-tight">Cargando fecha...</h2>
+            <p class="text-xs text-gray-700 font-medium mt-0.5" id="orders-counter">Consultando órdenes...</p>
+
+            <!-- Selector de vista para ver órdenes de hoy, todas o por fecha -->
+            <div class="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
+                <button type="button" data-filter="todas" class="filtro-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#045174] text-white transition-colors">
+                    Todas las órdenes
+                </button>
+                <button type="button" data-filter="hoy" class="filtro-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors">
+                    Solo hoy
+                </button>
+                <input
+                    type="date"
+                    id="input-filtro-fecha-movil"
+                    class="px-2 py-0.5 rounded-full text-[11px] font-semibold border border-slate-300 text-slate-700 bg-slate-50"
+                    aria-label="Filtrar por fecha específica"
+                >
+            </div>
+        </div>
+
+        <!-- Lista de Órdenes (Acordeón Unificado) -->
+        <main class="flex-1 overflow-y-auto px-3.5 py-3 pb-6 space-y-3.5 bg-white" id="orders-Container">
+            <div class="text-center py-10 text-xs text-gray-500 font-semibold">
+                Cargando órdenes de servicio...
+            </div>
+        </main>
+
+    </div>
+
+    <script type="module" src="./ordenes-tecnico-movil.js"></script>
+</body>
+</html>

@@ -85,6 +85,11 @@ export default defineConfig({
           'src/modules/ordenes/index.html'
         ),
 
+        ordenesMovil: resolve(
+          process.cwd(),
+          'src/modules/ordenes/Ordenes_Servicio_Movil.html'
+        ),
+
         registrarIncidencia: resolve(
           process.cwd(),
           'src/modules/incidencias/Registrar_Incidencia_Movil.html'

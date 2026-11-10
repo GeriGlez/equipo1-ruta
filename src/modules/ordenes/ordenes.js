@@ -1171,3 +1171,8 @@ async function inicializarModuloOrdenes() {
 }
 
 inicializarModuloOrdenes();
+// Si entra un técnico a la vista de escritorio, redirigirlo a su interfaz móvil
+      if (rol === 'tecnico') {
+        window.location.replace('./Ordenes_Servicio_Movil.html');
+        return;
+      }
