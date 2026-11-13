@@ -39,6 +39,10 @@ const RECURSOS = [
   '/src/modules/visitas/registrar-visita.js',
   '/src/modules/visitas/visitas-bitacora.js',
 
+  // Componente HU-02 Notas de acceso
+  '/src/modules/condominios/notas-acceso.js',
+  '/src/modules/condominios/notas-acceso.css',
+
   // Órdenes de servicio y programación semanal
   '/src/modules/ordenes/index.html',
   '/src/modules/ordenes/Ordenes_Servicio_Movil.html',

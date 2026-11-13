@@ -13,8 +13,10 @@ import {
 } from '../pendientes_sync/db-local.js';
 import {
   cargarCatalogosCompletos,
-  consultarOrdenesServicio
+  consultarOrdenesServicio,
+  guardarCatalogoLocal
 } from './ordenes-db.js';
+import { mostrarNotasAcceso } from '../condominios/notas-acceso.js';
 
 const STORAGE_ESTADOS_TECNICO_KEY = 'ruta_estados_ordenes_tecnico_v1';
 
@@ -105,6 +107,7 @@ async function cargarCatalogosConNotas() {
 
       if (!error && Array.isArray(data)) {
         condominios = data;
+        await guardarCatalogoLocal('condominios', condominios);
       }
     } catch (err) {
       console.warn('[Órdenes Técnico] Usando condominios en caché local:', err);
@@ -291,9 +294,6 @@ async function renderizarOrdenes() {
     const nombreCondominio = condo.nombre || `Condominio #${orden.condominio_id}`;
     const nombreArea = area.nombre || `Área #${orden.area_id}`;
     const nombreServicio = serv.nombre || `Servicio #${orden.servicio_id}`;
-    const notasAcceso =
-      (condo.notas_acceso && String(condo.notas_acceso).trim()) ||
-      'Sin notas de acceso registradas para este condominio.';
 
     const cfg = obtenerConfigEstado(orden.estado);
 
@@ -345,10 +345,7 @@ async function renderizarOrdenes() {
                 <div class="orden-field-box">${escaparHTML(nombreServicio)}</div>
               </div>
 
-              <div class="orden-field">
-                <span class="orden-field-label">Notas de acceso:</span>
-                <div class="orden-field-box orden-field-box--notas">${escaparHTML(notasAcceso)}</div>
-              </div>
+              <div class="orden-notas-container" data-notas-orden-idx="${idx}"></div>
 
               <div class="orden-btn-wrap">
                 <button
@@ -369,6 +366,32 @@ async function renderizarOrdenes() {
   }
 
   ordersContainer.innerHTML = tarjetasHTML.join('');
+
+  // Renderizar las notas de acceso usando el componente de HU-02 (notas-acceso.js)
+  for (let idx = 0; idx < todasLasOrdenes.length; idx++) {
+    const orden = todasLasOrdenes[idx];
+    const contenedorNotas = ordersContainer.querySelector(`[data-notas-orden-idx="${idx}"]`);
+    if (!contenedorNotas) continue;
+
+    let contexto = null;
+    if (orden.id) {
+      try {
+        contexto = await obtenerContextoOrden(orden.id);
+      } catch {
+        contexto = null;
+      }
+    }
+
+    const condoMapa = mapaCondominios.get(Number(orden.condominio_id));
+    const notasGuardadas = condoMapa?.notas_acceso ?? contexto?.condominio?.notas_acceso;
+
+    const datosCondominio = {
+      id: Number(orden.condominio_id),
+      ...(notasGuardadas ? { notas_acceso: notasGuardadas } : {})
+    };
+
+    await mostrarNotasAcceso(contenedorNotas, datosCondominio);
+  }
 }
 
 // =============================================================================
