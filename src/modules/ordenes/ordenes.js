@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { getActiveSession } from '../auth/authService.js';
+import { supabase } from '../../services/supabase.js';
 import {
   cargarCatalogosCompletos,
   consultarOrdenesServicio,
@@ -40,11 +41,14 @@ let catalogos = {
 let mapaCondominios = new Map();
 let mapaAreas = new Map();
 let mapaServicios = new Map();
+let mapaCuadrillas = new Map();
+let mapaUsuarios = new Map();
 
 let ordenes = [];
 let claveOrdenActual = null;
 let modoEdicion = false;
 let modoSoloLectura = false;
+let usuarioActualId = null;
 
 // Estado de la vista previa de programación semanal
 let vistaPreviaActual = null;
@@ -71,6 +75,7 @@ const notaEstadoInicial = document.getElementById('nota-estado-inicial');
 const inputCondominio = document.getElementById('input-condominio');
 const inputArea = document.getElementById('input-area');
 const inputServicio = document.getElementById('input-servicio');
+const inputCuadrilla = document.getElementById('input-cuadrilla');
 const inputFecha = document.getElementById('input-fecha');
 const inputMotivoCancelacion = document.getElementById('input-motivo-cancelacion');
 
@@ -286,6 +291,28 @@ async function cargarCatalogos() {
     catalogos = resultado;
     reconstruirMapasCatalogos();
     poblarSelectoresCatalogos();
+
+    if (navigator.onLine) {
+      const [{ data: listaCuadrillas }, { data: listaUsuarios }] = await Promise.all([
+        supabase.from('cuadrillas').select('id, nombre').order('nombre', { ascending: true }),
+        supabase.from('usuarios').select('id, nombre')
+      ]);
+
+      mapaCuadrillas = new Map((listaCuadrillas || []).map(c => [Number(c.id), c.nombre]));
+      mapaUsuarios = new Map((listaUsuarios || []).map(u => [String(u.id), u.nombre]));
+
+      if (inputCuadrilla) {
+        const valorPrevio = inputCuadrilla.value || '';
+        inputCuadrilla.innerHTML = '<option value="">Sin asignar</option>';
+        (listaCuadrillas || []).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = String(c.id);
+          opt.textContent = c.nombre;
+          inputCuadrilla.appendChild(opt);
+        });
+        inputCuadrilla.value = valorPrevio;
+      }
+    }
   } catch (error) {
     console.error('[Órdenes] Error cargando catálogos:', error);
     mostrarAlerta(`No fue posible cargar los catálogos: ${error.message}`, 'error');
@@ -300,6 +327,23 @@ async function obtenerOrdenes() {
   try {
     const resultado = await consultarOrdenesServicio();
     ordenes = resultado.ordenes || [];
+
+    if (navigator.onLine) {
+      const { data } = await supabase
+        .from('ordenes_servicio')
+        .select('id, cuadrilla_id, creada_por');
+      if (data) {
+        const mapaExtraOrden = new Map(data.map(d => [Number(d.id), d]));
+        ordenes.forEach(o => {
+          if (o.id && mapaExtraOrden.has(Number(o.id))) {
+            const extra = mapaExtraOrden.get(Number(o.id));
+            o.cuadrilla_id = extra.cuadrilla_id;
+            o.creada_por = extra.creada_por;
+          }
+        });
+      }
+    }
+
     renderTabla();
     await actualizarIndicadoresConexionYSync();
   } catch (error) {
@@ -494,6 +538,9 @@ function renderTabla() {
       <td>
         <strong>${escaparHTML(etiquetaId)}</strong><br>
         ${badgeOrigen}
+        <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+          Por: ${escaparHTML(orden.creada_por ? (mapaUsuarios.get(String(orden.creada_por)) || 'Admin') : 'Sin registro')}
+        </div>
       </td>
       <td><span class="badge">${nombreCondominio}</span></td>
       <td><span class="badge">${nombreArea}</span></td>
@@ -503,7 +550,11 @@ function renderTabla() {
         <span class="status ${claseEstado}">${iconoEstado} ${escaparHTML(orden.estado)}</span>
         ${motivosHTML}
       </td>
-      <td>${htmlSync}</td>
+      <td>
+        <span class="badge">
+          ${orden.cuadrilla_id ? escaparHTML(mapaCuadrillas.get(Number(orden.cuadrilla_id)) || `Cuadrilla #${orden.cuadrilla_id}`) : 'Sin asignar'}
+        </span>
+      </td>
       <td>${accionesHTML}</td>
     `;
 
@@ -552,9 +603,14 @@ btnGuardarOrden.addEventListener('click', async () => {
 
   btnGuardarOrden.disabled = true;
 
+  const cuadrillaId = inputCuadrilla?.value ? parseInt(inputCuadrilla.value, 10) : null;
+
   try {
     if (modoEdicion && claveOrdenActual) {
       const res = await actualizarOrdenServicio(claveOrdenActual, payload, catalogos);
+      if (res.orden?.id && navigator.onLine) {
+        await supabase.from('ordenes_servicio').update({ cuadrilla_id: cuadrillaId }).eq('id', res.orden.id);
+      }
       modalNuevaOrden.classList.remove('active');
       await obtenerOrdenes();
       mostrarAlerta(
@@ -565,6 +621,15 @@ btnGuardarOrden.addEventListener('click', async () => {
       );
     } else {
       const res = await crearOrdenServicio(payload, catalogos);
+      if (res.orden?.id && navigator.onLine) {
+        await supabase
+          .from('ordenes_servicio')
+          .update({
+            cuadrilla_id: cuadrillaId,
+            creada_por: usuarioActualId
+          })
+          .eq('id', res.orden.id);
+      }
       modalNuevaOrden.classList.remove('active');
       await obtenerOrdenes();
       mostrarAlerta(
@@ -616,6 +681,9 @@ tbody.addEventListener('click', async (e) => {
     inputCondominio.value = String(orden.condominio_id);
     actualizarOpcionesAreaPorCondominio(orden.condominio_id, orden.area_id);
     inputServicio.value = String(orden.servicio_id);
+    if (inputCuadrilla) {
+      inputCuadrilla.value = orden.cuadrilla_id ? String(orden.cuadrilla_id) : '';
+    }
     inputFecha.value = orden.fecha_programada;
 
     tituloModalOrden.innerText = orden.id
@@ -1018,6 +1086,13 @@ btnConfirmarProgramacionSemanal?.addEventListener('click', async () => {
       ordenesExistentes: [...ordenes]
     });
 
+    if (navigator.onLine && usuarioActualId && resumen.generadas > 0) {
+      await supabase
+        .from('ordenes_servicio')
+        .update({ creada_por: usuarioActualId })
+        .is('creada_por', null);
+    }
+
     await obtenerOrdenes();
 
     vistaPreviaActual = generarVistaPreviaSemanal({
@@ -1139,6 +1214,7 @@ async function inicializarModuloOrdenes() {
   try {
     const sesion = await getActiveSession();
     if (sesion?.usuario) {
+      usuarioActualId = sesion.usuario.id || sesion.user?.id || null;
       const rol = sesion.usuario.rol;
 
       if (rol !== 'administrador' && rol !== 'tecnico') {
@@ -1150,13 +1226,10 @@ async function inicializarModuloOrdenes() {
         nombreUsuarioOrden.textContent = sesion.usuario.nombre || 'Usuario';
       }
 
-      // Si entra un técnico, activamos el Modo Vista (solo lectura)
+      // Si entra un técnico a la vista de escritorio, redirigirlo a su interfaz móvil
       if (rol === 'tecnico') {
-        modoSoloLectura = true;
-        if (btnAbrirNuevaOrden) btnAbrirNuevaOrden.style.display = 'none';
-        if (btnAbrirProgramacionSemanal) btnAbrirProgramacionSemanal.style.display = 'none';
-        const subRol = document.querySelector('.user-info div:nth-child(2)');
-        if (subRol) subRol.textContent = 'Técnico (Modo Vista)';
+        window.location.replace('./Ordenes_Servicio_Movil.html');
+        return;
       }
     }
   } catch (err) {
@@ -1171,8 +1244,3 @@ async function inicializarModuloOrdenes() {
 }
 
 inicializarModuloOrdenes();
-// Si entra un técnico a la vista de escritorio, redirigirlo a su interfaz móvil
-      if (rol === 'tecnico') {
-        window.location.replace('./Ordenes_Servicio_Movil.html');
-        return;
-      }

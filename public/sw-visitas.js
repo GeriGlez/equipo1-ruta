@@ -43,6 +43,7 @@ const RECURSOS = [
   '/src/modules/ordenes/index.html',
   '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
   '/src/modules/ordenes/ordenes.css',
+  '/src/modules/ordenes/ordenes_movil.css',
   '/src/modules/ordenes/ordenes.js',
   '/src/modules/ordenes/ordenes-tecnico-movil.js',
   '/src/modules/ordenes/ordenes-db.js',
