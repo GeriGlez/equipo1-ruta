@@ -176,9 +176,35 @@ async function cargarDatosYRenderizar() {
     await cargarCatalogosConNotas();
     const resultado = await consultarOrdenesServicio();
     const estadosLocales = obtenerEstadosLocalesTecnico();
+    const hoy = obtenerFechaLocalISO();
 
+    // Obtener las cuadrillas del técnico (y respaldarlas localmente para modo offline)
+    const claveCuadrillas = `ruta_cuadrillas_tec_${usuarioActual?.id || 'anon'}`;
+    let misCuadrillas = JSON.parse(localStorage.getItem(claveCuadrillas) || '[]');
+
+    if (navigator.onLine && usuarioActual?.id) {
+      const [{ data: comoMiembro }, { data: comoResp }] = await Promise.all([
+        supabase.from('cuadrilla_usuario').select('cuadrilla_id').eq('usuario_id', usuarioActual.id),
+        supabase.from('cuadrillas').select('id').eq('responsable_id', usuarioActual.id)
+      ]);
+      misCuadrillas = [
+        ...new Set([
+          ...(comoMiembro || []).map(m => Number(m.cuadrilla_id)),
+          ...(comoResp || []).map(c => Number(c.id))
+        ])
+      ];
+      localStorage.setItem(claveCuadrillas, JSON.stringify(misCuadrillas));
+    }
+
+    // Mostrar solo las órdenes activas del día asignadas a la cuadrilla del técnico
     const activas = (resultado.ordenes || []).filter(
-      o => o.activo !== false && o.estado !== 'cancelada' && o.operacion_pendiente !== 'eliminar'
+      o =>
+        o.activo !== false &&
+        o.estado !== 'cancelada' &&
+        o.operacion_pendiente !== 'eliminar' &&
+        o.fecha_programada === hoy &&
+        o.cuadrilla_id !== null &&
+        misCuadrillas.includes(Number(o.cuadrilla_id))
     );
 
     // Sincronizar el estado con las visitas locales o el progreso iniciado por el técnico
@@ -204,7 +230,7 @@ async function cargarDatosYRenderizar() {
       }
     }
 
-    const hoy = obtenerFechaLocalISO();
+     hoy = obtenerFechaLocalISO();
     activas.sort((a, b) => {
       const aEsHoy = a.fecha_programada === hoy ? 0 : 1;
       const bEsHoy = b.fecha_programada === hoy ? 0 : 1;
@@ -296,6 +322,10 @@ async function renderizarOrdenes() {
     const nombreServicio = serv.nombre || `Servicio #${orden.servicio_id}`;
 
     const cfg = obtenerConfigEstado(orden.estado);
+    if (orden.fecha_programada && orden.fecha_programada > hoyISO && orden.estado !== 'completada') {
+      cfg.textoBoton = `Programada (${orden.fecha_programada})`;
+      cfg.claseBoton = 'orden-action-btn orden-action-btn--completada';
+    }
 
     tarjetasHTML.push(`
       <article
@@ -408,6 +438,14 @@ async function iniciarTrabajoYRedirigir(buttonEl) {
 
   if (!orden.id) {
     alert('Esta orden aún no cuenta con un identificador sincronizado para registrar visita.');
+    return;
+  }
+
+  const hoyISO = obtenerFechaLocalISO();
+  if (orden.fecha_programada && orden.fecha_programada > hoyISO) {
+    alert(
+      `No puedes iniciar esta orden todavía. Está programada para el ${orden.fecha_programada} y no se permiten iniciar trabajos de fechas futuras.`
+    );
     return;
   }
 

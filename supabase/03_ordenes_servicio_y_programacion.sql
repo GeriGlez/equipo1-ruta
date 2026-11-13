@@ -4,6 +4,10 @@
 -- existentes (autenticación, condominios, áreas, servicios, contratos y visitas).
 -- =============================================================================
 
+
+alter table if exists ordenes_servicio
+  add column if not exists cancelada_por uuid;
+
 -- -----------------------------------------------------------------------------
 -- 1. Columnas incrementales en ordenes_servicio
 -- -----------------------------------------------------------------------------
@@ -139,8 +143,8 @@ begin
       new.estado := 'programada';
     end if;
   elsif tg_op = 'UPDATE' then
-    if old.estado = 'completada' and new.estado <> 'completada' then
-      raise exception 'Una orden completada no puede cambiar de estado ni cancelarse.';
+    if new.estado = 'en_proceso' and old.estado <> 'en_proceso' and new.fecha_programada > current_date then
+      raise exception 'No se puede iniciar una orden programada para una fecha futura (%).', new.fecha_programada;
     end if;
 
     if old.estado = 'completada' and (
@@ -278,5 +282,31 @@ begin
         for delete to authenticated
         using (ruta_seguridad.es_admin() and estado in ('programada', 'cancelada'));
     end if;
+  end if;
+end $$;
+
+-- 5. Políticas RLS para que el técnico solo vea y actualice órdenes de su cuadrilla
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'ordenes_servicio' and policyname = 'ordenes_servicio_tecnico_select'
+  ) then
+    create policy ordenes_servicio_tecnico_select on ordenes_servicio
+      for select to authenticated
+      using (
+        exists (
+          select 1 from cuadrilla_usuario cu
+          join usuarios u on u.id = cu.usuario_id
+          where cu.cuadrilla_id = ordenes_servicio.cuadrilla_id
+            and lower(u.correo) = lower(auth.jwt() ->> 'email')
+        )
+        or exists (
+          select 1 from cuadrillas c
+          join usuarios u on u.id = c.responsable_id
+          where c.id = ordenes_servicio.cuadrilla_id
+            and lower(u.correo) = lower(auth.jwt() ->> 'email')
+        )
+      );
   end if;
 end $$;
