@@ -1,0 +1,224 @@
+/* =========================================================
+   MÓDULO 5 - ÓRDENES DE SERVICIO (VISTA MÓVIL TÉCNICO)
+========================================================= */
+
+.ordenes-movil-content {
+  padding: 1.5rem 1.15rem 2.5rem;
+  background-color: #ffffff;
+}
+
+/* Encabezado de fecha centrado */
+.ordenes-fecha-header {
+  text-align: center;
+  margin-bottom: 1.35rem;
+}
+
+.ordenes-fecha-titulo {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: -0.02em;
+}
+
+.ordenes-fecha-subtitulo {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #222222;
+}
+
+.ordenes-cargando {
+  text-align: center;
+  color: #64748b;
+  font-weight: 600;
+  padding: 2.5rem 1rem;
+}
+
+/* Contenedor de tarjetas */
+.ordenes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+/* Tarjeta gris redondeada */
+.orden-card {
+  background-color: #efefef;
+  border-radius: 22px;
+  padding: 1rem 1.15rem 1.1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.14);
+  border: 1px solid #e2e2e2;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Parte superior siempre visible */
+.orden-card-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.orden-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.orden-card-svg {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.orden-card-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.orden-card-numero {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #075f80;
+}
+
+.orden-card-condominio {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orden-card-chevron {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: #222222;
+  transition: transform 0.28s ease;
+}
+
+.orden-card.is-open .orden-card-chevron {
+  transform: rotate(180deg);
+}
+
+/* Barra de estado tipo píldora de ancho completo */
+.orden-status-bar {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.38rem 0.75rem;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.orden-status-bar--asignada {
+  background-color: #0099ff;
+}
+
+.orden-status-bar--en-proceso {
+  background-color: #f28500;
+}
+
+.orden-status-bar--completada {
+  background-color: #16a34a;
+}
+
+/* Contenido desplegable (Acordeón) */
+.orden-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orden-card.is-open .orden-accordion {
+  grid-template-rows: 1fr;
+}
+
+.orden-accordion-inner {
+  overflow: hidden;
+}
+
+.orden-card-body {
+  padding-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.orden-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.orden-field-label {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #111111;
+}
+
+.orden-field-box {
+  background-color: #ffffff;
+  border-radius: 11px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.35;
+}
+
+.orden-field-box--notas {
+  padding: 0.65rem 0.9rem;
+  white-space: pre-line;
+}
+
+/* Botón verde centrado "Iniciar Trabajo" */
+.orden-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.orden-action-btn {
+  width: 74%;
+  max-width: 260px;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.orden-action-btn:active {
+  transform: scale(0.98);
+}
+
+.orden-action-btn--iniciar {
+  background-color: #39f724;
+  color: #000000;
+  box-shadow: 0 3px 8px rgba(57, 247, 36, 0.35);
+}
+
+.orden-action-btn--finalizar {
+  background-color: #f28500;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(242, 133, 0, 0.35);
+}
+
+.orden-action-btn--completada {
+  background-color: #d1d5db;
+  color: #374151;
+}

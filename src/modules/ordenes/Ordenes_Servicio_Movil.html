@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA | Órdenes de Servicio</title>
+
+  <!-- Estilos globales y encabezado compartido con Visitas e Incidencias -->
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/visitas_movil.css">
+  <link rel="stylesheet" href="./ordenes_movil.css">
+</head>
+<body>
+
+  <div class="m5-mobile-page">
+
+    <!-- =========================================
+         HEADER (Idéntico a Visitas e Incidencias)
+    ========================================== -->
+    <header class="m5-mobile-header">
+      <div class="m5-brand">
+        <div class="m5-brand-main">
+          <img
+            src="/logo-ruta.png"
+            alt="Logotipo RUTA"
+            class="m5-brand-logo"
+          >
+          <span class="m5-brand-name">RUTA</span>
+        </div>
+        <span class="m5-brand-subtitle">Gestión de servicios en campo</span>
+      </div>
+
+      <div class="m5-user">
+        <img
+          src="/avatar.png"
+          alt="Usuario técnico"
+          class="m5-user-avatar"
+        >
+        <strong id="tecnico-nombre-header">Usuario</strong>
+        <span>Técnico</span>
+      </div>
+    </header>
+
+    <!-- =========================================
+         BARRA VOLVER (Idéntica a los demás módulos)
+    ========================================== -->
+    <nav class="m5-backbar" aria-label="Navegación">
+      <button
+        type="button"
+        id="btn-volver-inicio"
+        class="m5-back-button"
+        aria-label="Volver a la pantalla anterior"
+      >
+        <span class="m5-back-arrow" aria-hidden="true">←</span>
+        <span>Volver</span>
+      </button>
+    </nav>
+
+    <!-- =========================================
+         CONTENIDO BLANCO (Órdenes de Servicio)
+    ========================================== -->
+    <main class="m5-mobile-content ordenes-movil-content">
+
+      <!-- Encabezado de Fecha y Contador -->
+      <header class="ordenes-fecha-header">
+        <h1 id="titulo-fecha-actual" class="ordenes-fecha-titulo">
+          Cargando fecha...
+        </h1>
+        <p id="orders-counter" class="ordenes-fecha-subtitulo">
+          Consultando órdenes...
+        </p>
+      </header>
+
+      <!-- Lista de Tarjetas en Acordeón -->
+      <section id="orders-Container" class="ordenes-lista" aria-live="polite">
+        <p class="ordenes-cargando">Cargando órdenes programadas...</p>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script type="module" src="./ordenes-tecnico-movil.js"></script>
+</body>
+</html>
