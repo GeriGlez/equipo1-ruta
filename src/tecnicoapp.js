@@ -22,8 +22,8 @@ const RUTAS = {
   incidencias:
     '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
 
-  ordenes:
-    '/src/modules/ordenes/index.html'
+ ordenes:
+    '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
 
 }
 
