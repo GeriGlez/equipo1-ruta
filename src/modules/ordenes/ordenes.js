@@ -331,7 +331,7 @@ async function obtenerOrdenes() {
     if (navigator.onLine) {
       const { data } = await supabase
         .from('ordenes_servicio')
-        .select('id, cuadrilla_id, creada_por');
+        .select('id, cuadrilla_id, creada_por, cancelada_por, estado');
       if (data) {
         const mapaExtraOrden = new Map(data.map(d => [Number(d.id), d]));
         ordenes.forEach(o => {
@@ -339,6 +339,10 @@ async function obtenerOrdenes() {
             const extra = mapaExtraOrden.get(Number(o.id));
             o.cuadrilla_id = extra.cuadrilla_id;
             o.creada_por = extra.creada_por;
+            o.cancelada_por = extra.cancelada_por;
+            if (!o.pendiente_sync && extra.estado) {
+              o.estado = extra.estado;
+            }
           }
         });
       }
@@ -570,6 +574,12 @@ inputCondominio.addEventListener('change', () => {
   actualizarOpcionesAreaPorCondominio(inputCondominio.value, '');
 });
 
+inputCuadrilla?.addEventListener('change', () => {
+  if (!notaEstadoInicial) return;
+  const estadoTexto = inputCuadrilla.value ? 'ASIGNADA' : 'PROGRAMADA';
+  notaEstadoInicial.innerHTML = `La orden quedará en estado: <strong>${estadoTexto}</strong>`;
+});
+
 btnAbrirNuevaOrden.addEventListener('click', () => {
   if (modoSoloLectura) return;
   modoEdicion = false;
@@ -604,18 +614,25 @@ btnGuardarOrden.addEventListener('click', async () => {
   btnGuardarOrden.disabled = true;
 
   const cuadrillaId = inputCuadrilla?.value ? parseInt(inputCuadrilla.value, 10) : null;
+  const estadoSegunCuadrilla = cuadrillaId !== null ? 'asignada' : 'programada';
 
   try {
     if (modoEdicion && claveOrdenActual) {
       const res = await actualizarOrdenServicio(claveOrdenActual, payload, catalogos);
       if (res.orden?.id && navigator.onLine) {
-        await supabase.from('ordenes_servicio').update({ cuadrilla_id: cuadrillaId }).eq('id', res.orden.id);
+        await supabase
+          .from('ordenes_servicio')
+          .update({
+            cuadrilla_id: cuadrillaId,
+            estado: estadoSegunCuadrilla
+          })
+          .eq('id', res.orden.id);
       }
       modalNuevaOrden.classList.remove('active');
       await obtenerOrdenes();
       mostrarAlerta(
         res.guardadoEnServidor
-          ? 'Orden actualizada en Supabase.'
+          ? `Orden actualizada en Supabase con estado "${estadoSegunCuadrilla}".`
           : 'Sin conexión: los cambios de la orden se guardaron localmente en IndexedDB y están pendientes de sincronización.',
         res.guardadoEnServidor ? 'success' : 'warning'
       );
@@ -626,6 +643,7 @@ btnGuardarOrden.addEventListener('click', async () => {
           .from('ordenes_servicio')
           .update({
             cuadrilla_id: cuadrillaId,
+            estado: estadoSegunCuadrilla,
             creada_por: usuarioActualId
           })
           .eq('id', res.orden.id);
@@ -755,6 +773,12 @@ btnConfirmarCancelacion.addEventListener('click', async () => {
 
   try {
     const res = await cancelarOrdenServicio(claveOrdenActual, motivo);
+    if (res.orden?.id && navigator.onLine && usuarioActualId) {
+      await supabase
+        .from('ordenes_servicio')
+        .update({ cancelada_por: usuarioActualId })
+        .eq('id', res.orden.id);
+    }
     modalCancelarOrden.classList.remove('active');
     await obtenerOrdenes();
     mostrarAlerta(
