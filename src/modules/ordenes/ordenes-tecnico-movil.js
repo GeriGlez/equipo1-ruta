@@ -230,7 +230,6 @@ async function cargarDatosYRenderizar() {
       }
     }
 
-     hoy = obtenerFechaLocalISO();
     activas.sort((a, b) => {
       const aEsHoy = a.fecha_programada === hoy ? 0 : 1;
       const bEsHoy = b.fecha_programada === hoy ? 0 : 1;
