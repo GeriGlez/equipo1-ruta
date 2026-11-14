@@ -1,4 +1,4 @@
-import { guardarVisita } from './db-local.js';
+import { guardarVisita } from '../pendientes_sync/db-local.js';
 
   const formulario = document.querySelector('#visit-form');
   const botonGuardar = document.querySelector('#save-visit');

@@ -18,12 +18,11 @@ const RUTAS = {
 
   pendientes:
     '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
-
   incidencias:
     '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
 
   ordenes:
-    '/src/modules/ordenes/index.html',
+    '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
 
   insumos:
     '/src/modules/insumos/Registrar_Insumos_Movil.html'
@@ -496,13 +495,7 @@ export function renderTecnicoApp(
   // MÓDULOS AÚN NO INTEGRADOS
   // ==========================================
 
-  const modulosPendientes = [
-<<<<<<< HEAD
-    'incidencias'
-=======
-    'insumos',
->>>>>>> origin/Build
-  ]
+  const modulosPendientes = [];
 
 
   modulosPendientes.forEach(
@@ -626,3 +619,45 @@ async function actualizarOrdenesTecnico(
   }
 
 }
+// ================================================
+// PRECARGAR CATÁLOGO PARA EL MÓDULO DE INCIDENCIAS
+// ================================================
+import { supabase } from './services/supabase.js';
+import { guardarCatalogoM7 } from './modules/pendientes_sync/db-local.js';
+
+// Ejecutar silenciosamente en segundo plano
+async function descargarCatalogosOffline() {
+  if (!navigator.onLine) return;
+
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return;
+
+    // Traemos las visitas anidadas igual que lo hacías en tu módulo
+    const { data: visitas, error } = await supabase
+      .from('visitas')
+      .select(`
+        id,
+        ordenes_servicio (
+          condominio_id,
+          area_id,
+          condominios ( nombre ),
+          areas ( nombre )
+        )
+      `)
+      .eq('tecnico_id', authData.user.id)
+      .order('id', { ascending: false }); 
+
+    if (error) throw error;
+
+    // Guardamos en la base de datos local
+    await guardarCatalogoM7(visitas);
+    console.log('Catálogo M7 descargado exitosamente para uso offline.');
+    
+  } catch (error) {
+    console.error('Error descargando catálogo M7:', error);
+  }
+}
+
+// Llamar a la función al cargar el dashboard
+descargarCatalogosOffline();

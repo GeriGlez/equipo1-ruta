@@ -11,7 +11,7 @@
 }
 
 body {
-    background-color: #f1f5f9;
+    background-color: #ffffff;
     color: #0f172a;
 }
 
@@ -114,10 +114,12 @@ body {
     background-color: #fde68a;
 }
 
-/* SUBBARRA VOLVER */
+/* SUBBARRA VOLVER (Unificada con los demás módulos) */
 .ordenes-subbar {
-    background-color: #dceaf1;
-    padding: 8px 28px;
+    width: 100%;
+    min-height: 48px;
+    background-color: #dcebf3;
+    padding: 0 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -126,10 +128,18 @@ body {
 }
 
 .ordenes-back-link {
-    color: #005f8a;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #005b7f;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 20px;
     text-decoration: none;
+}
+
+.ordenes-back-arrow {
+    font-size: 26px;
+    line-height: 1;
 }
 
 .ordenes-back-link:hover {
@@ -144,12 +154,11 @@ body {
 
 /* CONTENIDO PRINCIPAL */
 .container {
-    max-width: 1280px;
-    padding: 26px;
-    background-color: white;
-    margin: 20px auto;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: min(1400px, calc(100% - 6rem));
+    max-width: 1400px;
+    padding: 32px 0 60px;
+    background-color: #ffffff;
+    margin: 0 auto;
 }
 
 .header-actions {

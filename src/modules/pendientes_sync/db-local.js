@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 8;
+const DB_VERSION = 10;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -149,7 +149,6 @@ export function abrirBD() {
 
       }
 
-    
       if (!db.objectStoreNames.contains("insumos_catalogo")) {
 
         db.createObjectStore(
@@ -184,6 +183,15 @@ export function abrirBD() {
 
       }
 
+      if (!db.objectStoreNames.contains("catalogo_m7")) {
+        db.createObjectStore("catalogo_m7", { keyPath: "id" });
+      }
+
+      if (!db.objectStoreNames.contains("incidencias")) {
+        const storeIncidencias = db.createObjectStore("incidencias", { keyPath: "id" });
+        storeIncidencias.createIndex("estado_envio", "estado_envio", { unique: false });
+      }
+
     }; // cierra request.onupgradeneeded
 
      // Apertura exitosa
@@ -215,7 +223,7 @@ export function abrirBD() {
 export async function guardarVisita(datosVisita) {
 
   const db = await abrirBD();
-
+  
   return new Promise((resolve, reject) => {
 
     const transaction = db.transaction(
@@ -227,6 +235,8 @@ export async function guardarVisita(datosVisita) {
 
     const visita = {
       ...datosVisita,
+
+      revision_local: crypto.randomUUID(),
 
       id: crypto.randomUUID(),
 
@@ -266,46 +276,62 @@ export async function guardarVisita(datosVisita) {
 // OBTENER VISITAS PENDIENTES
 // ==============================================
 
-export async function obtenerVisitasPendientes() {
 
+export async function obtenerVisitasPendientes(tecnicoId) {
+  if (
+    tecnicoId === null ||
+    tecnicoId === undefined ||
+    String(tecnicoId).trim() === ''
+  ) {
+    throw new Error(
+      'Se requiere el identificador del técnico.'
+    );
+  }
+
+  const idTecnico = String(tecnicoId);
   const db = await abrirBD();
 
   return new Promise((resolve, reject) => {
-
     let transaction;
 
     try {
-
       transaction = db.transaction(
-        "visitas",
-        "readonly"
+        'visitas',
+        'readonly'
       );
 
-      const store = transaction.objectStore("visitas");
+      const store = transaction.objectStore('visitas');
+      const indice = store.index('estado_envio');
 
-      const indice = store.index("estado_envio");
-
-      // Buscar únicamente registros pendientes
-      const request = indice.getAll("pendiente");
+      const request = indice.getAll('pendiente');
 
       let visitas = [];
 
       request.onsuccess = () => {
-        visitas = request.result;
+        visitas = (request.result || []).filter(
+          visita =>
+            String(visita.tecnico_id) === idTecnico
+        );
       };
 
-      // Confirmar que la transacción terminó
       transaction.oncomplete = () => {
         db.close();
         resolve(visitas);
       };
 
-      transaction.onabort = () => {
+      transaction.onerror = () => {
         db.close();
-
         reject(
           transaction.error ||
-          new Error("Error al consultar visitas pendientes")
+          new Error('No fue posible consultar los pendientes.')
+        );
+      };
+
+      transaction.onabort = () => {
+        db.close();
+        reject(
+          transaction.error ||
+          new Error('Error al consultar visitas pendientes.')
         );
       };
 
@@ -313,10 +339,9 @@ export async function obtenerVisitasPendientes() {
       db.close();
       reject(error);
     }
-
   });
-
 }
+
 
 // ==============================================
 // OBTENER TODAS LAS VISITAS LOCALES
@@ -812,6 +837,8 @@ export async function actualizarVisitaLocal(
 
           ...cambios,
 
+          revision_local: crypto.randomUUID(),
+
           // Nunca cambiar el identificador local.
           id:
             visita.id,
@@ -913,8 +940,14 @@ export async function actualizarVisitaLocal(
 
 export async function marcarVisitaComoEnviada(
   visitaId,
-  visitaServidorId = null
+  visitaServidorId,
+  revisionEnviada
 ) {
+  if (revisionEnviada === undefined) {
+    throw new Error(
+      'Se requiere la revisión enviada de la visita.'
+    );
+  }
 
   const db = await abrirBD();
 
@@ -934,12 +967,12 @@ export async function marcarVisitaComoEnviada(
     let visitaActualizada = null;
     let errorPropio = null;
 
+    
     request.onsuccess = () => {
 
       const visita = request.result;
 
       if (!visita) {
-
         errorPropio = new Error(
           "No se encontró la visita local."
         );
@@ -948,24 +981,38 @@ export async function marcarVisitaComoEnviada(
         return;
       }
 
+      // Comprobar si la visita cambió durante el envío.
+      const revisionActual = visita.revision_local ?? null;
+
+      const mismaRevision =
+        revisionActual === revisionEnviada;
+
       visitaActualizada = {
         ...visita,
 
-        estado_envio: "enviado",
+        // Conservar el ID confirmado por Supabase.
+        visita_servidor_id: visitaServidorId,
 
-        pendiente_envio: false,
+        // Confirmar únicamente la revisión enviada.
+        estado_envio: mismaRevision
+          ? 'enviado'
+          : 'pendiente',
 
-        operacion_pendiente: null,
+        pendiente_envio: !mismaRevision,
 
-        sincronizado_en:
-          new Date().toISOString(),
+        // Conservar cambios nuevos para el siguiente envío.
+        operacion_pendiente: mismaRevision
+          ? null
+          : 'actualizar',
 
-        visita_servidor_id:
-          visitaServidorId
+        ...(mismaRevision
+          ? { sincronizado_en: new Date().toISOString() }
+          : {})
       };
 
       store.put(visitaActualizada);
     };
+
 
     request.onerror = () => {
 
@@ -1691,4 +1738,117 @@ export async function eliminarUsuarioContexto(
     }
   );
 
+}
+
+// ==============================================
+// CATÁLOGO OFFLINE M7 (INCIDENCIAS)
+// ==============================================
+export async function guardarCatalogoM7(visitas) {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readwrite");
+    const store = tx.objectStore("catalogo_m7");
+    
+    store.clear(); // Borramos el catálogo viejo
+    visitas.forEach(visita => store.put(visita)); // Insertamos el catálogo fresco
+    
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function obtenerCatalogoM7() {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("catalogo_m7", "readonly");
+    const store = tx.objectStore("catalogo_m7");
+    const request = store.getAll();
+    
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ==============================================
+// OBTENER INCIDENCIAS PENDIENTES
+// ==============================================
+export async function obtenerIncidenciasPendientes() {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readonly");
+    const store = tx.objectStore("incidencias");
+    
+    // Asume que creaste el índice "estado_envio" en tu tabla incidencias
+    const request = store.index("estado_envio").getAll("pendiente");
+    
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ==============================================
+// MARCAR INCIDENCIA COMO ENVIADA
+// ==============================================
+export async function marcarIncidenciaComoEnviada(idLocal, idServidor) {
+  const db = await abrirBD();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readwrite");
+    const store = tx.objectStore("incidencias");
+    const request = store.get(idLocal);
+    
+    request.onsuccess = () => {
+      const incidencia = request.result;
+      if (!incidencia) return resolve();
+      
+      incidencia.estado_envio = "enviado";
+      incidencia.pendiente_envio = false;
+      incidencia.id_servidor = idServidor;
+      
+      store.put(incidencia);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ==============================================
+// GUARDAR INCIDENCIA LOCAL (M7)
+// ==============================================
+export async function guardarIncidenciaLocal(datosIncidencia) {
+  const db = await abrirBD();
+  
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("incidencias", "readwrite");
+    const store = tx.objectStore("incidencias");
+
+    const uuidLocal = crypto.randomUUID();
+
+    const incidencia = {
+      ...datosIncidencia,
+      // Como aún no va a Supabase, le damos un ID temporal UUID para que IndexedDB no falle
+      id: uuidLocal, 
+      id_local: uuidLocal,
+      estado_envio: "pendiente",
+      pendiente_envio: true,
+      tipo_registro: "incidencia",
+      creado_localmente_en: new Date().toISOString()
+    };
+
+    store.put(incidencia);
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve(incidencia);
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+    
+    tx.onabort = () => {
+      db.close();
+      reject(tx.error || new Error("No se pudo guardar la incidencia localmente."));
+    };
+  });
 }

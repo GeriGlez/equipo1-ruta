@@ -11,7 +11,8 @@ const modulosAdministrador = [
   {
     titulo: 'Servicios Contratados',
     descripcion: 'Define servicios, frecuencia y día preferente',
-    estilo: 'servicios'
+    estilo: 'servicios',
+    ruta: './src/modules/servicios/modulos.html'
   },
   {
     titulo: 'Personal y Cuadrillas',

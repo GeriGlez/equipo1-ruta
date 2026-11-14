@@ -3,7 +3,7 @@
 // Almacenamiento local de insumos (IndexedDB)
 // ==============================================
 
-import { abrirBD } from '../visitas/db-local.js';
+import { abrirBD } from '../pendientes_sync/db-local.js';
 
 
 // Ejecuta una operación sobre un store y espera

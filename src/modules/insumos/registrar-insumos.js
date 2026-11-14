@@ -10,7 +10,7 @@ import { getActiveSession } from '../auth/authService.js';
 import {
   obtenerVisitasLocales,
   obtenerContextoOrden
-} from '../visitas/db-local.js';
+} from '../pendientes_sync/db-local.js';
 
 import {
   obtenerCatalogoLocal,

@@ -12,7 +12,7 @@ import {
   eliminarConsumoLocal
 } from './insumos-local.js';
 
-import { obtenerVisitasLocales } from '../visitas/db-local.js';
+import { obtenerVisitasLocales } from '../pendientes_sync/db-local.js';
 
 
 const COLUMNAS_INSUMO =
