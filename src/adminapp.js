@@ -40,7 +40,8 @@ const modulosAdministrador = [
   {
     titulo: 'Incidencias',
     descripcion: 'Revisa y resuelve incidencias reportadas',
-    estilo: 'incidencias'
+    estilo: 'incidencias',
+    ruta: './src/modules/incidencias/incidencias-admin.html'
   },
   {
     titulo: 'Reportes',
