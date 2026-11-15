@@ -151,8 +151,9 @@ function actualizarUnidad(linea) {
 
   if (insumo) {
 
+    const existencia = insumo.existencia ?? insumo.stock;
     linea.ayuda.textContent =
-      `Existencia registrada: ${formatearNumero(insumo.stock)} ${insumo.unidad}`;
+      `Existencia registrada: ${formatearNumero(existencia)} ${insumo.unidad}`;
     linea.ayuda.hidden = false;
 
   } else {

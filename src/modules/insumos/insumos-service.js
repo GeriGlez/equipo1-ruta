@@ -15,8 +15,18 @@ import {
 import { obtenerVisitasLocales } from '../pendientes_sync/db-local.js';
 
 
-const COLUMNAS_INSUMO =
-  'id, nombre, tipo, unidad, stock, cantidad, descripcion, activo';
+const COLUMNAS_INSUMO = 'id, nombre, unidad, existencia';
+
+function normalizarInsumo(item) {
+  if (!item) return null;
+  const existencia = Number(item.existencia ?? item.stock ?? 0);
+  return {
+    ...item,
+    existencia,
+    stock: existencia,
+    cantidad: existencia
+  };
+}
 
 
 // ==============================================
@@ -34,7 +44,7 @@ export async function listarCatalogoServidor() {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(normalizarInsumo);
 
 }
 
@@ -42,21 +52,17 @@ export async function listarCatalogoServidor() {
 export async function crearInsumo({
   nombre,
   unidad,
-  existencia,
-  tipo,
-  descripcion
+  existencia
 }) {
+
+  const numExistencia = Number(existencia) || 0;
 
   const { data, error } = await supabase
     .from('insumos')
     .insert({
       nombre,
       unidad,
-      stock: existencia,
-      cantidad: existencia,
-      tipo: tipo || null,
-      descripcion: descripcion || null,
-      activo: true
+      existencia: numExistencia
     })
     .select(COLUMNAS_INSUMO)
     .single();
@@ -65,7 +71,7 @@ export async function crearInsumo({
     throw error;
   }
 
-  return data;
+  return normalizarInsumo(data);
 
 }
 
@@ -79,16 +85,17 @@ export async function sincronizarCatalogoLocal() {
   const { data, error } = await supabase
     .from('insumos')
     .select(COLUMNAS_INSUMO)
-    .eq('activo', true)
     .order('nombre', { ascending: true });
 
   if (error) {
     throw error;
   }
 
-  await guardarCatalogoLocal(data || []);
+  const mapeados = (data || []).map(normalizarInsumo);
 
-  return data || [];
+  await guardarCatalogoLocal(mapeados);
+
+  return mapeados;
 
 }
 
@@ -124,13 +131,26 @@ export async function sincronizarConsumosPendientes() {
 
     try {
 
+      const visita = visitasPorId.get(consumo.visita_local_id);
+      const visitaServidorId =
+        visita?.visita_servidor_id ||
+        (typeof visita?.id === 'number' ? visita.id : null);
+
+      if (!visitaServidorId) {
+        omitidos++;
+        continue;
+      }
+
       // ---------- ELIMINAR ----------
       if (consumo.operacion_pendiente === 'eliminar') {
 
         const { error } = await supabase
-          .from('consumos_insumo')
+          .from('visita_insumo')
           .delete()
-          .eq('id_local', consumo.id);
+          .match({
+            visita_id: visitaServidorId,
+            insumo_id: consumo.insumo_id
+          });
 
         if (error) {
           throw error;
@@ -142,49 +162,43 @@ export async function sincronizarConsumosPendientes() {
 
       }
 
-      const visita = visitasPorId.get(consumo.visita_local_id);
+      // ---------- ACTUALIZAR O INSERTAR (IDEMPOTENTE) ----------
+      const { data: existente, error: errBusqueda } = await supabase
+        .from('visita_insumo')
+        .select('id')
+        .eq('visita_id', visitaServidorId)
+        .eq('insumo_id', consumo.insumo_id)
+        .maybeSingle();
 
-      if (!visita?.visita_servidor_id) {
-        omitidos++;
-        continue;
+      if (errBusqueda) {
+        throw errBusqueda;
       }
 
-      // ---------- ACTUALIZAR ----------
-      if (consumo.operacion_pendiente === 'actualizar') {
+      if (existente?.id) {
 
-        const { error } = await supabase
-          .from('consumos_insumo')
+        const { error: errUpdate } = await supabase
+          .from('visita_insumo')
           .update({
-            insumo_id: consumo.insumo_id,
-            cantidad: consumo.cantidad
+            cantidad: Number(consumo.cantidad)
           })
-          .eq('id_local', consumo.id);
+          .eq('id', existente.id);
 
-        if (error) {
-          throw error;
+        if (errUpdate) {
+          throw errUpdate;
         }
 
-      }
+      } else {
 
-      // ---------- INSERTAR ----------
-      // upsert por id_local: si el envío anterior llegó
-      // pero se perdió la respuesta, no se duplica.
-      else {
+        const { error: errInsert } = await supabase
+          .from('visita_insumo')
+          .insert({
+            visita_id: visitaServidorId,
+            insumo_id: consumo.insumo_id,
+            cantidad: Number(consumo.cantidad)
+          });
 
-        const { error } = await supabase
-          .from('consumos_insumo')
-          .upsert(
-            {
-              id_local: consumo.id,
-              visita_id: visita.visita_servidor_id,
-              insumo_id: consumo.insumo_id,
-              cantidad: consumo.cantidad
-            },
-            { onConflict: 'id_local' }
-          );
-
-        if (error) {
-          throw error;
+        if (errInsert) {
+          throw errInsert;
         }
 
       }
@@ -247,7 +261,7 @@ async function consultarPorIds(tabla, columnas, ids) {
 export async function obtenerReporteInsumos() {
 
   const { data: consumos, error } = await supabase
-    .from('consumos_insumo')
+    .from('visita_insumo')
     .select('id, visita_id, insumo_id, cantidad')
     .order('id', { ascending: false });
 
@@ -262,7 +276,7 @@ export async function obtenerReporteInsumos() {
   const [insumos, visitas] = await Promise.all([
     consultarPorIds(
       'insumos',
-      'id, nombre, unidad',
+      'id, nombre, unidad, existencia',
       unicos(consumos.map(c => c.insumo_id))
     ),
     consultarPorIds(

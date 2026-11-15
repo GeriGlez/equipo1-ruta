@@ -40,7 +40,8 @@ function estadoDe(insumo) {
     return 'inactivo';
   }
 
-  return Number(insumo.stock) > 0 ? 'disponible' : 'agotado';
+  const existencia = Number(insumo.existencia ?? insumo.stock ?? 0);
+  return existencia > 0 ? 'disponible' : 'agotado';
 
 }
 
