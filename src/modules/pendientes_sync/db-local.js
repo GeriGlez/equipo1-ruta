@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -48,6 +48,48 @@ export function abrirBD() {
         );
 
       }
+
+
+      if (!db.objectStoreNames.contains("ordenes_contexto_tecnico")) {
+        const storeNuevo = db.createObjectStore(
+          "ordenes_contexto_tecnico",
+          {
+            keyPath: ["orden_id", "tecnico_id"]
+          }
+        );
+
+        // Migrar contextos existentes sin eliminar el almacén anterior.
+        const storeAnterior =
+          request.transaction.objectStore("ordenes_contexto");
+
+        const cursorRequest = storeAnterior.openCursor();
+
+        cursorRequest.onsuccess = () => {
+          const cursor = cursorRequest.result;
+
+          if (!cursor) return;
+
+          const contexto = cursor.value;
+          const ordenId = Number(contexto?.orden_id);
+          const tecnicoId =
+            String(contexto?.tecnico_id ?? "").trim();
+
+          if (
+            Number.isSafeInteger(ordenId) &&
+            ordenId > 0 &&
+            tecnicoId
+          ) {
+            storeNuevo.put({
+              ...contexto,
+              orden_id: ordenId,
+              tecnico_id: tecnicoId
+            });
+          }
+
+          cursor.continue();
+        };
+      }
+
 
       let storeUsuario;
 
