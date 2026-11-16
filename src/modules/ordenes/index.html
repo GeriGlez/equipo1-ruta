@@ -4,47 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUTA | Órdenes de Servicio</title>
-    <!-- Estilos globales de RUTA y estilos del módulo de órdenes -->
+    <!-- Estilos globales de RUTA, encabezado oficial de Admin y estilos de órdenes -->
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/adminapp.css">
     <link rel="stylesheet" href="./ordenes.css">
 </head>
 <body>
 
-    <!-- BARRA DE NAVEGACIÓN --> 
-    <nav class="navbar">
-        <div class="logo">
-            <img src="/logo-ruta.png" alt="RUTA" class="navbar-logo-img">
-            <div>
-                <span>RUTA</span>
-                <span class="subtitle">Gestión de servicios en campo</span>
+    <!-- ENCABEZADO OFICIAL DEL ADMINISTRADOR (Idéntico al panel principal) -->
+    <header class="admin-header">
+        <div class="admin-brand">
+            <div class="admin-brand-main">
+                <img src="/logo-ruta.png" class="admin-logo" alt="Logotipo RUTA">
+                <span class="admin-brand-name">RUTA</span>
             </div>
+            <span class="admin-brand-subtitle">Gestión de servicios en campo</span>
         </div>
 
-        <div class="navbar-right">
-            <div id="estado-conexion-ordenes" class="conn-pill conn-online" role="status">
-                <span class="conn-dot"></span>
-                <span id="texto-conexion-ordenes">En línea</span>
-            </div>
-
-            <button type="button" id="btn-sincronizar-ordenes" class="btn-sync-ordenes" hidden>
-                🔄 Sincronizar pendientes (<span id="badge-pendientes-sync">0</span>)
-            </button>
-
-            <div class="user-profile">
-                <img src="/avatar.png" alt="Avatar" class="avatar">
-                <div class="user-info">
-                    <div><strong id="nombre-usuario-orden">Administrador</strong></div>
-                    <div style="font-size: 12px;">Administrador</div>
-                </div>
-            </div>
+        <div class="admin-user">
+            <img src="/avatar.png" class="admin-avatar" alt="Avatar Administrador">
+            <strong id="nombre-usuario-orden">Usuario</strong>
+            <span>Administrador</span>
         </div>
+    </header>
+
+    <!-- BARRA DE NAVEGACIÓN VOLVER (Idéntica a los demás módulos) -->
+    <nav class="ordenes-subbar" aria-label="Navegación">
+        <a href="/" class="ordenes-back-link" aria-label="Volver al panel de administración">
+            <span class="ordenes-back-arrow" aria-hidden="true">←</span>
+            <span>Volver</span>
+        </a>
+
+        <button type="button" id="btn-sincronizar-ordenes" class="btn-sync-ordenes" hidden>
+            🔄 Sincronizar pendientes (<span id="badge-pendientes-sync">0</span>)
+        </button>
     </nav>
-
-    <!-- SUBBARRA VOLVER -->
-    <div class="ordenes-subbar">
-        <a href="/" class="ordenes-back-link">← Volver al panel principal</a>
-        <span id="resumen-sincronizacion-barra" class="sync-status-hint"></span>
-    </div>
 
     <!-- CONTENEDOR PRINCIPAL -->
     <div class="container">
@@ -109,7 +103,7 @@
                         <th>Servicio</th>
                         <th>Fecha Programada</th>
                         <th>Estado</th>
-                        <th>Sincronización</th>
+                        <th>Cuadrilla</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -141,6 +135,12 @@
                     <label for="input-servicio">Servicio:</label>
                     <select id="input-servicio" required>
                         <option value="">Seleccionar</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-cuadrilla">Cuadrilla:</label>
+                    <select id="input-cuadrilla">
+                        <option value="">Sin asignar</option>
                     </select>
                 </div>
                 <div class="form-group">
