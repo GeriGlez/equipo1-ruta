@@ -143,3 +143,11 @@
   color: #B91C1C;
   font-size: 0.9rem;
 }
+
+/* Condominio y servicio bloqueados al editar un contrato */
+#select-condominio:disabled,
+#select-servicio:disabled {
+  background-color: #E2E8F0;
+  color: #475569;
+  cursor: not-allowed;
+}
