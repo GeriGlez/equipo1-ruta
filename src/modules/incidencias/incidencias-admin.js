@@ -111,7 +111,8 @@ function renderizarLista(incidencias) {
       <h4>Incidencia ${numeroIncidencia}</h4>
       <p>Condominio: ${nombreCondominio}</p>
       <p>Reportado por: ${nombreReporta}</p>
-      <span style="font-size: 10px; padding: 2px 6px; background: #e0e0e0; border-radius: 4px; text-transform: uppercase;">${inc.estado}</span>
+      <span style="font-size: 10px; padding: 2px 6px; background: #e0e0e0; border-radius: 4px; text-transform: uppercase;">
+      ${inc.estado.replace('_', ' ')}</span>
     `;
 
     tarjeta.addEventListener('click', (e) => seleccionarIncidencia(inc, e));
