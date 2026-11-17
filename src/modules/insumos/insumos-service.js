@@ -12,7 +12,10 @@ import {
   eliminarConsumoLocal
 } from './insumos-local.js';
 
-import { obtenerVisitasLocales } from '../pendientes_sync/db-local.js';
+import {
+  obtenerVisitasLocales,
+  guardarVisitasServidor
+} from '../pendientes_sync/db-local.js';
 
 
 const COLUMNAS_INSUMO = 'id, nombre, unidad, existencia';
@@ -49,14 +52,26 @@ export async function listarCatalogoServidor() {
 }
 
 
+export async function actualizarInsumo({id, nombre, unidad, existencia}) {
+  const numExistencia = Number(existencia) || 0;
+  const { data, error } = await supabase
+    .from('insumos')
+    .update({ nombre, unidad, existencia: numExistencia })
+    .eq('id', id)
+    .select(COLUMNAS_INSUMO)
+    .single();
+  if (error) {
+    throw error;
+  }
+  return normalizarInsumo(data);
+}
+
 export async function crearInsumo({
   nombre,
   unidad,
   existencia
 }) {
-
   const numExistencia = Number(existencia) || 0;
-
   const { data, error } = await supabase
     .from('insumos')
     .insert({
@@ -66,13 +81,10 @@ export async function crearInsumo({
     })
     .select(COLUMNAS_INSUMO)
     .single();
-
   if (error) {
     throw error;
   }
-
   return normalizarInsumo(data);
-
 }
 
 
@@ -109,6 +121,30 @@ export async function sincronizarCatalogoLocal() {
 // Supabase. Si la visita aún no llegó, el consumo se
 // queda pendiente para el siguiente intento.
 
+// Id de la visita en Supabase a partir del registro local.
+// Solo es confiable si Supabase ya confirmó esa visita.
+function obtenerVisitaServidorId(visita) {
+
+  if (!visita) {
+    return null;
+  }
+
+  if (visita.visita_servidor_id) {
+    return visita.visita_servidor_id;
+  }
+
+  if (typeof visita.id === 'number') {
+    return visita.id;
+  }
+
+  // Visitas descargadas del servidor: "servidor:<id>"
+  const coincidencia = /^servidor:(\d+)$/.exec(String(visita.id));
+
+  return coincidencia ? Number(coincidencia[1]) : null;
+
+}
+
+
 export async function sincronizarConsumosPendientes() {
 
   const pendientes = await obtenerConsumosPendientes();
@@ -131,15 +167,20 @@ export async function sincronizarConsumosPendientes() {
 
     try {
 
-      const visita = visitasPorId.get(consumo.visita_local_id);
-      const visitaServidorId =
-        visita?.visita_servidor_id ||
-        (typeof visita?.id === 'number' ? visita.id : null);
+      const visitaServidorId = obtenerVisitaServidorId(
+        visitasPorId.get(consumo.visita_local_id)
+      );
 
+      // La visita todavía no existe en Supabase: el consumo
+      // se queda pendiente en el dispositivo.
       if (!visitaServidorId) {
         omitidos++;
         continue;
       }
+
+      // Versión que se está enviando: sirve para no confirmar
+      // un registro que el técnico editó durante el envío.
+      const revision = consumo.actualizado_localmente_en;
 
       // ---------- ELIMINAR ----------
       if (consumo.operacion_pendiente === 'eliminar') {
@@ -156,23 +197,28 @@ export async function sincronizarConsumosPendientes() {
           throw error;
         }
 
-        await eliminarConsumoLocal(consumo.id);
+        // Solo se borra del dispositivo cuando Supabase ya confirmó.
+        await eliminarConsumoLocal(consumo.id, revision);
         enviados++;
         continue;
 
       }
 
       // ---------- ACTUALIZAR O INSERTAR (IDEMPOTENTE) ----------
-      const { data: existente, error: errBusqueda } = await supabase
+      // Se busca por (visita, insumo): reintentar nunca duplica.
+      const { data: filas, error: errBusqueda } = await supabase
         .from('visita_insumo')
         .select('id')
         .eq('visita_id', visitaServidorId)
         .eq('insumo_id', consumo.insumo_id)
-        .maybeSingle();
+        .order('id', { ascending: true })
+        .limit(1);
 
       if (errBusqueda) {
         throw errBusqueda;
       }
+
+      const existente = filas?.[0] || null;
 
       if (existente?.id) {
 
@@ -203,7 +249,8 @@ export async function sincronizarConsumosPendientes() {
 
       }
 
-      await marcarConsumoEnviado(consumo.id);
+      // Supabase confirmó: recién ahora sale de los pendientes.
+      await marcarConsumoEnviado(consumo.id, revision);
       enviados++;
 
     } catch (error) {
@@ -225,6 +272,46 @@ export async function sincronizarConsumosPendientes() {
   }
 
   return { enviados, omitidos };
+
+}
+
+
+// ==============================================
+// VISITAS DEL TÉCNICO (COPIA LOCAL)
+// ==============================================
+//
+// Descarga las visitas del técnico y las guarda en IndexedDB
+// (misma consulta que usa la bitácora) para poder asignarles
+// insumos también sin conexión.
+
+export async function actualizarVisitasDesdeServidor(tecnicoId) {
+
+  const { data, error } = await supabase
+    .from('visitas')
+    .select(`
+      id,
+      id_local,
+      orden_id,
+      tecnico_id,
+      hora_entrada,
+      hora_salida,
+      ph,
+      cloro,
+      observaciones,
+      quien_recibio,
+      pendiente_envio,
+      created_at
+    `)
+    .eq('tecnico_id', tecnicoId)
+    .order('hora_entrada', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  await guardarVisitasServidor(data || []);
+
+  return (data || []).length;
 
 }
 

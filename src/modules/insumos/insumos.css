@@ -50,11 +50,7 @@
   display: grid;
 
   grid-template-columns:
-    minmax(280px, 2.4fr)
-    minmax(140px, 1fr)
-    minmax(140px, 1fr)
-    minmax(140px, 1fr)
-    auto
+    minmax(280px, 1fr)
     auto;
 
   gap: 1rem;
@@ -117,6 +113,42 @@
 .ins-submit:focus-visible,
 .ins-link-button:focus-visible,
 .ins-dialog-close:focus-visible {
+  outline: 3px solid #1597d4;
+  outline-offset: 3px;
+}
+
+
+/* Tabla del catálogo (5 columnas) */
+
+.visitas-table.ins-table th:nth-child(1) { width: 12%; }
+.visitas-table.ins-table th:nth-child(2) { width: 34%; }
+.visitas-table.ins-table th:nth-child(3) { width: 16%; }
+.visitas-table.ins-table th:nth-child(4) { width: 20%; }
+.visitas-table.ins-table th:nth-child(5) { width: 18%; }
+
+.ins-edit-button {
+  min-height: 36px;
+
+  padding: 0 1.25rem;
+
+  border: 0;
+  border-radius: var(--radius-md);
+
+  background-color: #005b7f;
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.ins-edit-button:hover {
+  background-color: #004561;
+}
+
+.ins-edit-button:focus-visible {
   outline: 3px solid #1597d4;
   outline-offset: 3px;
 }
@@ -623,7 +655,7 @@ body:has(dialog[open]) {
 @media (max-width: 1200px) {
 
   .ins-filters {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .visitas-search,

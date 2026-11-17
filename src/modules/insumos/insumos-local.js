@@ -125,11 +125,18 @@ export async function obtenerConsumosPendientes() {
 // lineas: [{ id|null, insumo_id, insumo_nombre,
 //            unidad, cantidad }]
 //
-// - Línea nueva         -> se inserta (operación "insertar")
-// - Línea existente     -> se actualiza si cambió
-// - Línea que ya no está-> se elimina (localmente si nunca
+// Cada insumo tiene como máximo UN registro por visita, así que
+// guardar varias veces nunca duplica:
+//
+// - Insumo nuevo        -> se inserta (operación "insertar")
+// - Insumo existente    -> se actualiza si cambió la cantidad
+// - Insumo que ya no está-> se elimina (localmente si nunca
 //                          llegó al servidor; si ya llegó,
-//                          queda marcada para borrarse allá)
+//                          queda marcado para borrarse allá)
+// - Insumo que estaba marcado para eliminarse y se vuelve a
+//   capturar            -> se reactiva como "actualizar" (conserva
+//                          su id y evita un borrado posterior
+//                          que se llevaría el registro nuevo)
 export async function guardarConsumosVisita(
   visita,
   lineas
@@ -150,28 +157,56 @@ export async function guardarConsumosVisita(
 
       const ahora = new Date().toISOString();
 
-      const existentes = (lectura.result || [])
-        .filter(r => r.operacion_pendiente !== 'eliminar');
+      // Un registro por insumo. Si por datos antiguos hubiera
+      // más de uno, se conserva el vigente y los sobrantes se
+      // quitan solo del dispositivo (en el servidor es la misma fila).
+      const porInsumo = new Map();
 
-      const idsEnFormulario = new Set(
-        lineas.filter(l => l.id).map(l => l.id)
-      );
+      for (const registro of (lectura.result || [])) {
 
-      // Líneas que el técnico quitó
-      for (const existente of existentes) {
+        const actual = porInsumo.get(registro.insumo_id);
 
-        if (idsEnFormulario.has(existente.id)) {
+        if (!actual) {
+          porInsumo.set(registro.insumo_id, registro);
           continue;
         }
 
-        if (!existente.sincronizado_en) {
+        const reemplaza =
+          actual.operacion_pendiente === 'eliminar' &&
+          registro.operacion_pendiente !== 'eliminar';
 
-          store.delete(existente.id);
+        store.delete((reemplaza ? actual : registro).id);
+
+        if (reemplaza) {
+          porInsumo.set(registro.insumo_id, registro);
+        }
+
+      }
+
+      const deseados = new Map();
+
+      for (const linea of lineas) {
+        deseados.set(linea.insumo_id, linea);
+      }
+
+      // Insumos que el técnico quitó
+      for (const [insumoId, registro] of porInsumo) {
+
+        if (
+          deseados.has(insumoId) ||
+          registro.operacion_pendiente === 'eliminar'
+        ) {
+          continue;
+        }
+
+        if (!registro.sincronizado_en) {
+
+          store.delete(registro.id);
 
         } else {
 
           store.put({
-            ...existente,
+            ...registro,
             estado_envio: 'pendiente',
             operacion_pendiente: 'eliminar',
             actualizado_localmente_en: ahora
@@ -181,10 +216,10 @@ export async function guardarConsumosVisita(
 
       }
 
-      // Líneas nuevas o modificadas
-      for (const linea of lineas) {
+      // Insumos nuevos o modificados
+      for (const [insumoId, linea] of deseados) {
 
-        const previo = existentes.find(r => r.id === linea.id);
+        const previo = porInsumo.get(insumoId);
 
         if (!previo) {
 
@@ -208,8 +243,10 @@ export async function guardarConsumosVisita(
 
         }
 
+        const estabaPorEliminar = previo.operacion_pendiente === 'eliminar';
+
         const sinCambios =
-          previo.insumo_id === linea.insumo_id &&
+          !estabaPorEliminar &&
           Number(previo.cantidad) === Number(linea.cantidad);
 
         if (sinCambios) {
@@ -218,7 +255,6 @@ export async function guardarConsumosVisita(
 
         store.put({
           ...previo,
-          insumo_id: linea.insumo_id,
           insumo_nombre: linea.insumo_nombre,
           unidad: linea.unidad,
           cantidad: linea.cantidad,
@@ -262,7 +298,10 @@ export async function guardarConsumosVisita(
 // MARCAS DE SINCRONIZACIÓN
 // ==============================================
 
-export function marcarConsumoEnviado(id) {
+// Confirma un consumo como enviado SOLO si no cambió mientras
+// se enviaba (revisionEnviada = actualizado_localmente_en que se
+// mandó). Si cambió, sigue pendiente para el siguiente envío.
+export function marcarConsumoEnviado(id, revisionEnviada) {
 
   return ejecutar('consumos_insumo', 'readwrite', store => {
 
@@ -270,12 +309,36 @@ export function marcarConsumoEnviado(id) {
 
     lectura.onsuccess = () => {
 
-      if (!lectura.result) {
+      const actual = lectura.result;
+
+      if (!actual) {
         return;
       }
 
+      const cambioDespues =
+        revisionEnviada !== undefined &&
+        actual.actualizado_localmente_en !== revisionEnviada;
+
+      if (cambioDespues) {
+
+        // La fila ya existe en el servidor: lo que falte es
+        // actualizarla (o borrarla, si se marcó para eliminar).
+        store.put({
+          ...actual,
+          estado_envio: 'pendiente',
+          operacion_pendiente:
+            actual.operacion_pendiente === 'insertar'
+              ? 'actualizar'
+              : actual.operacion_pendiente,
+          sincronizado_en: new Date().toISOString()
+        });
+
+        return;
+
+      }
+
       store.put({
-        ...lectura.result,
+        ...actual,
         estado_envio: 'enviado',
         operacion_pendiente: null,
         sincronizado_en: new Date().toISOString()
@@ -290,12 +353,34 @@ export function marcarConsumoEnviado(id) {
 }
 
 
-export function eliminarConsumoLocal(id) {
+// Quita el registro local después de confirmar el borrado en el
+// servidor, salvo que el técnico lo haya reactivado mientras tanto.
+export function eliminarConsumoLocal(id, revisionEnviada) {
 
-  return ejecutar(
-    'consumos_insumo',
-    'readwrite',
-    store => store.delete(id)
-  );
+  return ejecutar('consumos_insumo', 'readwrite', store => {
+
+    const lectura = store.get(id);
+
+    lectura.onsuccess = () => {
+
+      const actual = lectura.result;
+
+      if (!actual) {
+        return;
+      }
+
+      const reactivado =
+        revisionEnviada !== undefined &&
+        actual.actualizado_localmente_en !== revisionEnviada;
+
+      if (!reactivado) {
+        store.delete(id);
+      }
+
+    };
+
+    return lectura;
+
+  });
 
 }

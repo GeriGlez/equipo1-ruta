@@ -28,7 +28,6 @@ const botonAgregar = document.querySelector('#agregar-linea');
 const botonGuardar = document.querySelector('#guardar-insumos');
 const datalist = document.querySelector('#lista-insumos');
 const mensajeError = document.querySelector('#insumos-error');
-const sinVisitas = document.querySelector('#sin-visitas');
 const estadoConexion = document.querySelector('#connection-status');
 const nombreUsuario = document.querySelector('.m5-user strong');
 
@@ -36,6 +35,7 @@ let usuario = null;
 let catalogo = [];
 let visitas = [];
 let lineas = [];
+let guardando = false;
 
 
 // ---------- Utilidades ----------
@@ -273,9 +273,19 @@ botonAgregar.addEventListener('click', () => {
 
 
 // ---------- Visitas del técnico ----------
+function fechaDeVisita(visita) {
+
+  const fecha = new Date(
+    visita.fecha_visita_en || visita.creado_localmente_en
+  );
+
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+
+}
+
 async function etiquetaVisita(visita) {
 
-  let nombre = visita.orden_referencia || `Orden #${visita.orden_id}`;
+  let lugar = null;
 
   try {
 
@@ -283,8 +293,7 @@ async function etiquetaVisita(visita) {
 
     if (contexto) {
 
-      nombre =
-        `${contexto.condominio.nombre} - ${contexto.area.nombre}`;
+      lugar = `${contexto.condominio.nombre} - ${contexto.area.nombre}`;
 
     }
 
@@ -294,24 +303,151 @@ async function etiquetaVisita(visita) {
 
   }
 
-  return `${nombre} (Orden #${visita.orden_id})`;
+  let nombre = 'Visita';
+
+  if (lugar) {
+    nombre = `Visita: ${lugar}`;
+  } else if (visita.visita_servidor_id) {
+    nombre = `Visita #${visita.visita_servidor_id}`;
+  }
+
+  // Fecha y hora distinguen varias visitas del mismo lugar.
+  const fecha = fechaDeVisita(visita);
+
+  const cuando = [
+    fecha
+      ? fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit' })
+      : null,
+    visita.hora_entrada || null
+  ].filter(Boolean).join(' ');
+
+  return cuando ? `${nombre} · ${cuando}` : nombre;
+
+}
+
+// Una visita real se identifica por su id en Supabase cuando ya lo
+// tiene; si no, por su id local. Así dos copias locales de la misma
+// visita (por ejemplo "uuid" y "servidor:<id>") cuentan una sola vez,
+// mientras que visitas distintas de una misma orden se conservan.
+function claveVisita(visita) {
+
+  return visita.visita_servidor_id
+    ? `srv:${visita.visita_servidor_id}`
+    : `loc:${visita.id}`;
+
+}
+
+async function quitarVisitasDuplicadas(lista) {
+
+  const grupos = new Map();
+
+  for (const visita of lista) {
+
+    const clave = claveVisita(visita);
+
+    if (!grupos.has(clave)) {
+      grupos.set(clave, []);
+    }
+
+    grupos.get(clave).push(visita);
+
+  }
+
+  const unicas = [];
+
+  for (const grupo of grupos.values()) {
+
+    if (grupo.length === 1) {
+      unicas.push(grupo[0]);
+      continue;
+    }
+
+    // De las copias, se conserva la que ya tiene insumos guardados,
+    // luego la que tiene cambios pendientes y luego la de id local.
+    let mejor = null;
+    let mejorPuntaje = -1;
+
+    for (const visita of grupo) {
+
+      const consumos = await obtenerConsumosVisita(visita.id);
+
+      const puntaje =
+        (consumos.length ? 4 : 0) +
+        (visita.pendiente_envio === true || visita.estado_envio === 'pendiente' ? 2 : 0) +
+        (String(visita.id).startsWith('servidor:') ? 0 : 1);
+
+      if (puntaje > mejorPuntaje) {
+        mejor = visita;
+        mejorPuntaje = puntaje;
+      }
+
+    }
+
+    unicas.push(mejor);
+
+  }
+
+  return unicas;
 
 }
 
 async function cargarVisitas() {
 
-  const todas = await obtenerVisitasLocales();
+  // Conserva solo la opción "Selecciona la visita".
+  selectorVisita.length = 1;
+  selectorVisita.disabled = false;
 
-  visitas = todas
-    .filter(v => String(v.tecnico_id) === String(usuario.id))
+  // Con red, se trae la copia más reciente de las visitas del técnico
+  // (como hace la bitácora); sin red se usan las que ya están guardadas.
+  if (navigator.onLine) {
+
+    try {
+
+      const { actualizarVisitasDesdeServidor } =
+        await import('./insumos-service.js');
+
+      await actualizarVisitasDesdeServidor(usuario.id);
+
+    } catch (error) {
+
+      console.warn(
+        '[RUTA] No se pudieron actualizar las visitas; se usan las locales.',
+        error
+      );
+
+    }
+
+  }
+
+  let todas;
+
+  try {
+
+    todas = await obtenerVisitasLocales();
+
+  } catch (error) {
+
+    // Un error de lectura NO es lo mismo que "no hay visitas".
+    console.error('[RUTA] No se pudieron leer las visitas locales:', error);
+    mostrarError('No fue posible leer las visitas guardadas en este dispositivo.');
+    selectorVisita.disabled = true;
+    return;
+
+  }
+
+  const delTecnico = todas.filter(
+    v => String(v.tecnico_id) === String(usuario.id)
+  );
+
+  visitas = (await quitarVisitasDuplicadas(delTecnico))
     .sort((a, b) =>
-      String(b.creado_localmente_en)
-        .localeCompare(String(a.creado_localmente_en))
+      (fechaDeVisita(b)?.getTime() || 0) - (fechaDeVisita(a)?.getTime() || 0)
     );
 
+  // Sin visitas no hay nada que elegir: el selector queda deshabilitado.
   if (!visitas.length) {
 
-    sinVisitas.hidden = false;
+    selectorVisita.options[0].textContent = 'Sin visitas disponibles';
     selectorVisita.disabled = true;
     return;
 
@@ -371,6 +507,18 @@ async function alSeleccionarVisita() {
 
 }
 
+// Deja el formulario vacío y listo para un nuevo registro.
+// No toca IndexedDB: los consumos guardados siguen en el dispositivo.
+function limpiarFormulario() {
+
+  limpiarLineas();
+  panel.hidden = true;
+  selectorVisita.value = '';
+  botonGuardar.disabled = true;
+  mostrarError('');
+
+}
+
 selectorVisita.addEventListener('change', alSeleccionarVisita);
 
 
@@ -378,6 +526,11 @@ selectorVisita.addEventListener('change', alSeleccionarVisita);
 formulario.addEventListener('submit', async evento => {
 
   evento.preventDefault();
+
+  if (guardando) {
+    return;
+  }
+
   mostrarError('');
 
   const visita = visitas.find(v => v.id === selectorVisita.value);
@@ -463,19 +616,20 @@ formulario.addEventListener('submit', async evento => {
 
   }
 
+  guardando = true;
   botonGuardar.disabled = true;
 
   try {
 
     await guardarConsumosVisita(visita, validas);
 
+    // Se limpia antes de avisar, para que no queden datos en pantalla.
+    limpiarFormulario();
+
     alert(
       'Los insumos se guardaron en este dispositivo. ' +
       'Pendiente de sincronización.'
     );
-
-    // Recargar para conservar los ids de las líneas guardadas
-    await alSeleccionarVisita();
 
   } catch (error) {
 
@@ -487,6 +641,10 @@ formulario.addEventListener('submit', async evento => {
     );
 
     botonGuardar.disabled = false;
+
+  } finally {
+
+    guardando = false;
 
   }
 

@@ -41,7 +41,6 @@
 
       <!-- FILTROS -->
       <section class="ins-filters" aria-label="Filtros del catálogo">
-
         <div class="visitas-search">
           <span class="visitas-search-icon" aria-hidden="true">⌕</span>
           <input
@@ -53,37 +52,9 @@
           >
         </div>
 
-        <div class="form-group visitas-filter">
-          <label for="filtro-tipo" class="form-label">Tipo de insumo:</label>
-          <select id="filtro-tipo" class="form-input">
-            <option value="">Todas</option>
-          </select>
-        </div>
-
-        <div class="form-group visitas-filter">
-          <label for="filtro-estado" class="form-label">Estado:</label>
-          <select id="filtro-estado" class="form-input">
-            <option value="">Todos</option>
-            <option value="disponible">Disponible</option>
-            <option value="agotado">Agotado</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
-        </div>
-
-        <div class="form-group visitas-filter">
-          <label for="filtro-unidad" class="form-label">Unidad</label>
-          <select id="filtro-unidad" class="form-input">
-            <option value="">Todas</option>
-          </select>
-        </div>
-
         <button type="button" id="abrir-agregar" class="ins-add-button">
           Agregar Insumo
         </button>
-
-        <a href="./Reporte_Insumos_Escritorio.html" class="ins-report-button">
-          Reporte de Consumo
-        </a>
 
       </section>
 
@@ -91,16 +62,14 @@
 
       <!-- TABLA -->
       <section class="visitas-table-container">
-        <table class="visitas-table">
+        <table class="visitas-table ins-table">
           <thead>
             <tr>
               <th>ID_INSUMO</th>
               <th>NOMBRE</th>
-              <th>STOCK</th>
-              <th>CANTIDAD</th>
+              <th>EXISTENCIA</th>
               <th>UNIDAD</th>
-              <th>ESTADO</th>
-              <th>DESCRIPCIÓN</th>
+              <th>ACCIONES</th>
             </tr>
           </thead>
           <tbody id="insumos-body"></tbody>
@@ -120,8 +89,7 @@
 
   </div>
 
-
-  <!-- MODAL: AGREGAR INSUMO -->
+  <!-- MODAL: AGREGAR / EDITAR INSUMO -->
   <dialog id="dialogo-agregar" class="ins-dialog" aria-labelledby="titulo-agregar" aria-modal="true">
 
     <form id="form-agregar" novalidate>
@@ -159,9 +127,7 @@
 
       <p id="agregar-error" class="ins-message ins-message--error" role="alert" hidden></p>
 
-      <button type="submit" id="guardar-insumo" class="ins-submit">
-        AGREGAR INSUMO
-      </button>
+      <button type="submit" id="guardar-insumo" class="ins-submit">AGREGAR INSUMO</button>
 
     </form>
 
@@ -172,5 +138,4 @@
   <script type="module" src="./catalogo-insumos.js"></script>
 
 </body>
-
 </html>

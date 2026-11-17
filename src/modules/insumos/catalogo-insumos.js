@@ -7,13 +7,9 @@
 // así el botón "Agregar Insumo" y la ventana siempre responden,
 // aunque la conexión o la sesión tarden o fallen.
 
-
 // ---------- Elementos ----------
 const cuerpo = document.querySelector('#insumos-body');
 const buscador = document.querySelector('#buscar-insumo');
-const filtroTipo = document.querySelector('#filtro-tipo');
-const filtroEstado = document.querySelector('#filtro-estado');
-const filtroUnidad = document.querySelector('#filtro-unidad');
 const errorCatalogo = document.querySelector('#catalogo-error');
 
 const formulario = document.querySelector('#form-agregar');
@@ -25,182 +21,112 @@ const campoUnidad = document.querySelector('#nueva-unidad');
 const campoExistencia = document.querySelector('#nueva-existencia');
 
 let catalogo = [];
-
+let guardando = false;
 
 // ---------- Utilidades ----------
-const ETIQUETAS_ESTADO = {
-  disponible: 'Disponible',
-  agotado: 'Agotado',
-  inactivo: 'Inactivo'
-};
-
-function estadoDe(insumo) {
-
-  if (insumo.activo === false) {
-    return 'inactivo';
-  }
-
-  const existencia = Number(insumo.existencia ?? insumo.stock ?? 0);
-  return existencia > 0 ? 'disponible' : 'agotado';
-
-}
-
 function formatearNumero(valor) {
-
-  return new Intl.NumberFormat('es-MX', {
-    maximumFractionDigits: 2
-  }).format(Number(valor) || 0);
-
+  return new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(Number(valor) || 0);
 }
 
 function normalizar(texto) {
-
   return String(texto || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
-
 }
 
 function mostrarMensaje(elemento, texto) {
-
   elemento.textContent = texto || '';
   elemento.hidden = !texto;
-
 }
-
-
-// ---------- Filtros dinámicos ----------
-function llenarSelect(select, valores) {
-
-  const seleccionado = select.value;
-  const primera = select.options[0];
-
-  select.replaceChildren(primera);
-
-  [...new Set(valores.filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'es'))
-    .forEach(valor => select.append(new Option(valor, valor)));
-
-  select.value = [...select.options].some(o => o.value === seleccionado)
-    ? seleccionado
-    : '';
-
-}
-
-function actualizarFiltros() {
-
-  llenarSelect(filtroTipo, catalogo.map(i => i.tipo));
-  llenarSelect(filtroUnidad, catalogo.map(i => i.unidad));
-
-}
-
 
 // ---------- Tabla ----------
 function crearFila(insumo) {
-
   const fila = document.createElement('tr');
-  const estado = estadoDe(insumo);
 
   const valores = [
     insumo.id,
     insumo.nombre,
-    formatearNumero(insumo.stock),
-    formatearNumero(insumo.cantidad),
-    insumo.unidad,
-    null,
-    insumo.descripcion || '—'
+    formatearNumero(insumo.existencia),
+    insumo.unidad
   ];
 
-  valores.forEach((valor, indice) => {
-
+  valores.forEach(valor => {
     const celda = document.createElement('td');
-
-    if (indice === 5) {
-
-      const etiqueta = document.createElement('span');
-      etiqueta.className = `ins-badge ins-badge--${estado}`;
-      etiqueta.textContent = ETIQUETAS_ESTADO[estado];
-      celda.append(etiqueta);
-
-    } else {
-
-      celda.textContent = valor;
-
-    }
-
+    celda.textContent = valor;
     fila.append(celda);
-
   });
 
-  return fila;
+  const celdaAcciones = document.createElement('td');
+  const botonEditar = document.createElement('button');
+  botonEditar.type = 'button';
+  botonEditar.className = 'ins-edit-button';
+  botonEditar.dataset.editar = String(insumo.id);
+  botonEditar.textContent = 'Editar';
+  botonEditar.setAttribute('aria-label', `Editar insumo ${insumo.nombre}`);
+  celdaAcciones.append(botonEditar);
+  fila.append(celdaAcciones);
 
+  return fila;
 }
 
 function renderizar() {
-
   const texto = normalizar(buscador.value);
 
   const visibles = catalogo.filter(insumo => {
-
-    if (filtroTipo.value && insumo.tipo !== filtroTipo.value) {
-      return false;
-    }
-
-    if (filtroUnidad.value && insumo.unidad !== filtroUnidad.value) {
-      return false;
-    }
-
-    if (filtroEstado.value && estadoDe(insumo) !== filtroEstado.value) {
-      return false;
-    }
-
     if (!texto) {
       return true;
     }
-
-    return normalizar(
-      `${insumo.id} ${insumo.nombre} ${insumo.descripcion || ''}`
-    ).includes(texto);
-
+    return normalizar(`${insumo.id} ${insumo.nombre}`).includes(texto);
   });
 
   cuerpo.replaceChildren();
 
   if (!visibles.length) {
-
     const fila = document.createElement('tr');
     const celda = document.createElement('td');
-
-    celda.colSpan = 7;
+    celda.colSpan = 5;
     celda.className = 'ins-empty';
     celda.textContent = catalogo.length
-      ? 'Ningún insumo coincide con los filtros.'
+      ? 'Ningún insumo coincide con la búsqueda.'
       : 'Aún no hay insumos registrados.';
-
     fila.append(celda);
     cuerpo.append(fila);
     return;
-
   }
 
   cuerpo.append(...visibles.map(crearFila));
-
 }
-
 
 // ---------- Modal ----------
-// Abrir/cerrar vive en modal-agregar.js (script clásico).
 function cerrarModal() {
-
   window.RUTA_modalAgregar?.cerrar();
-
 }
 
-formulario.addEventListener('submit', async evento => {
+// Botón "Editar": se delega en el cuerpo de la tabla
+cuerpo.addEventListener('click', evento => {
+  const boton = evento.target.closest('[data-editar]');
+  if (!boton) {
+    return;
+  }
 
+  const insumo = catalogo.find(i => String(i.id) === boton.dataset.editar);
+  if (insumo) {
+    window.RUTA_modalAgregar?.abrirEdicion(insumo);
+  }
+});
+
+// Único manejador de envío: crea o edita según el modo del modal
+formulario.addEventListener('submit', async evento => {
   evento.preventDefault();
+
+  if (guardando) {
+    return;
+  }
+
+  const { modo, id } = window.RUTA_modalAgregar?.obtenerEstado() ?? { modo: 'crear', id: null };
+  const editando = modo === 'editar';
 
   const nombre = campoNombre.value.trim();
   const unidad = campoUnidad.value.trim();
@@ -220,125 +146,92 @@ formulario.addEventListener('submit', async evento => {
     return;
   }
 
-  if (catalogo.some(i => normalizar(i.nombre) === normalizar(nombre))) {
+  // Al editar se ignora el propio registro para poder guardar sin cambiar el nombre
+  const duplicado = catalogo.some(i =>
+    (!editando || String(i.id) !== String(id)) &&
+    normalizar(i.nombre) === normalizar(nombre)
+  );
+
+  if (duplicado) {
     mostrarMensaje(errorAgregar, 'Ya existe un insumo con ese nombre.');
     return;
   }
 
   if (!navigator.onLine) {
-    mostrarMensaje(errorAgregar, 'Necesitas conexión para agregar insumos al catálogo.');
+    mostrarMensaje(
+      errorAgregar,
+      editando
+        ? 'Necesitas conexión para editar insumos del catálogo.'
+        : 'Necesitas conexión para agregar insumos al catálogo.'
+    );
     return;
   }
 
+  guardando = true;
   botonGuardar.disabled = true;
   mostrarMensaje(errorAgregar, '');
 
   try {
+    if (editando) {
+      const { actualizarInsumo } = await import('./insumos-service.js');
+      const actualizado = await actualizarInsumo({ id, nombre, unidad, existencia });
+      catalogo = catalogo.map(i => String(i.id) === String(id) ? actualizado : i);
+    } else {
+      const { crearInsumo } = await import('./insumos-service.js');
+      const nuevo = await crearInsumo({ nombre, unidad, existencia });
+      catalogo.push(nuevo);
+    }
 
-    const { crearInsumo } = await import('./insumos-service.js');
-
-    const nuevo = await crearInsumo({
-      nombre,
-      unidad,
-      existencia
-    });
-
-    catalogo.push(nuevo);
-    actualizarFiltros();
     renderizar();
     cerrarModal();
-
   } catch (error) {
-
-    console.error('[RUTA] Error al agregar insumo:', error);
-
+    console.error(`[RUTA] Error al ${editando ? 'editar' : 'agregar'} insumo:`, error);
     mostrarMensaje(
       errorAgregar,
       error?.code === '23505'
         ? 'Ya existe un insumo con ese nombre.'
-        : 'No fue posible agregar el insumo. Intenta de nuevo.'
+        : `No fue posible ${editando ? 'guardar los cambios del' : 'agregar el'} insumo. Intenta de nuevo.`
     );
-
   } finally {
-
+    guardando = false;
     botonGuardar.disabled = false;
-
   }
-
 });
-
 
 // ---------- Inicio ----------
-[buscador, filtroTipo, filtroEstado, filtroUnidad].forEach(control => {
-  control.addEventListener('input', renderizar);
-});
+buscador.addEventListener('input', renderizar);
 
 async function iniciar() {
-
-  const { getActiveSession } =
-    await import('../auth/authService.js');
-
+  const { getActiveSession } = await import('../auth/authService.js');
   const sesion = await getActiveSession();
 
   if (!sesion || sesion.usuario?.rol !== 'administrador') {
-
-    mostrarMensaje(
-      errorCatalogo,
-      'Inicia sesión como administrador para ver y editar el catálogo.'
-    );
-
+    mostrarMensaje(errorCatalogo, 'Inicia sesión como administrador para ver y editar el catálogo.');
     renderizar();
     return;
-
   }
 
-  document.querySelector('#admin-name').textContent =
-    sesion.usuario.nombre || 'Usuario';
+  document.querySelector('#admin-name').textContent = sesion.usuario.nombre || 'Usuario';
 
   if (!navigator.onLine) {
-
-    mostrarMensaje(
-      errorCatalogo,
-      'Sin conexión: el catálogo del administrador requiere internet.'
-    );
-
+    mostrarMensaje(errorCatalogo, 'Sin conexión: el catálogo del administrador requiere internet.');
     renderizar();
     return;
-
   }
 
   try {
-
-    const { listarCatalogoServidor } =
-      await import('./insumos-service.js');
-
+    const { listarCatalogoServidor } = await import('./insumos-service.js');
     catalogo = await listarCatalogoServidor();
-
   } catch (error) {
-
     console.error('[RUTA] Error al cargar el catálogo:', error);
-
-    mostrarMensaje(
-      errorCatalogo,
-      'No fue posible cargar el catálogo de insumos.'
-    );
-
+    mostrarMensaje(errorCatalogo, 'No fue posible cargar el catálogo de insumos.');
   }
 
-  actualizarFiltros();
   renderizar();
-
 }
 
 iniciar().catch(error => {
-
   console.error('[RUTA] Error al iniciar el catálogo:', error);
-
-  mostrarMensaje(
-    errorCatalogo,
-    'No fue posible cargar el catálogo de insumos.'
-  );
-
+  mostrarMensaje(errorCatalogo, 'No fue posible cargar el catálogo de insumos.');
   renderizar();
-
 });

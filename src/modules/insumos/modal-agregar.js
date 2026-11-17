@@ -1,8 +1,12 @@
 // ==============================================
-// RUTA - MÓDULO 6 (HU-11) – Ventana "Agregar Insumo"
+// RUTA - MÓDULO 6 (HU-11) – Ventana "Agregar / Editar Insumo"
+//
+// Este archivo solo controla la ventana: abrirla, cerrarla y
+// cambiar entre modo "crear" y modo "editar". El envío del
+// formulario (validar, crear o actualizar en Supabase) lo
+// resuelve un único manejador en catalogo-insumos.js.
 // ==============================================
 (function () {
-  // Ejecutar init tan pronto como el documento esté listo. Si la página ya está cargada, llamarlo de inmediato.
   if (document.readyState === 'loading' || document.readyState === 'interactive') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
@@ -15,6 +19,8 @@
     const formulario   = document.getElementById('form-agregar');
     const botonAbrir   = document.getElementById('abrir-agregar');
     const botonCerrar  = document.getElementById('cerrar-agregar');
+    const titulo       = document.getElementById('titulo-agregar');
+    const botonEnviar  = document.getElementById('guardar-insumo');
     const errorAgregar = document.getElementById('agregar-error');
     const campoNombre  = document.getElementById('nuevo-nombre');
     const campoUnidad  = document.getElementById('nueva-unidad');
@@ -25,18 +31,40 @@
       return;
     }
 
+    const TEXTOS = {
+      crear:  { titulo: 'Agregar Insumo', boton: 'AGREGAR INSUMO' },
+      editar: { titulo: 'Editar Insumo',  boton: 'GUARDAR CAMBIOS' }
+    };
+
+    /** Estado del formulario: ¿se crea uno nuevo o se edita uno existente? */
+    const estado = { modo: 'crear', id: null };
+
     /** Flag para distinguir cierre por usuario vs. cierre automático */
     let cierreAutorizado = false;
 
     // -----------------------------------------------------------------
     //   Apertura / Cierre del dialog
     // -----------------------------------------------------------------
-    function abrir() {
-      if (dialogo.open) return;
+    function preparar(modo, insumo) {
+      estado.modo = modo;
+      estado.id = modo === 'editar' ? insumo.id : null;
+
+      titulo.textContent = TEXTOS[modo].titulo;
+      botonEnviar.textContent = TEXTOS[modo].boton;
+      botonEnviar.disabled = false;
 
       formulario.reset();
       errorAgregar.textContent = '';
       errorAgregar.hidden = true;
+
+      if (modo === 'editar') {
+        campoNombre.value = insumo.nombre ?? '';
+        campoUnidad.value = insumo.unidad ?? '';
+        campoExist.value = insumo.existencia ?? '';
+      }
+    }
+
+    function mostrar() {
       cierreAutorizado = false;
 
       if (typeof dialogo.showModal === 'function') {
@@ -46,6 +74,18 @@
       }
 
       campoNombre.focus();
+    }
+
+    function abrir() {
+      if (dialogo.open) return;
+      preparar('crear');
+      mostrar();
+    }
+
+    function abrirEdicion(insumo) {
+      if (dialogo.open || !insumo) return;
+      preparar('editar', insumo);
+      mostrar();
     }
 
     function cerrar() {
@@ -74,64 +114,12 @@
       }
     });
 
-    // -----------------------------------------------------------------
-    //   Guardar insumo
-    // -----------------------------------------------------------------
-    async function guardar() {
-      // Validar campos mínimos
-      const nombre = campoNombre.value.trim();
-      const unidad = campoUnidad.value.trim();
-      const existencia = campoExist.value.trim();
-
-      if (!nombre || !unidad || !existencia) {
-        errorAgregar.textContent = 'Completa todos los campos.';
-        errorAgregar.hidden = false;
-        return;
-      }
-
-      // Cargar el servicio bajo demanda (funciona offline)
-      let crearInsumo;
-      try {
-        const srv = await import('./insumos-service.js');
-        crearInsumo = srv.crearInsumo;
-      } catch (e) {
-        console.warn('[RUTA] No se pudo cargar supabase; se usará el catálogo local.');
-        errorAgregar.textContent = 'No hay conexión con el servidor.';
-        errorAgregar.hidden = false;
-        return;
-      }
-
-      try {
-        await crearInsumo({
-          nombre,
-          unidad,
-          existencia: Number(existencia)
-        });
-
-        // Éxito: limpiar, cerrar y notificar al catálogo
-        formulario.reset();
-        cerrar();
-        // Notificar al catálogo‑insumos.js para que recargue la tabla
-        window.dispatchEvent(new CustomEvent('insumo-guardado'));
-      } catch (err) {
-        console.error('[RUTA] Error al crear insumo', err);
-        const mensaje = err?.message || 'Error inesperado al guardar.';
-        errorAgregar.textContent = mensaje;
-        errorAgregar.hidden = false;
-      }
-    }
-
-    // Interceptar el envío del formulario (evita recarga)
-    formulario.addEventListener('submit', function (evento) {
-      evento.preventDefault();
-      guardar();
-    });
-
-    // Exportar la API para que otros scripts la usen
+    // Exportar la API para que catalogo-insumos.js la use
     window.RUTA_modalAgregar = {
       abrir,
+      abrirEdicion,
       cerrar,
-      guardar // opcional: invocable desde fuera
+      obtenerEstado: () => ({ ...estado })
     };
   }
 })();
