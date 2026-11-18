@@ -11,7 +11,8 @@ const modulosAdministrador = [
   {
     titulo: 'Servicios Contratados',
     descripcion: 'Define servicios, frecuencia y día preferente',
-    estilo: 'servicios'
+    estilo: 'servicios',
+    ruta: './src/modules/servicios/modulos.html'
   },
   {
     titulo: 'Personal y Cuadrillas',
@@ -22,7 +23,8 @@ const modulosAdministrador = [
   {
     titulo: 'Órdenes de Servicio',
     descripcion: 'Programa, asigna y cancela órdenes',
-    estilo: 'ordenes'
+    estilo: 'ordenes',
+    ruta: './src/modules/ordenes/index.html'
   },
   {
     titulo: 'Bitácora de Visitas',

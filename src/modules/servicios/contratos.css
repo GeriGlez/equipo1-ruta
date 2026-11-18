@@ -1,4 +1,9 @@
-@import url('./servicios.css'); /* Reutiliza los estilos base de servicios */
+@import url('./servicios.css'); /* ¡Debe ir en la primera línea para que el navegador lo cargue! */
+
+/* Oculta toda la app por defecto hasta que se valide la sesión */
+#app {
+  display: none;
+}
 
 /* Modal Estilo Exacto a la Maqueta de Contratos */
 .modal-card-contrato {
@@ -127,4 +132,14 @@
   font-size: 0.88rem;
   color: #334155;
   margin-bottom: 0.25rem;
+}
+/* Aviso de error dentro del modal (validaciones y duplicados) */
+.form-error-ruta {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+  font-size: 0.9rem;
 }

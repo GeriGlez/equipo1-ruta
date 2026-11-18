@@ -1,10 +1,10 @@
 import { supabase } from '../../services/supabase.js';
+import { getActiveSession } from '../auth/authService.js';
 
 // Referencias DOM
 const gridContratos = document.getElementById('grid-contratos');
 const paginacionContainer = document.getElementById('paginacion-contratos');
 const busquedaInput = document.getElementById('busqueda-contrato');
-const btnVolver = document.getElementById('btn-volver');
 
 // Modal Crear/Editar
 const fabNuevo = document.getElementById('btn-fab-nuevo');
@@ -15,11 +15,12 @@ const btnCancelarModal = document.getElementById('btn-cancelar-modal');
 const formModal = document.getElementById('form-modal-contrato');
 
 const inputId = document.getElementById('input-contrato-id');
-const inputCondominio = document.getElementById('input-condominio');
+const selectCondominio = document.getElementById('select-condominio');
 const selectServicio = document.getElementById('select-servicio');
 const inputTarifa = document.getElementById('input-tarifa');
 const selectFrecuencia = document.getElementById('select-frecuencia');
 const inputDias = document.getElementById('input-dias');
+const formError = document.getElementById('form-error');
 
 // Modal Eliminar
 const modalEliminar = document.getElementById('modal-confirmar-eliminar');
@@ -31,44 +32,73 @@ const textoConfirmarEliminar = document.getElementById('texto-confirmar-eliminar
 // Estado Global
 let contratosCache = [];
 let contratosFiltrados = [];
-let serviciosLista = [];
 let paginaActual = 1;
 const ITEMS_POR_PAGINA = 12;
 let contratoAEliminarId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  cargarServiciosSelect();
-  cargarContratos();
-  initEventListeners();
+document.addEventListener('DOMContentLoaded', async () => {
+  const appContainer = document.getElementById('app');
+
+  try {
+    const sesion = await getActiveSession();
+
+    if (!sesion?.usuario || sesion.usuario.rol !== 'administrador') {
+      window.location.href = '/';
+      return;
+    }
+
+    const nombreUser = document.querySelector('.visitas-user-info strong');
+    if (nombreUser && sesion.usuario.nombre) {
+      nombreUser.textContent = sesion.usuario.nombre;
+    }
+
+    if (appContainer) {
+      appContainer.style.display = 'block';
+    }
+
+    await cargarSelectsModal();
+    await cargarContratos();
+    initEventListeners();
+  } catch (error) {
+    console.error('Error al verificar la sesión:', error);
+    window.location.href = '/';
+  }
 });
 
-function initEventListeners() {
-  // Botón Volver -> Regresa a index.html dentro de la misma carpeta
-  btnVolver.addEventListener('click', () => {
-    window.location.href = './index.html';
-  });
+// Aviso de error dentro del modal (textContent: nunca se interpreta como HTML)
+function mostrarError(mensaje) {
+  formError.textContent = mensaje;
+  formError.hidden = false;
+}
 
-  // Buscador en tiempo real
+function limpiarError() {
+  formError.textContent = '';
+  formError.hidden = true;
+}
+
+function initEventListeners() {
   busquedaInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
     contratosFiltrados = contratosCache.filter(c => 
-      c.nombre_condominio.toLowerCase().includes(query) || 
-      (c.servicio_nombre && c.servicio_nombre.toLowerCase().includes(query))
+      c.condominios?.nombre?.toLowerCase().includes(query) || 
+      c.servicios?.nombre?.toLowerCase().includes(query)
     );
     paginaActual = 1;
     renderTarjetas();
   });
 
-  // Abrir Modal Crear
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
+    limpiarError();
     modalTitle.textContent = 'Nuevo contrato';
     modalContrato.classList.remove('hidden');
   });
 
-  // Cerrar Modales
-  const cerrarModal = () => modalContrato.classList.add('hidden');
+  const cerrarModal = () => {
+    modalContrato.classList.add('hidden');
+    limpiarError();
+  };
   btnCloseModal.addEventListener('click', cerrarModal);
   btnCancelarModal.addEventListener('click', cerrarModal);
 
@@ -79,7 +109,6 @@ function initEventListeners() {
   btnCloseModalEliminar.addEventListener('click', cerrarModalEliminar);
   btnCancelarEliminar.addEventListener('click', cerrarModalEliminar);
 
-  // Confirmar Eliminación
   btnConfirmarEliminar.addEventListener('click', async () => {
     if (contratoAEliminarId) {
       await eliminarContrato(contratoAEliminarId);
@@ -87,43 +116,60 @@ function initEventListeners() {
     }
   });
 
-  // Guardar (Crear o Editar)
   formModal.addEventListener('submit', async (e) => {
     e.preventDefault();
     await guardarContrato();
   });
 }
 
-async function cargarServiciosSelect() {
+// Cargar catálogos de Condominios y Servicios para los Selects del Modal
+async function cargarSelectsModal() {
   try {
-    const { data } = await supabase
-      .from('servicios')
-      .select('id, nombre')
-      .order('nombre', { ascending: true });
+    const [{ data: condominios }, { data: servicios }] = await Promise.all([
+      supabase.from('condominios').select('id, nombre').order('nombre', { ascending: true }),
+      supabase.from('servicios').select('id, nombre').order('nombre', { ascending: true })
+    ]);
 
-    serviciosLista = data || [];
-    selectServicio.innerHTML = '<option value="" disabled selected>Selecciona un servicio...</option>';
-
-    serviciosLista.forEach(s => {
+    selectCondominio.innerHTML = '<option value="" disabled selected>Selecciona un condominio...</option>';
+    (condominios || []).forEach(c => {
       const opt = document.createElement('option');
-      opt.value = s.nombre;
+      opt.value = c.id;
+      opt.textContent = c.nombre;
+      selectCondominio.appendChild(opt);
+    });
+
+    selectServicio.innerHTML = '<option value="" disabled selected>Selecciona un servicio...</option>';
+    (servicios || []).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
       opt.textContent = s.nombre;
       selectServicio.appendChild(opt);
     });
   } catch (err) {
-    console.warn('No se pudieron cargar servicios para el selector:', err);
+    console.warn('Error al cargar catálogos para el modal:', err);
   }
 }
 
+// CONSULTAR DESDE TABLA RELACIONAL `condominio_servicio`
 async function cargarContratos() {
-  gridContratos.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">Cargando contratos desde Supabase...</p>';
+  gridContratos.innerHTML = '<p class="estado-vacio">Cargando contratos desde Supabase...</p>';
   paginacionContainer.innerHTML = '';
   paginacionContainer.style.display = 'none';
 
   try {
     const { data, error } = await supabase
-      .from('contratos')
-      .select('*')
+      .from('condominio_servicio')
+      .select(`
+        id,
+        condominio_id,
+        servicio_id,
+        tarifa,
+        frecuencia,
+        dia_preferente,
+        created_at,
+        condominios ( id, nombre ),
+        servicios ( id, nombre )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -139,7 +185,10 @@ async function cargarContratos() {
     renderTarjetas();
   } catch (err) {
     console.error('Error al consultar Supabase:', err.message);
-    gridContratos.innerHTML = `<p style="text-align:center; width:100%; color:#ef4444; padding: 2rem;">Error al cargar datos: ${err.message}</p>`;
+    const pError = document.createElement('p');
+    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
+    pError.textContent = `Error al cargar datos: ${err.message}`;
+    gridContratos.replaceChildren(pError);
   }
 }
 
@@ -147,7 +196,7 @@ function renderTarjetas() {
   gridContratos.innerHTML = '';
 
   if (contratosFiltrados.length === 0) {
-    gridContratos.innerHTML = '<p style="text-align:center; width:100%; color:#64748b; padding: 2rem;">No se encontraron contratos.</p>';
+    gridContratos.innerHTML = '<p class="estado-vacio">No se encontraron contratos.</p>';
     paginacionContainer.innerHTML = '';
     paginacionContainer.style.display = 'none';
     return;
@@ -158,6 +207,9 @@ function renderTarjetas() {
   const paginaItems = contratosFiltrados.slice(inicio, fin);
 
   paginaItems.forEach(c => {
+    const nombreCondominio = c.condominios?.nombre || 'Condominio no especificado';
+    const nombreServicio = c.servicios?.nombre || 'Servicio no especificado';
+
     const card = document.createElement('div');
     card.className = 'card-ruta';
     card.innerHTML = `
@@ -165,38 +217,50 @@ function renderTarjetas() {
         <div class="card-contrato-header">
           <div class="condominio-title">
             <span>🏠</span>
-            <span>${c.nombre_condominio}</span>
+            <span class="contrato-condominio"></span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
+          <div class="card-acciones">
             <button class="btn-edit-circle btn-editar-card" title="Editar contrato">✏️</button>
-            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar contrato" style="background: #FEE2E2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">🗑️</button>
+            <button class="btn-delete-circle btn-eliminar-card" title="Eliminar contrato">🗑️</button>
           </div>
         </div>
 
         <div class="contrato-servicio-box">
-          <div class="servicio-nombre-badge">${c.servicio_nombre}</div>
-          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> $${Number(c.tarifa_mensual || 0).toLocaleString('es-MX')}</div>
-          <div class="contrato-detalle-row"><strong>Frecuencia:</strong> ${c.frecuencia || 'N/A'}</div>
-          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> ${c.dias_preferenciales || 'N/A'}</div>
+          <div class="servicio-nombre-badge"></div>
+          <div class="contrato-detalle-row"><strong>Tarifa mensual:</strong> <span class="contrato-tarifa"></span></div>
+          <div class="contrato-detalle-row"><strong>Frecuencia:</strong> <span class="contrato-frecuencia"></span></div>
+          <div class="contrato-detalle-row"><strong>Días preferenciales:</strong> <span class="contrato-dia"></span></div>
         </div>
       </div>
     `;
 
+    // Los datos de la BD se asignan con textContent: el navegador los trata como texto, nunca como HTML (evita XSS almacenado)
+    card.querySelector('.contrato-condominio').textContent = nombreCondominio;
+    card.querySelector('.servicio-nombre-badge').textContent = nombreServicio;
+    card.querySelector('.contrato-tarifa').textContent = `$${Number(c.tarifa || 0).toLocaleString('es-MX')}`;
+    card.querySelector('.contrato-frecuencia').textContent = c.frecuencia || 'N/A';
+    card.querySelector('.contrato-dia').textContent = c.dia_preferente || 'N/A';
+
+    // aria-label con datos de la BD, asignado aquí y no en la plantilla
+    card.querySelector('.btn-editar-card').setAttribute('aria-label', `Editar contrato de ${nombreCondominio}: ${nombreServicio}`);
+    card.querySelector('.btn-eliminar-card').setAttribute('aria-label', `Eliminar contrato de ${nombreCondominio}: ${nombreServicio}`);
+
     card.querySelector('.btn-editar-card').addEventListener('click', () => {
       inputId.value = c.id;
-      inputCondominio.value = c.nombre_condominio;
-      selectServicio.value = c.servicio_nombre;
-      inputTarifa.value = c.tarifa_mensual;
+      selectCondominio.value = c.condominio_id;
+      selectServicio.value = c.servicio_id;
+      inputTarifa.value = c.tarifa;
       selectFrecuencia.value = c.frecuencia;
-      inputDias.value = c.dias_preferenciales;
+      inputDias.value = c.dia_preferente;
 
+      limpiarError();
       modalTitle.textContent = 'Editar contrato';
       modalContrato.classList.remove('hidden');
     });
 
     card.querySelector('.btn-eliminar-card').addEventListener('click', () => {
       contratoAEliminarId = c.id;
-      textoConfirmarEliminar.textContent = `¿Estás seguro de que deseas eliminar el contrato de "${c.nombre_condominio}"? Esta acción no se puede deshacer.`;
+      textoConfirmarEliminar.textContent = `¿Estás seguro de que deseas eliminar el contrato de "${nombreCondominio}"? Esta acción no se puede deshacer.`;
       modalEliminar.classList.remove('hidden');
     });
 
@@ -255,28 +319,37 @@ function renderPaginacion() {
   paginacionContainer.appendChild(btnNext);
 }
 
+// GUARDAR / ACTUALIZAR EN `condominio_servicio`
 async function guardarContrato() {
   const id = inputId.value;
+  limpiarError();
+
+  // Number() en lugar de parseFloat(...) || 0: un valor vacío o inválido ya no se convierte en 0 en silencio
+  const tarifa = Number(inputTarifa.value);
+  if (!Number.isFinite(tarifa) || tarifa <= 0) {
+    mostrarError('La tarifa debe ser un número mayor a 0.');
+    return;
+  }
 
   const payload = {
-    nombre_condominio: inputCondominio.value.trim(),
-    servicio_nombre: selectServicio.value,
-    tarifa_mensual: parseFloat(inputTarifa.value) || 0,
+    condominio_id: selectCondominio.value,
+    servicio_id: selectServicio.value,
+    tarifa,
     frecuencia: selectFrecuencia.value,
-    dias_preferenciales: inputDias.value.trim()
+    dia_preferente: inputDias.value.trim()
   };
 
   try {
     if (id) {
       const { error } = await supabase
-        .from('contratos')
+        .from('condominio_servicio')
         .update(payload)
         .eq('id', id);
 
       if (error) throw error;
     } else {
       const { error } = await supabase
-        .from('contratos')
+        .from('condominio_servicio')
         .insert([payload]);
 
       if (error) throw error;
@@ -285,14 +358,20 @@ async function guardarContrato() {
     modalContrato.classList.add('hidden');
     await cargarContratos();
   } catch (err) {
-    alert('Error al guardar en Supabase: ' + err.message);
+    // 23505 = violación de UNIQUE (condominio_id, servicio_id): ese condominio ya tiene ese servicio
+    if (err.code === '23505') {
+      mostrarError('Este condominio ya tiene contratado ese servicio. Edita el contrato existente en lugar de crear otro.');
+    } else {
+      mostrarError('No se pudo guardar el contrato: ' + err.message);
+    }
   }
 }
 
+// ELIMINAR REGISTRO DE `condominio_servicio`
 async function eliminarContrato(id) {
   try {
     const { error } = await supabase
-      .from('contratos')
+      .from('condominio_servicio')
       .delete()
       .eq('id', id);
 

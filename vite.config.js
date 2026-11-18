@@ -52,7 +52,7 @@ export default defineConfig({
 
         pendientesVisitas: resolve(
           process.cwd(),
-          'src/modules/visitas/Pendientes_Sincronizacion_Movil.html'
+          'src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html'
         ),
 
         bitacoraVisitas: resolve(
@@ -79,6 +79,37 @@ export default defineConfig({
           process.cwd(),
           'src/modules/cuadrillas/cuadrillas.html'
         ),
+
+        ordenes: resolve(
+          process.cwd(),
+          'src/modules/ordenes/index.html'
+        ),
+
+        ordenesMovil: resolve(
+          process.cwd(),
+          'src/modules/ordenes/Ordenes_Servicio_Movil.html'
+        ),
+
+        registrarIncidencia: resolve(
+          process.cwd(),
+          'src/modules/incidencias/Registrar_Incidencia_Movil.html'
+        ),
+
+        modulosServicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/modulos.html'
+        ),
+
+        servicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/servicios.html'
+        ),
+
+        contratos: resolve(
+          process.cwd(),
+          'src/modules/servicios/contratos.html'
+        )
+
       }
     }
   }

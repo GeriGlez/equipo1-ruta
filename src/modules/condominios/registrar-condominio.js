@@ -6,7 +6,8 @@ import {
   crearCondominio,
   actualizarCondominio,
   agregarAreas,
-  eliminarAreas
+  eliminarAreas,
+  actualizarArea
 } from './condominiosService.js'
 
 // ---------- Elementos ----------
@@ -22,14 +23,19 @@ const areaLecturas = document.querySelector('#area-lecturas')
 const botonAgregarArea = document.querySelector('#btn-agregar-area')
 const listaAreas = document.querySelector('#lista-areas')
 const campoTelefono = document.querySelector('#telefono')
+const botonCancelarArea = document.querySelector('#btn-cancelar-area')
+const avisoTipo = document.querySelector('#area-aviso-tipo')
 
 // Si la URL trae ?id=14, estamos editando ese condominio
 const idEditar = Number(new URLSearchParams(window.location.search).get('id')) || null
 
 // Áreas que se ven en la tabla. Las que ya están guardadas traen "id".
 // Las guardadas que el usuario marca para borrar llevan "eliminar: true"
-// y solo se borran al dar Guardar.
+// y solo se borran al dar Guardar. Las que se corrigen llevan "editada: true".
 let areas = []
+
+// Posición en "areas" del área que se está editando (null = capturando una nueva)
+let areaEditando = null
 
 // ---------- Utilidades ----------
 
@@ -39,9 +45,77 @@ function escapar(texto) {
   return div.innerHTML
 }
 
+// Aviso flotante arriba de la pantalla; se oculta solo a los 6 segundos
+let temporizadorMensaje
 function mostrarMensaje(texto) {
+  clearTimeout(temporizadorMensaje)
   mensaje.textContent = texto
   mensaje.hidden = !texto
+  if (texto) temporizadorMensaje = setTimeout(() => { mensaje.hidden = true }, 6000)
+}
+
+// ---------- Errores junto a cada campo ----------
+
+// Pinta el campo en rojo y escribe el error justo debajo de él
+function marcarError(campo, texto) {
+  const grupo = campo.closest('.form-group')
+  campo.classList.add('reg-campo-error')
+  campo.setAttribute('aria-invalid', 'true')
+
+  let aviso = grupo.querySelector('.reg-error-texto')
+  if (!aviso) {
+    aviso = document.createElement('small')
+    aviso.className = 'reg-error-texto'
+    grupo.append(aviso)
+  }
+  aviso.textContent = texto
+}
+
+function quitarError(campo) {
+  campo.classList.remove('reg-campo-error')
+  campo.removeAttribute('aria-invalid')
+  campo.closest('.form-group')?.querySelector('.reg-error-texto')?.remove()
+}
+
+function limpiarErrores() {
+  formulario.querySelectorAll('.reg-campo-error').forEach(quitarError)
+}
+
+// Revisa los campos obligatorios antes de enviar. Devuelve true si todo está bien.
+function validarFormulario() {
+  limpiarErrores()
+  const errores = []
+
+  if (!formulario.nombre.value.trim()) {
+    errores.push([formulario.nombre, 'Escribe el nombre del condominio.'])
+  }
+  if (!formulario.direccion.value.trim()) {
+    errores.push([formulario.direccion, 'Escribe la dirección completa.'])
+  }
+  const telefono = campoTelefono.value
+  if (telefono && telefono.length !== 10) {
+    errores.push([campoTelefono, 'El teléfono debe tener exactamente 10 dígitos.'])
+  }
+  // Un área a medio editar, o escrita pero que no se agregó a la lista
+  if (areaEditando !== null) {
+    errores.push([areaNombre, 'Termina de editar el área ("Guardar cambios del área") o cancela la edición.'])
+  } else if (areaNombre.value.trim()) {
+    errores.push([areaNombre, 'Dale "+ Agregar a la lista" o borra el nombre.'])
+  }
+
+  if (errores.length === 0) return true
+
+  errores.forEach(([campo, texto]) => marcarError(campo, texto))
+
+  // Lleva la pantalla y el cursor al primer error
+  const [primero] = errores[0]
+  primero.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  primero.focus({ preventScroll: true })
+
+  mostrarMensaje(errores.length === 1
+    ? 'Revisa el campo marcado en rojo.'
+    : `Revisa los ${errores.length} campos marcados en rojo.`)
+  return false
 }
 
 function etiquetaTipo(valor) {
@@ -65,12 +139,20 @@ function dibujarAreas() {
       accion = `<span class="reg-etiqueta-eliminar">Se eliminará</span>
                 <button type="button" class="condo-link" data-deshacer="${indice}">Deshacer</button>`
     } else {
-      accion = `<button type="button" class="condo-link reg-link-peligro" data-eliminar="${indice}">Eliminar</button>`
+      accion = `<button type="button" class="condo-link" data-editar="${indice}">Editar</button>
+                <button type="button" class="condo-link reg-link-peligro" data-eliminar="${indice}">Eliminar</button>`
     }
 
+    const etiquetaEditada = area.editada && !area.eliminar
+      ? ' <span class="reg-etiqueta-editada">Modificada</span>'
+      : ''
+    const claseFila = area.eliminar
+      ? 'reg-area-eliminada'
+      : (indice === areaEditando ? 'reg-area-en-edicion' : '')
+
     return `
-      <tr class="${area.eliminar ? 'reg-area-eliminada' : ''}">
-        <td>${escapar(area.nombre)}</td>
+      <tr class="${claseFila}">
+        <td>${escapar(area.nombre)}${etiquetaEditada}</td>
         <td>${etiquetaTipo(area.tipo)}</td>
         <td>${area.requiere_lecturas ? 'Sí' : 'No'}</td>
         <td>${accion}</td>
@@ -79,19 +161,68 @@ function dibujarAreas() {
   }).join('')
 }
 
+// Pone los datos de un área guardada en los campos de arriba para corregirlos
+function empezarEdicion(indice) {
+  const area = areas[indice]
+  areaEditando = indice
+
+  areaNombre.value = area.nombre
+  areaTipo.value = area.tipo
+  areaLecturas.checked = area.requiere_lecturas
+
+  // Con historial no se puede cambiar el tipo (el servicio también lo revisa)
+  const conOrdenes = (area.total_ordenes ?? 0) > 0
+  areaTipo.disabled = conOrdenes
+  avisoTipo.hidden = !conOrdenes
+
+  botonAgregarArea.textContent = 'Guardar cambios del área'
+  botonCancelarArea.hidden = false
+  quitarError(areaNombre)
+  dibujarAreas()
+  areaNombre.focus()
+}
+
+function terminarEdicion() {
+  areaEditando = null
+  areaTipo.disabled = false
+  avisoTipo.hidden = true
+  botonAgregarArea.textContent = '+ Agregar a la lista'
+  botonCancelarArea.hidden = true
+
+  areaNombre.value = ''
+  areaTipo.value = TIPOS_AREA[0].valor
+  areaLecturas.checked = areaTipo.value === 'alberca'
+  quitarError(areaNombre)
+  dibujarAreas()
+}
+
 function agregarAreaALista() {
   const nombre = areaNombre.value.trim()
 
   if (!nombre) {
-    mostrarMensaje('Escribe el nombre del área antes de agregarla.')
+    marcarError(areaNombre, 'Escribe el nombre del área antes de agregarla.')
     areaNombre.focus()
     return
   }
 
-  // Las marcadas para eliminar no cuentan como repetidas
-  const repetida = areas.some(a => !a.eliminar && a.nombre.toLowerCase() === nombre.toLowerCase())
+  // Las marcadas para eliminar (y la que se está editando) no cuentan como repetidas
+  const repetida = areas.some((a, i) => i !== areaEditando && !a.eliminar &&
+    a.nombre.toLowerCase() === nombre.toLowerCase())
   if (repetida) {
-    mostrarMensaje(`Ya existe un área llamada "${nombre}" en este condominio.`)
+    marcarError(areaNombre, `Ya existe un área llamada "${nombre}" en este condominio.`)
+    areaNombre.focus()
+    return
+  }
+
+  if (areaEditando !== null) {
+    // Corrige el área en la lista; se guarda en Supabase al dar Guardar
+    const area = areas[areaEditando]
+    area.nombre = nombre
+    area.tipo = areaTipo.value
+    area.requiere_lecturas = areaLecturas.checked
+    if (area.id) area.editada = true
+    mostrarMensaje('')
+    terminarEdicion()
     return
   }
 
@@ -101,6 +232,7 @@ function agregarAreaALista() {
     requiere_lecturas: areaLecturas.checked
   })
 
+  quitarError(areaNombre)
   mostrarMensaje('')
   dibujarAreas()
 
@@ -137,11 +269,7 @@ async function guardar(evento) {
   evento.preventDefault()
   mostrarMensaje('')
 
-  // Si el usuario escribió un área pero olvidó darle "Agregar", se la recordamos
-  if (areaNombre.value.trim()) {
-    mostrarMensaje('Tienes un área escrita sin agregar. Dale "+ Agregar a la lista" o borra el nombre.')
-    return
-  }
+  if (!validarFormulario()) return
 
   const datos = {
     nombre: formulario.nombre.value,
@@ -153,15 +281,9 @@ async function guardar(evento) {
     activo: formulario.activo.checked
   }
 
-  const telefono = campoTelefono.value
-  if (telefono && telefono.length !== 10) {
-    mostrarMensaje('El teléfono debe tener exactamente 10 dígitos, solo números.')
-    campoTelefono.focus()
-    return
-  }
-
   const areasNuevas = areas.filter(a => !a.id)
   const idsEliminar = areas.filter(a => a.id && a.eliminar).map(a => a.id)
+  const areasEditadas = areas.filter(a => a.id && a.editada && !a.eliminar)
 
   if (idsEliminar.length > 0) {
     const texto = idsEliminar.length === 1 ? '1 área' : `${idsEliminar.length} áreas`
@@ -175,6 +297,7 @@ async function guardar(evento) {
     if (idEditar) {
       // Primero se eliminan: si un área no se puede borrar, no se guarda nada más
       await eliminarAreas(idsEliminar)
+      for (const area of areasEditadas) await actualizarArea(area.id, area)
       await actualizarCondominio(idEditar, datos)
       if (areasNuevas.length > 0) await agregarAreas(idEditar, areasNuevas)
     } else {
@@ -193,6 +316,7 @@ async function guardar(evento) {
 // ---------- Eventos ----------
 
 botonAgregarArea.addEventListener('click', agregarAreaALista)
+botonCancelarArea.addEventListener('click', terminarEdicion)
 
 // Enter dentro del nombre del área la agrega, en vez de enviar todo el formulario
 areaNombre.addEventListener('keydown', (evento) => {
@@ -213,10 +337,18 @@ listaAreas.addEventListener('click', (evento) => {
 
   if (boton.dataset.quitar !== undefined) {
     // Área nueva: solo existe en la lista, se quita de inmediato
-    areas.splice(Number(boton.dataset.quitar), 1)
+    const indice = Number(boton.dataset.quitar)
+    areas.splice(indice, 1)
+    // Si se quita una fila de arriba, el área en edición se recorre un lugar
+    if (areaEditando !== null && indice < areaEditando) areaEditando--
+  } else if (boton.dataset.editar !== undefined) {
+    empezarEdicion(Number(boton.dataset.editar))
+    return
   } else if (boton.dataset.eliminar !== undefined) {
     // Área guardada: se marca y se borra al dar Guardar
-    areas[Number(boton.dataset.eliminar)].eliminar = true
+    const indice = Number(boton.dataset.eliminar)
+    if (indice === areaEditando) terminarEdicion()
+    areas[indice].eliminar = true
   } else if (boton.dataset.deshacer !== undefined) {
     const area = areas[Number(boton.dataset.deshacer)]
     const repetida = areas.some(a => a !== area && !a.eliminar &&
@@ -237,6 +369,11 @@ listaAreas.addEventListener('click', (evento) => {
 // Teléfono: al escribir o pegar se quitan letras y símbolos, máximo 10 dígitos
 campoTelefono.addEventListener('input', () => {
   campoTelefono.value = campoTelefono.value.replace(/\D/g, '').slice(0, 10)
+})
+
+// Al corregir un campo marcado, su error desaparece
+formulario.addEventListener('input', (evento) => {
+  if (evento.target.classList.contains('reg-campo-error')) quitarError(evento.target)
 })
 
 formulario.addEventListener('submit', guardar)

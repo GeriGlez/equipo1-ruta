@@ -1,6 +1,6 @@
 import {
   obtenerVisitasPendientes
-} from './modules/visitas/db-local.js'
+} from './modules/pendientes_sync/db-local.js'
 
 
 
@@ -17,7 +17,13 @@ const RUTAS = {
     '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
 
   pendientes:
-    '/src/modules/visitas/Pendientes_Sincronizacion_Movil.html'
+    '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
+
+ ordenes:
+    '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
 
 }
 
@@ -415,6 +421,22 @@ export function renderTecnicoApp(
     }
   )
 
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
 
   const botonPendientes =
     app.querySelector(
@@ -433,14 +455,29 @@ export function renderTecnicoApp(
   )
 
 
+  const botonOrdenes =
+    app.querySelector(
+      '[data-module="ordenes"]'
+    )
+
+
+  botonOrdenes.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.ordenes
+
+    }
+  )
+
+
   // ==========================================
   // MÓDULOS AÚN NO INTEGRADOS
   // ==========================================
 
   const modulosPendientes = [
-    'ordenes',
     'insumos',
-    'incidencias'
   ]
 
 
@@ -474,7 +511,8 @@ export function renderTecnicoApp(
   // ==========================================
 
   actualizarPendientes(
-    app
+    app,
+    usuario
   )
 
   actualizarOrdenesTecnico(
@@ -490,7 +528,8 @@ export function renderTecnicoApp(
 // ============================================
 
 async function actualizarPendientes(
-  app
+  app,
+  usuario
 ) {
 
   const contador =
@@ -502,7 +541,7 @@ async function actualizarPendientes(
   try {
 
     const pendientes =
-      await obtenerVisitasPendientes()
+      await obtenerVisitasPendientes(usuario?.id)
 
 
     const cantidad =
@@ -563,3 +602,45 @@ async function actualizarOrdenesTecnico(
   }
 
 }
+// ================================================
+// PRECARGAR CATÁLOGO PARA EL MÓDULO DE INCIDENCIAS
+// ================================================
+import { supabase } from './services/supabase.js';
+import { guardarCatalogoM7 } from './modules/pendientes_sync/db-local.js';
+
+// Ejecutar silenciosamente en segundo plano
+async function descargarCatalogosOffline() {
+  if (!navigator.onLine) return;
+
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return;
+
+    // Traemos las visitas anidadas igual que lo hacías en tu módulo
+    const { data: visitas, error } = await supabase
+      .from('visitas')
+      .select(`
+        id,
+        ordenes_servicio (
+          condominio_id,
+          area_id,
+          condominios ( nombre ),
+          areas ( nombre )
+        )
+      `)
+      .eq('tecnico_id', authData.user.id)
+      .order('id', { ascending: false }); 
+
+    if (error) throw error;
+
+    // Guardamos en la base de datos local
+    await guardarCatalogoM7(visitas);
+    console.log('Catálogo M7 descargado exitosamente para uso offline.');
+    
+  } catch (error) {
+    console.error('Error descargando catálogo M7:', error);
+  }
+}
+
+// Llamar a la función al cargar el dashboard
+descargarCatalogosOffline();

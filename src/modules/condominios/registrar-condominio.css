@@ -170,3 +170,77 @@
 .reg-link-peligro {
   color: #b91c1c;
 }
+/* Errores junto a cada campo */
+
+.form-input.reg-campo-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.form-input.reg-campo-error:focus {
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.2);
+}
+
+.reg-error-texto {
+  display: block;
+  margin-top: 0.3rem;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Aviso flotante arriba de la pantalla */
+
+.reg-aviso {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  z-index: 100;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  transform: translateX(-50%);
+  border: 1px solid #fecaca;
+  box-shadow: var(--shadow-lg);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Editar áreas ya registradas */
+
+.reg-area-botones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.reg-area-botones .condo-link {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.form-input:disabled {
+  background: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.reg-aviso-tipo {
+  margin: -0.5rem 0 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.reg-area-en-edicion td {
+  background: #eef6fb;
+}
+
+.reg-etiqueta-editada {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #dceaf1;
+  color: var(--condo-azul);
+  font-size: 0.7rem;
+  font-weight: 600;
+}

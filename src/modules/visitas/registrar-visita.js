@@ -4,7 +4,7 @@ import {
   obtenerContextoOrden,
   obtenerVisitaPorOrden,
   actualizarVisitaLocal
-} from './db-local.js';
+} from '../pendientes_sync/db-local.js';
 
 
 // ============================================
