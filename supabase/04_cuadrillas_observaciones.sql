@@ -5,7 +5,13 @@
 ALTER TABLE public.cuadrillas
   ADD COLUMN IF NOT EXISTS activo boolean NOT NULL DEFAULT true;
 
--- 2. Reconocer en RLS tanto al técnico responsable como a los técnicos de apoyo
+-- 2. Limpiar registros históricos donde el responsable aparecía duplicado como apoyo
+DELETE FROM public.cuadrilla_usuario cu
+USING public.cuadrillas c
+WHERE cu.cuadrilla_id = c.id
+  AND cu.usuario_id = c.responsable_id;
+
+-- 3. Reconocer en RLS tanto al técnico responsable como a los técnicos de apoyo
 CREATE OR REPLACE FUNCTION ruta_seguridad.pertenece_cuadrilla(p_cuadrilla_id bigint)
  RETURNS boolean
  LANGUAGE sql

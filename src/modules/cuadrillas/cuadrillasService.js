@@ -2,6 +2,7 @@ import { supabase } from '../../services/supabase.js'
 
 const PATRON_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PATRON_TELEFONO = /^\d{10}$/
+const ROLES_VALIDOS = ['tecnico', 'administrador']
 
 function limpiarTelefono(texto) {
   const limpio = String(texto || '').replace(/[\s-]/g, '').trim()
@@ -33,55 +34,6 @@ function validarDatosCuadrilla(nombre, responsable_id, miembrosIds = []) {
   return { nombreLimpio, respLimpio, miembrosApoyoIds: idsLimpiados }
 }
 
-// ============================================
-// CUADRILLAS - SERVICIO DE DATOS
-// ============================================
-
-/**
- * Consulta todas las cuadrillas con su responsable y sus técnicos de apoyo.
- */
-export async function listarCuadrillas() {
-  const { data, error } = await supabase
-    .from('cuadrillas')
-    .select(`
-      id,
-      nombre,
-      responsable_id,
-      activo,
-      created_at,
-      responsable:usuarios(id, nombre, correo, telefono, activo),
-      miembros:cuadrilla_usuario(
-        id,
-        usuario_id,
-        fecha_alta,
-        usuario:usuarios(id, nombre, correo, telefono, rol, activo)
-      )
-    `)
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-
-  // Si existen registros históricos donde el responsable estaba duplicado como apoyo, limpiarlos en BD
-  const idsDuplicados = (data || []).flatMap(c =>
-    (c.miembros || []).filter(m => m.usuario_id === c.responsable_id && m.id).map(m => m.id)
-  )
-  if (idsDuplicados.length > 0) {
-    supabase.from('cuadrilla_usuario').delete().in('id', idsDuplicados).then(() => {})
-  }
-
-  // Un técnico responsable, administrador o dado de baja nunca debe figurar como técnico de apoyo activo
-  return (data || []).map(c => ({
-    ...c,
-    activo: c.activo ?? true,
-    miembros: (c.miembros || []).filter(
-      m =>
-        m.usuario_id !== c.responsable_id &&
-        m.usuario?.activo !== false &&
-        m.usuario?.rol !== 'administrador'
-    )
-  }))
-}
-
 async function verificarNombreCuadrillaUnico(nombreLimpio, excluirId = null) {
   const { data, error } = await supabase
     .from('cuadrillas')
@@ -95,6 +47,46 @@ async function verificarNombreCuadrillaUnico(nombreLimpio, excluirId = null) {
   if (duplicada) {
     throw new Error(`Ya existe una cuadrilla registrada con el nombre "${nombreLimpio}".`)
   }
+}
+
+// ============================================
+// CUADRILLAS - SERVICIO DE DATOS
+// ============================================
+
+/**
+ * Consulta todas las cuadrillas con su responsable y sus técnicos de apoyo activos.
+ */
+export async function listarCuadrillas() {
+  const { data, error } = await supabase
+    .from('cuadrillas')
+    .select(`
+      id,
+      nombre,
+      responsable_id,
+      activo,
+      created_at,
+      responsable:usuarios(id, nombre, correo, telefono, activo, rol),
+      miembros:cuadrilla_usuario(
+        id,
+        usuario_id,
+        fecha_alta,
+        usuario:usuarios(id, nombre, correo, telefono, rol, activo)
+      )
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data || []).map(c => ({
+    ...c,
+    activo: c.activo ?? true,
+    miembros: (c.miembros || []).filter(
+      m =>
+        String(m.usuario_id) !== String(c.responsable_id) &&
+        m.usuario?.activo !== false &&
+        m.usuario?.rol !== 'administrador'
+    )
+  }))
 }
 
 /**
@@ -118,10 +110,11 @@ export async function crearCuadrilla({ nombre, responsable_id, miembrosIds = [] 
   if (errorCuadrilla) throw errorCuadrilla
 
   if (miembrosApoyoIds.length > 0) {
+    const hoy = new Date().toISOString().split('T')[0]
     const filasMiembros = miembrosApoyoIds.map(uid => ({
       cuadrilla_id: cuadrilla.id,
       usuario_id: uid,
-      fecha_alta: new Date().toISOString().split('T')[0]
+      fecha_alta: hoy
     }))
 
     const { error: errorMiembros } = await supabase
@@ -138,9 +131,10 @@ export async function crearCuadrilla({ nombre, responsable_id, miembrosIds = [] 
 }
 
 /**
- * Actualiza los datos de una cuadrilla y sincroniza sus técnicos de apoyo.
+ * Actualiza los datos de una cuadrilla y sincroniza de forma diferencial sus técnicos de apoyo.
  */
 export async function actualizarCuadrilla(id, { nombre, responsable_id, miembrosIds = [] }) {
+  if (!id) throw new Error('El identificador de la cuadrilla es obligatorio.')
   const { nombreLimpio, respLimpio, miembrosApoyoIds } = validarDatosCuadrilla(
     nombre,
     responsable_id,
@@ -160,46 +154,43 @@ export async function actualizarCuadrilla(id, { nombre, responsable_id, miembros
     throw new Error('No tienes permiso para editar esta cuadrilla o ya no existe.')
   }
 
-  const { data: miembrosAnteriores } = await supabase
+  const { data: actuales, error: errorActuales } = await supabase
     .from('cuadrilla_usuario')
-    .select('usuario_id, fecha_alta')
+    .select('usuario_id')
     .eq('cuadrilla_id', id)
 
-  const mapaFechas = new Map(
-    (miembrosAnteriores || []).map(m => [String(m.usuario_id), m.fecha_alta])
-  )
+  if (errorActuales) throw errorActuales
 
-  const { error: errorDelete } = await supabase
-    .from('cuadrilla_usuario')
-    .delete()
-    .eq('cuadrilla_id', id)
+  const setNuevos = new Set(miembrosApoyoIds)
+  const setActuales = new Set((actuales || []).map(m => String(m.usuario_id)))
 
-  if (errorDelete) throw errorDelete
+  // Eliminar solo los que ya no pertenecen (o el responsable si estaba duplicado antes)
+  const paraEliminar = Array.from(setActuales).filter(uid => !setNuevos.has(uid) || uid === respLimpio)
+  if (paraEliminar.length > 0) {
+    const { error: errorDelete } = await supabase
+      .from('cuadrilla_usuario')
+      .delete()
+      .eq('cuadrilla_id', id)
+      .in('usuario_id', paraEliminar)
 
-  if (miembrosApoyoIds.length > 0) {
+    if (errorDelete) throw errorDelete
+  }
+
+  // Insertar solo los nuevos técnicos de apoyo (conserva intactos los existentes y su fecha_alta)
+  const paraInsertar = miembrosApoyoIds.filter(uid => !setActuales.has(uid))
+  if (paraInsertar.length > 0) {
     const hoy = new Date().toISOString().split('T')[0]
-    const filasMiembros = miembrosApoyoIds.map(uid => ({
+    const filasNuevas = paraInsertar.map(uid => ({
       cuadrilla_id: id,
       usuario_id: uid,
-      fecha_alta: mapaFechas.get(String(uid)) || hoy
+      fecha_alta: hoy
     }))
 
     const { error: errorInsert } = await supabase
       .from('cuadrilla_usuario')
-      .insert(filasMiembros)
+      .insert(filasNuevas)
 
     if (errorInsert) {
-      if (miembrosAnteriores?.length) {
-        await supabase.from('cuadrilla_usuario').insert(
-          miembrosAnteriores
-            .filter(m => m.usuario_id !== respLimpio)
-            .map(m => ({
-              cuadrilla_id: id,
-              usuario_id: m.usuario_id,
-              fecha_alta: m.fecha_alta
-            }))
-        )
-      }
       throw new Error(`No se pudieron actualizar los técnicos de apoyo: ${errorInsert.message}`)
     }
   }
@@ -216,14 +207,14 @@ export async function cambiarEstadoCuadrilla(id, activo) {
   if (activo) {
     const { data: actual, error: errorActual } = await supabase
       .from('cuadrillas')
-      .select('responsable:usuarios(nombre, activo, rol)')
+      .select('responsable:usuarios(activo, rol)')
       .eq('id', id)
       .single()
 
     if (errorActual) throw errorActual
     if (!actual?.responsable?.activo || actual.responsable.rol !== 'tecnico') {
       throw new Error(
-        'No puedes reactivar esta cuadrilla porque su técnico responsable fue dado de baja. Edita la cuadrilla y asigna primero a un técnico activo.'
+        'No puedes reactivar esta cuadrilla porque su responsable está dado de baja o ya no tiene rol de técnico. Edita la cuadrilla y asigna primero a un técnico activo.'
       )
     }
   }
@@ -248,7 +239,6 @@ export async function cambiarEstadoCuadrilla(id, activo) {
 export async function eliminarCuadrilla(id) {
   if (!id) throw new Error('El identificador de la cuadrilla es obligatorio.')
 
-  // Verificar primero si tiene órdenes de servicio antes de tocar cuadrilla_usuario
   const { data: conOrdenes, error: errorOrdenes } = await supabase
     .from('ordenes_servicio')
     .select('id')
@@ -258,14 +248,16 @@ export async function eliminarCuadrilla(id) {
   if (errorOrdenes) throw errorOrdenes
   if (conOrdenes?.length > 0) {
     throw new Error(
-      'No se puede eliminar esta cuadrilla porque ya tiene órdenes de servicio registradas. Usa el botón "Desactivar" para darla de baja conservando su historial.'
+      'No se puede eliminar definitivamente esta cuadrilla porque ya tiene órdenes de servicio registradas. Consérvala como inactiva para no perder su historial.'
     )
   }
 
-  const { data: miembrosRespaldo } = await supabase
+  const { data: miembrosRespaldo, error: errorRespaldo } = await supabase
     .from('cuadrilla_usuario')
     .select('usuario_id, fecha_alta')
     .eq('cuadrilla_id', id)
+
+  if (errorRespaldo) throw errorRespaldo
 
   const { error: errorPivote } = await supabase
     .from('cuadrilla_usuario')
@@ -294,7 +286,7 @@ export async function eliminarCuadrilla(id) {
     }
     if (error.code === '23503') {
       throw new Error(
-        'No se puede eliminar esta cuadrilla porque tiene registros asociados en el sistema. Usa la opción "Desactivar".'
+        'No se puede eliminar definitivamente esta cuadrilla porque tiene registros asociados en el sistema. Consérvala como inactiva.'
       )
     }
     throw new Error(`No se pudo eliminar la cuadrilla: ${error.message}`)
@@ -314,7 +306,7 @@ export async function eliminarCuadrilla(id) {
 function prepararDatosEmpleado({ nombre, correo, telefono, rol = 'tecnico' }) {
   const nombreLimpio = String(nombre || '').trim()
   const correoLimpio = String(correo || '').trim().toLowerCase()
-  const rolLimpio = rol === 'administrador' ? 'administrador' : 'tecnico'
+  const rolTexto = String(rol || 'tecnico').trim().toLowerCase()
 
   if (!nombreLimpio) {
     throw new Error('Por favor, ingresa el nombre completo del empleado.')
@@ -325,6 +317,9 @@ function prepararDatosEmpleado({ nombre, correo, telefono, rol = 'tecnico' }) {
   if (!PATRON_CORREO.test(correoLimpio)) {
     throw new Error('El formato del correo electrónico no es válido (ejemplo: usuario@dominio.com).')
   }
+  if (!ROLES_VALIDOS.includes(rolTexto)) {
+    throw new Error('El rol seleccionado no es válido.')
+  }
 
   const telLimpio = limpiarTelefono(telefono)
 
@@ -332,7 +327,7 @@ function prepararDatosEmpleado({ nombre, correo, telefono, rol = 'tecnico' }) {
     nombre: nombreLimpio,
     correo: correoLimpio,
     telefono: telLimpio,
-    rol: rolLimpio
+    rol: rolTexto
   }
 }
 
@@ -396,13 +391,12 @@ export async function actualizarEmpleado(id, datos) {
       .from('cuadrillas')
       .select('nombre')
       .eq('responsable_id', id)
-      .eq('activo', true)
 
     if (errorResp) throw errorResp
     if (cuadrillasResp?.length > 0) {
       const nombres = cuadrillasResp.map(c => `"${c.nombre}"`).join(', ')
       throw new Error(
-        `No puedes cambiar el rol a Administrador porque este técnico es responsable de la cuadrilla activa ${nombres}. Asigna otro responsable primero.`
+        `No puedes cambiar el rol a Administrador porque este técnico está asignado como responsable de la cuadrilla ${nombres}. Asigna otro responsable primero.`
       )
     }
   }
@@ -425,7 +419,12 @@ export async function actualizarEmpleado(id, datos) {
   }
 
   if (empleado.rol === 'administrador') {
-    await supabase.from('cuadrilla_usuario').delete().eq('usuario_id', id)
+    const { error: errorDesvincular } = await supabase
+      .from('cuadrilla_usuario')
+      .delete()
+      .eq('usuario_id', id)
+
+    if (errorDesvincular) throw errorDesvincular
   }
 
   return true

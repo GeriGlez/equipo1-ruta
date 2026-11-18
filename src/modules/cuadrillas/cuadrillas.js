@@ -91,8 +91,36 @@ function mostrarAvisoLista(contenedor, texto, tipo = 'danger') {
 }
 
 // ============================================
-// INICIALIZACIÓN Y SEGURIDAD
+// CARGA SINCRONIZADA Y SEGURIDAD
 // ============================================
+
+async function recargarDatos() {
+  const [resCuadrillas, resPersonal] = await Promise.allSettled([
+    listarCuadrillas(),
+    listarPersonal()
+  ])
+
+  if (resCuadrillas.status === 'fulfilled') {
+    cacheCuadrillas = resCuadrillas.value
+  }
+  if (resPersonal.status === 'fulfilled') {
+    cachePersonal = resPersonal.value
+  }
+
+  if (resCuadrillas.status === 'fulfilled') {
+    filtrarCuadrillas()
+  } else {
+    console.error('[Cuadrillas] Error al listar:', resCuadrillas.reason)
+    gridCuadrillas.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error al cargar cuadrillas: ${escaparHtml(resCuadrillas.reason?.message || 'Error de conexión')}</div>`
+  }
+
+  if (resPersonal.status === 'fulfilled') {
+    filtrarPersonal()
+  } else {
+    console.error('[Personal] Error al listar:', resPersonal.reason)
+    tablaPersonalBody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#ef4444;">Error al cargar personal: ${escaparHtml(resPersonal.reason?.message || 'Error de conexión')}</td></tr>`
+  }
+}
 
 async function inicializar() {
   try {
@@ -108,9 +136,10 @@ async function inicializar() {
       headerUserName.textContent = sesion.usuario.nombre || 'Administrador'
     }
 
-    await Promise.all([cargarCuadrillas(), cargarPersonal()])
+    await recargarDatos()
   } catch (error) {
     console.error('[Cuadrillas] Error en inicialización:', error)
+    window.location.href = '/'
   }
 }
 
@@ -146,9 +175,8 @@ function limpiarErroresEmpleado() {
 inputCuadrillaNombre.addEventListener('input', () => marcarErrorCampo(inputCuadrillaNombre, errorCuadrillaNombre, ''))
 selectResponsable.addEventListener('change', () => {
   marcarErrorCampo(selectResponsable, errorCuadrillaResponsable, '')
-  // El responsable no puede ser técnico de apoyo en la misma cuadrilla
   if (selectResponsable.value) {
-    apoyoSeleccionadosIds.delete(selectResponsable.value)
+    apoyoSeleccionadosIds.delete(String(selectResponsable.value))
   }
   renderCheckboxesApoyo()
 })
@@ -205,16 +233,6 @@ function filtrarCuadrillas() {
   renderCuadrillasCards(resultado)
 }
 
-async function cargarCuadrillas() {
-  try {
-    cacheCuadrillas = await listarCuadrillas()
-    filtrarCuadrillas()
-  } catch (error) {
-    console.error('[Cuadrillas] Error al listar:', error)
-    gridCuadrillas.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error al cargar cuadrillas: ${escaparHtml(error.message)}</div>`
-  }
-}
-
 function renderCuadrillasCards(cuadrillas) {
   if (!cuadrillas.length) {
     const hayFiltro = Boolean(buscarCuadrilla.value.trim()) || filtroEstadoCuadrilla.value !== 'activas'
@@ -230,7 +248,7 @@ function renderCuadrillasCards(cuadrillas) {
 
   gridCuadrillas.innerHTML = cuadrillas.map(c => {
     const respNombre = c.responsable?.nombre || 'Sin responsable'
-    const miembrosApoyo = (c.miembros || []).filter(m => m.usuario_id !== c.responsable_id)
+    const miembrosApoyo = (c.miembros || []).filter(m => String(m.usuario_id) !== String(c.responsable_id))
     const totalApoyo = miembrosApoyo.length
 
     const primeros = miembrosApoyo.slice(0, 4)
@@ -243,7 +261,7 @@ function renderCuadrillasCards(cuadrillas) {
     }).join('')
 
     const nombresRestantes = restantes > 0
-      ? miembrosApoyo.slice(4).map(m => m.usuario?.nombre || 'Técnico').join(', ')
+      ? miembrosApoyo.slice(4).map(m => (m.usuario?.nombre || '').trim() || 'Técnico').join(', ')
       : ''
     const masHtml = restantes > 0
       ? `<div class="avatar-member avatar-more" title="${escaparHtml(nombresRestantes)}">+${restantes}</div>`
@@ -331,7 +349,7 @@ gridCuadrillas.addEventListener('click', async (e) => {
     btnToggle.disabled = true
     try {
       await cambiarEstadoCuadrilla(id, activar)
-      await Promise.all([cargarCuadrillas(), cargarPersonal()])
+      await recargarDatos()
       mostrarAvisoLista(
         alertListaCuadrillas,
         activar ? 'Cuadrilla reactivada correctamente.' : 'Cuadrilla desactivada correctamente.',
@@ -356,15 +374,14 @@ listaMiembrosCheckboxes.addEventListener('change', (e) => {
   const cb = e.target.closest('input[name="miembros"]')
   if (!cb) return
   if (cb.checked) {
-    apoyoSeleccionadosIds.add(cb.value)
+    apoyoSeleccionadosIds.add(String(cb.value))
   } else {
-    apoyoSeleccionadosIds.delete(cb.value)
+    apoyoSeleccionadosIds.delete(String(cb.value))
   }
 })
 
 function renderCheckboxesApoyo() {
   const responsableId = selectResponsable.value
-  // Excluir al responsable seleccionado de la lista de técnicos de apoyo
   const tecnicosApoyoDisponibles = cachePersonal.filter(
     p => p.rol === 'tecnico' && p.activo && String(p.id) !== String(responsableId)
   )
@@ -395,6 +412,9 @@ function renderCheckboxesApoyo() {
 }
 
 function abrirModalCuadrilla(idEditar = null) {
+  const cuadrilla = idEditar ? cacheCuadrillas.find(c => String(c.id) === String(idEditar)) : null
+  if (idEditar && !cuadrilla) return
+
   formCuadrilla.reset()
   limpiarErroresCuadrilla()
   inputCuadrillaId.value = idEditar || ''
@@ -405,31 +425,22 @@ function abrirModalCuadrilla(idEditar = null) {
   btnGuardarCuadrilla.disabled = false
   btnGuardarCuadrilla.textContent = idEditar ? 'Guardar Cambios' : 'Guardar Cuadrilla'
 
-  modalCuadrilla.classList.add('active')
-
   const tecnicosActivos = cachePersonal.filter(p => p.rol === 'tecnico' && p.activo)
-
-  if (idEditar) {
-    const cuadrilla = cacheCuadrillas.find(c => String(c.id) === String(idEditar))
-    if (cuadrilla) {
-      inputCuadrillaNombre.value = cuadrilla.nombre || ''
-      apoyoSeleccionadosIds = new Set(
-        (cuadrilla.miembros || [])
-          .map(m => String(m.usuario_id))
-          .filter(uid => uid !== String(cuadrilla.responsable_id))
-      )
-    }
-  }
 
   selectResponsable.innerHTML = `
     <option value="">Selecciona un técnico responsable...</option>
     ${tecnicosActivos.map(t => `<option value="${escaparHtml(t.id)}">${escaparHtml(t.nombre)} (${escaparHtml(t.correo)})</option>`).join('')}
   `
 
-  if (idEditar) {
-    const cuadrilla = cacheCuadrillas.find(c => String(c.id) === String(idEditar))
+  if (cuadrilla) {
+    inputCuadrillaNombre.value = cuadrilla.nombre || ''
+    apoyoSeleccionadosIds = new Set(
+      (cuadrilla.miembros || [])
+        .map(m => String(m.usuario_id))
+        .filter(uid => uid !== String(cuadrilla.responsable_id))
+    )
     if (
-      cuadrilla?.responsable_id &&
+      cuadrilla.responsable_id &&
       tecnicosActivos.some(t => String(t.id) === String(cuadrilla.responsable_id))
     ) {
       selectResponsable.value = cuadrilla.responsable_id
@@ -437,6 +448,7 @@ function abrirModalCuadrilla(idEditar = null) {
   }
 
   renderCheckboxesApoyo()
+  modalCuadrilla.classList.add('active')
 }
 
 function cerrarModales() {
@@ -452,7 +464,7 @@ document.querySelectorAll('.btn-modal-close').forEach(btn => {
 })
 
 ;[modalCuadrilla, modalEmpleado].forEach(modal => {
-  modal.addEventListener('click', (e) => {
+  modal.addEventListener('mousedown', (e) => {
     if (e.target === modal) cerrarModales()
   })
 })
@@ -492,7 +504,10 @@ formCuadrilla.addEventListener('submit', async (e) => {
     return
   }
 
-  const miembrosIds = Array.from(apoyoSeleccionadosIds).filter(uid => uid !== String(responsable_id))
+  const idsDom = Array.from(formCuadrilla.querySelectorAll('input[name="miembros"]:checked')).map(cb => String(cb.value))
+  const miembrosIds = Array.from(new Set([...apoyoSeleccionadosIds, ...idsDom])).filter(
+    uid => uid !== String(responsable_id) && cachePersonal.some(p => String(p.id) === uid && p.activo && p.rol === 'tecnico')
+  )
 
   btnGuardarCuadrilla.disabled = true
   btnGuardarCuadrilla.textContent = 'Guardando...'
@@ -505,7 +520,7 @@ formCuadrilla.addEventListener('submit', async (e) => {
     }
 
     modalCuadrilla.classList.remove('active')
-    await Promise.all([cargarCuadrillas(), cargarPersonal()])
+    await recargarDatos()
     mostrarAvisoLista(
       alertListaCuadrillas,
       id ? 'Cambios de la cuadrilla guardados correctamente.' : 'Cuadrilla creada correctamente.',
@@ -525,7 +540,7 @@ btnEliminarCuadrilla.addEventListener('click', async () => {
   if (!id) return
 
   const seguro = confirm(
-    '¿Estás seguro de eliminar definitivamente esta cuadrilla? Si solo deseas darla de baja conservando su historial, cancélalo y usa el botón "Desactivar".'
+    '¿Estás seguro de eliminar definitivamente esta cuadrilla? Si solo deseas conservar su historial sin programarle órdenes, cancélalo y márcala como inactiva.'
   )
   if (!seguro) return
 
@@ -534,7 +549,7 @@ btnEliminarCuadrilla.addEventListener('click', async () => {
   try {
     await eliminarCuadrilla(id)
     modalCuadrilla.classList.remove('active')
-    await Promise.all([cargarCuadrillas(), cargarPersonal()])
+    await recargarDatos()
     mostrarAvisoLista(alertListaCuadrillas, 'Cuadrilla eliminada correctamente.', 'success')
   } catch (error) {
     alertCuadrilla.textContent = error.message
@@ -557,12 +572,23 @@ function filtrarPersonal() {
     if (estado === 'inactivos' && u.activo) return false
 
     if (!q) return true
-    const coincidePorResponsable = cacheCuadrillas.some(
-      c => c.activo && String(c.responsable_id) === String(u.id) && c.nombre?.toLowerCase().includes(q)
-    )
-    const coincidePorApoyo = u.cuadrillas?.some(
-      c => c.cuadrilla?.activo !== false && c.cuadrilla?.nombre?.toLowerCase().includes(q)
-    )
+    const coincidePorResponsable =
+      u.activo &&
+      u.rol === 'tecnico' &&
+      cacheCuadrillas.some(
+        c => c.activo && String(c.responsable_id) === String(u.id) && c.nombre?.toLowerCase().includes(q)
+      )
+    const coincidePorApoyo =
+      u.activo &&
+      u.rol === 'tecnico' &&
+      u.cuadrillas?.some(
+        c =>
+          c.cuadrilla?.activo !== false &&
+          c.cuadrilla?.nombre?.toLowerCase().includes(q) &&
+          !cacheCuadrillas.some(
+            cr => String(cr.id) === String(c.cuadrilla.id) && String(cr.responsable_id) === String(u.id)
+          )
+      )
     return (
       u.nombre?.toLowerCase().includes(q) ||
       u.correo?.toLowerCase().includes(q) ||
@@ -574,16 +600,6 @@ function filtrarPersonal() {
   })
 
   renderPersonalTabla(resultado)
-}
-
-async function cargarPersonal() {
-  try {
-    cachePersonal = await listarPersonal()
-    filtrarPersonal()
-  } catch (error) {
-    console.error('[Personal] Error al listar:', error)
-    tablaPersonalBody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#ef4444;">Error al cargar personal: ${escaparHtml(error.message)}</td></tr>`
-  }
 }
 
 function renderPersonalTabla(personal) {
@@ -606,22 +622,25 @@ function renderPersonalTabla(personal) {
       ? '<span class="badge-tag badge-rol-admin">Administrador</span>'
       : '<span class="badge-tag" style="background:#dcfce7; color:#166534;">Técnico</span>'
 
-    // Cuadrillas donde es responsable vs donde es técnico de apoyo
-    const comoResponsable = cacheCuadrillas
-      .filter(c => String(c.responsable_id) === String(p.id) && c.activo)
-      .map(c => `<span class="badge-tag badge-tag--resp" title="Responsable de cuadrilla">★ ${escaparHtml(c.nombre)}</span>`)
+    let etiquetasCuadrillas = []
+    if (p.activo && p.rol === 'tecnico') {
+      const comoResponsable = cacheCuadrillas
+        .filter(c => String(c.responsable_id) === String(p.id) && c.activo)
+        .map(c => `<span class="badge-tag badge-tag--resp" title="Responsable de cuadrilla">★ ${escaparHtml(c.nombre)}</span>`)
 
-    const idsResp = new Set(
-      cacheCuadrillas
-        .filter(c => String(c.responsable_id) === String(p.id))
-        .map(c => String(c.id))
-    )
+      const idsResp = new Set(
+        cacheCuadrillas
+          .filter(c => String(c.responsable_id) === String(p.id))
+          .map(c => String(c.id))
+      )
 
-    const comoApoyo = (p.cuadrillas || [])
-      .filter(c => c.cuadrilla?.nombre && c.cuadrilla.activo !== false && !idsResp.has(String(c.cuadrilla.id)))
-      .map(c => `<span class="badge-tag" title="Técnico de apoyo">${escaparHtml(c.cuadrilla.nombre)}</span>`)
+      const comoApoyo = (p.cuadrillas || [])
+        .filter(c => c.cuadrilla?.nombre && c.cuadrilla.activo !== false && !idsResp.has(String(c.cuadrilla.id)))
+        .map(c => `<span class="badge-tag" title="Técnico de apoyo">${escaparHtml(c.cuadrilla.nombre)}</span>`)
 
-    const etiquetasCuadrillas = [...comoResponsable, ...comoApoyo]
+      etiquetasCuadrillas = [...comoResponsable, ...comoApoyo]
+    }
+
     const cuadrillasHtml = etiquetasCuadrillas.length
       ? etiquetasCuadrillas.join('')
       : '<span style="font-size:0.8rem; color:#94a3b8;">Sin cuadrilla</span>'
@@ -672,21 +691,24 @@ filtroEstadoPersonal.addEventListener('change', filtrarPersonal)
 // ============================================
 
 function abrirModalEmpleado(idEditar = null) {
+  const emp = idEditar ? cachePersonal.find(u => String(u.id) === String(idEditar)) : null
+  if (idEditar && !emp) return
+
   formEmpleado.reset()
   limpiarErroresEmpleado()
   inputEmpleadoId.value = idEditar || ''
 
-  if (idEditar) {
-    const emp = cachePersonal.find(u => String(u.id) === String(idEditar))
-    if (!emp) return
+  if (emp) {
+    const esPropio = String(emp.id) === String(usuarioSesionId)
     modalEmpleadoTitle.textContent = 'Editar Empleado'
     modalEmpleadoSubtitle.textContent = 'Actualiza los datos de contacto o rol del empleado'
     btnGuardarEmpleado.textContent = 'Guardar Cambios'
 
-    const esPropio = String(emp.id) === String(usuarioSesionId)
     inputEmpleadoNombre.value = emp.nombre || ''
     inputEmpleadoCorreo.value = emp.correo || ''
-    inputEmpleadoTelefono.value = (emp.telefono || '').replace(/\D/g, '')
+    inputEmpleadoCorreo.disabled = esPropio
+    inputEmpleadoCorreo.title = esPropio ? 'El correo de tu sesión activa no se puede cambiar desde aquí' : ''
+    inputEmpleadoTelefono.value = (emp.telefono || '').replace(/\D/g, '').slice(0, 10)
     selectEmpleadoRol.value = emp.rol || 'tecnico'
     selectEmpleadoRol.disabled = esPropio
     selectEmpleadoRol.title = esPropio ? 'No puedes cambiar tu propio rol de administrador' : ''
@@ -694,6 +716,8 @@ function abrirModalEmpleado(idEditar = null) {
     modalEmpleadoTitle.textContent = 'Agregar Nuevo Empleado'
     modalEmpleadoSubtitle.textContent = 'Registra a un nuevo técnico o administrativo en la plataforma'
     btnGuardarEmpleado.textContent = 'Guardar Registro'
+    inputEmpleadoCorreo.disabled = false
+    inputEmpleadoCorreo.title = ''
     selectEmpleadoRol.disabled = false
     selectEmpleadoRol.title = ''
   }
@@ -730,7 +754,7 @@ tablaPersonalBody.addEventListener('click', async (e) => {
     btnToggle.disabled = true
     try {
       await cambiarEstadoEmpleado(id, activar)
-      await Promise.all([cargarCuadrillas(), cargarPersonal()])
+      await recargarDatos()
       mostrarAvisoLista(
         alertListaPersonal,
         activar ? 'Empleado reactivado correctamente.' : 'Empleado dado de baja correctamente.',
@@ -748,10 +772,13 @@ formEmpleado.addEventListener('submit', async (e) => {
   limpiarErroresEmpleado()
 
   const id = inputEmpleadoId.value
+  const esPropio = Boolean(id && String(id) === String(usuarioSesionId))
+  const empOriginal = id ? cachePersonal.find(u => String(u.id) === String(id)) : null
+
   const nombre = inputEmpleadoNombre.value.trim()
-  const correo = inputEmpleadoCorreo.value.trim()
+  const correo = esPropio && empOriginal ? empOriginal.correo : inputEmpleadoCorreo.value.trim()
   const telefono = inputEmpleadoTelefono.value.replace(/[\s-]/g, '').trim()
-  const rol = selectEmpleadoRol.value
+  const rol = esPropio && empOriginal ? empOriginal.rol : selectEmpleadoRol.value
 
   let hayError = false
   if (!nombre) {
@@ -797,7 +824,7 @@ formEmpleado.addEventListener('submit', async (e) => {
       await crearEmpleado({ nombre, correo, telefono, rol })
     }
     modalEmpleado.classList.remove('active')
-    await Promise.all([cargarCuadrillas(), cargarPersonal()])
+    await recargarDatos()
     mostrarAvisoLista(
       alertListaPersonal,
       id ? 'Datos del empleado actualizados correctamente.' : 'Empleado registrado correctamente.',
@@ -817,9 +844,12 @@ formEmpleado.addEventListener('submit', async (e) => {
 // ============================================
 
 function escaparHtml(texto) {
-  const div = document.createElement('div')
-  div.textContent = texto ?? ''
-  return div.innerHTML
+  return String(texto ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 // Iniciar
