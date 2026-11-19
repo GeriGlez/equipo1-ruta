@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 
 // Abrir o crear base de datos local
 export function abrirBD() {
@@ -145,6 +145,40 @@ export function abrirBD() {
           {
             keyPath: "catalogo"
           }
+        );
+
+      }
+
+      if (!db.objectStoreNames.contains("insumos_catalogo")) {
+
+        db.createObjectStore(
+          "insumos_catalogo",
+          {
+            keyPath: "id"
+          }
+        );
+
+      }
+
+      if (!db.objectStoreNames.contains("consumos_insumo")) {
+
+        const storeConsumosInsumo = db.createObjectStore(
+          "consumos_insumo",
+          {
+            keyPath: "id"
+          }
+        );
+
+        storeConsumosInsumo.createIndex(
+          "visita_local_id",
+          "visita_local_id",
+          { unique: false }
+        );
+
+        storeConsumosInsumo.createIndex(
+          "estado_envio",
+          "estado_envio",
+          { unique: false }
         );
 
       }

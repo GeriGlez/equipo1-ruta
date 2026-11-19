@@ -53,6 +53,13 @@ const RECURSOS = [
   '/src/modules/ordenes/ordenes-db.js',
   '/src/modules/ordenes/programacion-semanal.js',
 
+  // Insumos y consumo (HU-11)
+  '/src/modules/insumos/Registrar_Insumos_Movil.html',
+  '/src/modules/insumos/registrar-insumos.js',
+  '/src/modules/insumos/insumos-local.js',
+  '/src/modules/insumos/insumos-service.js',
+  '/src/modules/insumos/insumos.css',
+
   // Pantallas del módulo 7 (Incidencias)
   '/src/modules/incidencias/Registrar_Incidencia_Movil.html', 
   
