@@ -28,6 +28,7 @@ const btnCloseModalEliminar = document.getElementById('btn-close-modal-eliminar'
 const btnCancelarEliminar = document.getElementById('btn-cancelar-eliminar');
 const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
 const textoConfirmarEliminar = document.getElementById('texto-confirmar-eliminar');
+const eliminarError = document.getElementById('eliminar-error');
 
 // Estado Global
 let contratosCache = [];
@@ -74,6 +75,48 @@ function mostrarError(mensaje) {
 function limpiarError() {
   formError.textContent = '';
   formError.hidden = true;
+  eliminarError.textContent = '';
+  eliminarError.hidden = true;
+}
+
+// Mismo aviso, pero dentro del modal de eliminar
+function mostrarErrorEliminar(mensaje) {
+  eliminarError.textContent = mensaje;
+  eliminarError.hidden = false;
+}
+
+// Al editar un contrato no se puede cambiar el condominio ni el servicio (solo tarifa, frecuencia y día)
+function bloquearCondominioYServicio(bloquear) {
+  selectCondominio.disabled = bloquear;
+  selectServicio.disabled = bloquear;
+}
+
+// Traduce los errores de Supabase/PostgreSQL a mensajes en español para el usuario.
+// El mensaje original (en inglés) solo se manda a la consola, para depurar.
+const MENSAJES_POR_CODIGO = {
+  '23505': 'Ese registro ya existe. Revisa que no esté duplicado.',
+  '23503': 'No se puede completar porque el registro está en uso por otros datos (contratos u órdenes).',
+  '23502': 'Falta llenar un campo obligatorio.',
+  '23514': 'Uno de los valores no cumple las reglas permitidas.',
+  '42501': 'No tienes permiso para realizar esta acción.',
+  'PGRST301': 'Tu sesión expiró. Vuelve a iniciar sesión.'
+};
+
+function traducirError(err) {
+  console.error('[RUTA] Error de Supabase:', err);
+
+  if (err?.code && MENSAJES_POR_CODIGO[err.code]) {
+    return MENSAJES_POR_CODIGO[err.code];
+  }
+
+  // Sin red: supabase-js NO lanza la excepción, la devuelve como
+  // { message: "TypeError: Failed to fetch" } (o "NetworkError..." en Firefox)
+  const textoRed = /Failed to fetch|NetworkError|Load failed|FetchError/i;
+  if (!navigator.onLine || err?.name === 'TypeError' || textoRed.test(err?.message || '')) {
+    return 'Sin conexión a internet. Revisa tu red e inténtalo de nuevo.';
+  }
+
+  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 }
 
 function initEventListeners() {
@@ -90,6 +133,7 @@ function initEventListeners() {
   fabNuevo.addEventListener('click', () => {
     formModal.reset();
     inputId.value = '';
+    bloquearCondominioYServicio(false);
     limpiarError();
     modalTitle.textContent = 'Nuevo contrato';
     modalContrato.classList.remove('hidden');
@@ -105,14 +149,16 @@ function initEventListeners() {
   const cerrarModalEliminar = () => {
     modalEliminar.classList.add('hidden');
     contratoAEliminarId = null;
+    limpiarError();
   };
   btnCloseModalEliminar.addEventListener('click', cerrarModalEliminar);
   btnCancelarEliminar.addEventListener('click', cerrarModalEliminar);
 
+  // Si falla, el modal sigue abierto mostrando el aviso
   btnConfirmarEliminar.addEventListener('click', async () => {
     if (contratoAEliminarId) {
-      await eliminarContrato(contratoAEliminarId);
-      cerrarModalEliminar();
+      const ok = await eliminarContrato(contratoAEliminarId);
+      if (ok) cerrarModalEliminar();
     }
   });
 
@@ -127,7 +173,8 @@ async function cargarSelectsModal() {
   try {
     const [{ data: condominios }, { data: servicios }] = await Promise.all([
       supabase.from('condominios').select('id, nombre').order('nombre', { ascending: true }),
-      supabase.from('servicios').select('id, nombre').order('nombre', { ascending: true })
+      // Solo servicios activos: no se pueden contratar servicios desactivados
+      supabase.from('servicios').select('id, nombre').eq('activo', true).order('nombre', { ascending: true })
     ]);
 
     selectCondominio.innerHTML = '<option value="" disabled selected>Selecciona un condominio...</option>';
@@ -170,6 +217,7 @@ async function cargarContratos() {
         condominios ( id, nombre ),
         servicios ( id, nombre )
       `)
+      .eq('activo', true) // borrado lógico: los contratos desactivados no se muestran
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -184,10 +232,9 @@ async function cargarContratos() {
 
     renderTarjetas();
   } catch (err) {
-    console.error('Error al consultar Supabase:', err.message);
     const pError = document.createElement('p');
-    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
-    pError.textContent = `Error al cargar datos: ${err.message}`;
+    pError.className = 'estado-vacio estado-error';
+    pError.textContent = `No se pudieron cargar los contratos. ${traducirError(err)}`;
     gridContratos.replaceChildren(pError);
   }
 }
@@ -253,6 +300,7 @@ function renderTarjetas() {
       selectFrecuencia.value = c.frecuencia;
       inputDias.value = c.dia_preferente;
 
+      bloquearCondominioYServicio(true);
       limpiarError();
       modalTitle.textContent = 'Editar contrato';
       modalContrato.classList.remove('hidden');
@@ -324,10 +372,29 @@ async function guardarContrato() {
   const id = inputId.value;
   limpiarError();
 
+  // El formulario usa "novalidate": todas las validaciones se hacen aquí y se avisan en el modal, en español.
+  // Condominio y servicio solo se validan al crear (al editar están bloqueados y no se envían).
+  if (!id && !selectCondominio.value) {
+    mostrarError('Selecciona un condominio.');
+    return;
+  }
+  if (!id && !selectServicio.value) {
+    mostrarError('Selecciona un servicio.');
+    return;
+  }
+
   // Number() en lugar de parseFloat(...) || 0: un valor vacío o inválido ya no se convierte en 0 en silencio
   const tarifa = Number(inputTarifa.value);
   if (!Number.isFinite(tarifa) || tarifa <= 0) {
     mostrarError('La tarifa debe ser un número mayor a 0.');
+    return;
+  }
+  if (!selectFrecuencia.value) {
+    mostrarError('Selecciona la frecuencia del servicio.');
+    return;
+  }
+  if (!inputDias.value.trim()) {
+    mostrarError('Escribe los días de la semana preferenciales.');
     return;
   }
 
@@ -341,9 +408,12 @@ async function guardarContrato() {
 
   try {
     if (id) {
+      // Al editar NO se envían condominio_id ni servicio_id: aunque alguien quite el
+      // "disabled" desde la consola, esos dos campos no se modifican en la base.
+      const { condominio_id, servicio_id, ...cambios } = payload;
       const { error } = await supabase
         .from('condominio_servicio')
-        .update(payload)
+        .update(cambios)
         .eq('id', id);
 
       if (error) throw error;
@@ -362,23 +432,30 @@ async function guardarContrato() {
     if (err.code === '23505') {
       mostrarError('Este condominio ya tiene contratado ese servicio. Edita el contrato existente en lugar de crear otro.');
     } else {
-      mostrarError('No se pudo guardar el contrato: ' + err.message);
+      mostrarError('No se pudo guardar el contrato. ' + traducirError(err));
     }
   }
 }
 
-// ELIMINAR REGISTRO DE `condominio_servicio`
+// ELIMINAR CONTRATO (BORRADO LÓGICO): no se borra la fila, solo se marca activo = false.
+// Devuelve true si se eliminó; si falla, muestra el aviso en el modal y devuelve false
 async function eliminarContrato(id) {
   try {
-    const { error } = await supabase
+    // select('id') confirma que sí se actualizó una fila
+    // (si RLS lo bloquea, Supabase no da error, solo devuelve 0 filas)
+    const { data, error } = await supabase
       .from('condominio_servicio')
-      .delete()
-      .eq('id', id);
+      .update({ activo: false })
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    if (!data?.length) throw { code: '42501' };
 
     await cargarContratos();
+    return true;
   } catch (err) {
-    alert('Error al eliminar en Supabase: ' + err.message);
+    mostrarErrorEliminar('No se pudo eliminar el contrato. ' + traducirError(err));
+    return false;
   }
 }

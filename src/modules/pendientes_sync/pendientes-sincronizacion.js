@@ -40,10 +40,18 @@ import {
     const visitas = await obtenerVisitasPendientes(tecnicoActualId);
     const incidencias = await obtenerIncidenciasPendientes();
 
-    // Unimos ambos arreglos y les ponemos una etiqueta para diferenciarlos
+    let consumosPendientes = [];
+    try {
+      const { obtenerConsumosPendientes } =
+        await import('../insumos/insumos-local.js');
+      consumosPendientes = await obtenerConsumosPendientes();
+    } catch (_) {}
+
+    // Unimos todos los arreglos y les ponemos una etiqueta para diferenciarlos
     const listaPendientes = [
       ...visitas.map(v => ({ ...v, tipo_registro: 'visita' })),
-      ...incidencias.map(i => ({ ...i, tipo_registro: 'incidencia' }))
+      ...incidencias.map(i => ({ ...i, tipo_registro: 'incidencia' })),
+      ...consumosPendientes.map(c => ({ ...c, tipo_registro: 'consumo_insumo' }))
     ];
 
     cantidadPendientes = listaPendientes.length;
@@ -100,6 +108,29 @@ import {
               </h3>
               <p class="m5-pending-area">Visita #${item.visita_id}</p>
             </div>
+          </div>
+        `;
+      }
+      else if (item.tipo_registro === 'consumo_insumo') {
+        const fecha = new Date(item.creado_localmente_en);
+        const fechaValida = !Number.isNaN(fecha.getTime());
+
+        tarjeta.innerHTML = `
+          <div class="m5-pending-card-main" style="border-left: 4px solid #2196f3;">
+            <div class="m5-pending-card-icon"><img src="/caja.png" alt=""></div>
+            <div class="m5-pending-card-info">
+              <div class="m5-pending-card-header">
+                <strong>Insumo</strong> <span class="m5-pending-badge" style="background:#2196f3; color:white;">Pendiente</span>
+              </div>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                ${item.insumo_nombre || 'Insumo'} (${item.cantidad} ${item.unidad || ''})
+              </h3>
+              <p class="m5-pending-area">${item.orden_referencia || 'Visita local'}</p>
+            </div>
+          </div>
+          <div class="m5-pending-card-footer">
+            <span class="m5-pending-date">${fechaValida ? `Registrado: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
+            <span class="m5-pending-hours">Cant: ${item.cantidad} ${item.unidad || ''}</span>
           </div>
         `;
       }
@@ -503,12 +534,19 @@ async function sincronizarPendientes() {
     const visitasLocales = await obtenerVisitasPendientes(tecnicoActualId);
     const incidenciasLocales = await obtenerIncidenciasPendientes();
 
+    let consumosLocales = [];
+    try {
+      const { obtenerConsumosPendientes } =
+        await import('../insumos/insumos-local.js');
+      consumosLocales = await obtenerConsumosPendientes();
+    } catch (_) {}
+
     const pendientes = [
       ...visitasLocales.map(v => ({ ...v, tipo_registro: 'visita' })),
       ...incidenciasLocales.map(i => ({ ...i, tipo_registro: 'incidencia' }))
     ];
 
-    if (pendientes.length === 0) {
+    if (pendientes.length === 0 && consumosLocales.length === 0) {
       await cargarPendientes();
       return;
     }
@@ -520,6 +558,15 @@ async function sincronizarPendientes() {
       } else if (item.tipo_registro === 'incidencia') {
         await sincronizarIncidencia(supabase, item);
       }
+    }
+
+    // Sincronizar consumos de insumos asociados a visitas
+    try {
+      const { sincronizarConsumosPendientes } =
+        await import('../insumos/insumos-service.js');
+      await sincronizarConsumosPendientes();
+    } catch (errorInsumos) {
+      console.warn('[RUTA] Advertencia al sincronizar consumos de insumos:', errorInsumos);
     }
     // --- FIN DE LA UNIFICACIÓN ---
 
