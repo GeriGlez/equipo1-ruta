@@ -374,8 +374,10 @@ function esVisitaDeHoy(visita) {
 
 }
 
-// Nombre de la visita: condominio y área de su orden (datos que ya
-// se guardaron en el dispositivo) y la hora de entrada.
+// Nombre de la visita: "Visita #ID: Condominio - Área".
+// - ID: el de la visita en Supabase (el mismo que muestra la bitácora).
+//   Una visita que aún no se sincroniza no lo tiene y no se inventa uno.
+// - Condominio y área: datos de su orden guardados en el dispositivo.
 async function etiquetaVisita(visita) {
 
   let lugar = null;
@@ -395,17 +397,11 @@ async function etiquetaVisita(visita) {
 
   }
 
-  let nombre = 'Visita';
+  const encabezado = visita.visita_servidor_id
+    ? `Visita #${visita.visita_servidor_id}`
+    : 'Visita';
 
-  if (lugar) {
-    nombre = `Visita: ${lugar}`;
-  } else if (visita.visita_servidor_id) {
-    nombre = `Visita #${visita.visita_servidor_id}`;
-  }
-
-  return visita.hora_entrada
-    ? `${nombre} · ${visita.hora_entrada}`
-    : nombre;
+  return lugar ? `${encabezado}: ${lugar}` : encabezado;
 
 }
 
