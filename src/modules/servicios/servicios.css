@@ -487,3 +487,18 @@ main {
   background-color: #DC2626 !important;
   border-color: #DC2626;
 }
+
+/* Mensaje cuando falla la carga de datos */
+.estado-error {
+  color: #ef4444;
+}
+
+/* Botón "Cancelar" azul en el modal de eliminar servicio */
+.btn-ruta-cancel.btn-cancelar-azul {
+  background-color: #0284C7 !important;
+}
+
+/* Aviso dentro del modal de eliminar: separado del texto y de los botones */
+.modal-card-confirmar .form-error-ruta {
+  margin: 0 0 1.25rem;
+}

@@ -18,6 +18,7 @@ const inputId = document.getElementById('input-servicio-id');
 const inputNombre = document.getElementById('input-nombre');
 const inputDescripcion = document.getElementById('input-descripcion');
 const inputTiempo = document.getElementById('input-tiempo');
+const DURACION_MAX_MIN = 480; // 8 horas: límite máximo de un servicio
 const formError = document.getElementById('form-error');
 
 // Modal Eliminar
@@ -26,6 +27,7 @@ const btnCloseModalEliminar = document.getElementById('btn-close-modal-eliminar'
 const btnCancelarEliminar = document.getElementById('btn-cancelar-eliminar');
 const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
 const textoConfirmarEliminar = document.getElementById('texto-confirmar-eliminar');
+const eliminarError = document.getElementById('eliminar-error');
 
 // Estado Global
 let serviciosCache = [];
@@ -72,6 +74,42 @@ function mostrarError(mensaje) {
 function limpiarError() {
   formError.textContent = '';
   formError.hidden = true;
+  eliminarError.textContent = '';
+  eliminarError.hidden = true;
+}
+
+// Mismo aviso, pero dentro del modal de eliminar
+function mostrarErrorEliminar(mensaje) {
+  eliminarError.textContent = mensaje;
+  eliminarError.hidden = false;
+}
+
+// Traduce los errores de Supabase/PostgreSQL a mensajes en español para el usuario.
+// El mensaje original (en inglés) solo se manda a la consola, para depurar.
+const MENSAJES_POR_CODIGO = {
+  '23505': 'Ese registro ya existe. Revisa que no esté duplicado.',
+  '23503': 'No se puede completar porque el registro está en uso por otros datos (contratos u órdenes).',
+  '23502': 'Falta llenar un campo obligatorio.',
+  '23514': 'Uno de los valores no cumple las reglas permitidas.',
+  '42501': 'No tienes permiso para realizar esta acción.',
+  'PGRST301': 'Tu sesión expiró. Vuelve a iniciar sesión.'
+};
+
+function traducirError(err) {
+  console.error('[RUTA] Error de Supabase:', err);
+
+  if (err?.code && MENSAJES_POR_CODIGO[err.code]) {
+    return MENSAJES_POR_CODIGO[err.code];
+  }
+
+  // Sin red: supabase-js NO lanza la excepción, la devuelve como
+  // { message: "TypeError: Failed to fetch" } (o "NetworkError..." en Firefox)
+  const textoRed = /Failed to fetch|NetworkError|Load failed|FetchError/i;
+  if (!navigator.onLine || err?.name === 'TypeError' || textoRed.test(err?.message || '')) {
+    return 'Sin conexión a internet. Revisa tu red e inténtalo de nuevo.';
+  }
+
+  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 }
 
 function initEventListeners() {
@@ -106,15 +144,16 @@ function initEventListeners() {
   const cerrarModalEliminar = () => {
     modalEliminar.classList.add('hidden');
     servicioAEliminarId = null;
+    limpiarError();
   };
   btnCloseModalEliminar.addEventListener('click', cerrarModalEliminar);
   btnCancelarEliminar.addEventListener('click', cerrarModalEliminar);
 
-  // Confirmar Eliminación
+  // Confirmar Eliminación: si falla, el modal sigue abierto mostrando el aviso
   btnConfirmarEliminar.addEventListener('click', async () => {
     if (servicioAEliminarId) {
-      await eliminarServicio(servicioAEliminarId);
-      cerrarModalEliminar();
+      const ok = await eliminarServicio(servicioAEliminarId);
+      if (ok) cerrarModalEliminar();
     }
   });
 
@@ -137,6 +176,7 @@ async function cargarServicios() {
     const { data, error } = await supabase
       .from('servicios')
       .select('id, nombre, descripcion, duracion_estimada_min, created_at')
+      .eq('activo', true) // borrado lógico: los desactivados no se muestran
       .order('nombre', { ascending: true });
 
     if (error) throw error;
@@ -151,10 +191,9 @@ async function cargarServicios() {
 
     renderTarjetas();
   } catch (err) {
-    console.error('Error al consultar Supabase:', err.message);
     const pError = document.createElement('p');
-    pError.style.cssText = 'text-align:center; width:100%; color:#ef4444; padding: 2rem;';
-    pError.textContent = `Error al cargar datos: ${err.message}`;
+    pError.className = 'estado-vacio estado-error';
+    pError.textContent = `No se pudieron cargar los servicios. ${traducirError(err)}`;
     gridServicios.replaceChildren(pError);
   }
 }
@@ -294,16 +333,29 @@ async function guardarServicio() {
   const id = inputId.value;
   limpiarError();
 
+  // El formulario usa "novalidate": todas las validaciones se hacen aquí y se avisan en el modal, en español
+  if (!inputNombre.value.trim()) {
+    mostrarError('El nombre del servicio es obligatorio.');
+    return;
+  }
+
+  // La descripción es obligatoria (trim: solo espacios cuenta como vacía)
+  const descripcion = inputDescripcion.value.trim();
+  if (!descripcion) {
+    mostrarError('La descripción del servicio es obligatoria.');
+    return;
+  }
+
   // Number() (no parseInt) para que 1.5 NO se trunque a 1 en silencio: se rechaza
   const duracion = Number(inputTiempo.value);
-  if (!Number.isInteger(duracion) || duracion < 1) {
-    mostrarError('El tiempo estimado debe ser un número entero de minutos, mayor o igual a 1.');
+  if (!Number.isInteger(duracion) || duracion < 1 || duracion > DURACION_MAX_MIN) {
+    mostrarError(`El tiempo estimado debe ser un número entero de minutos, entre 1 y ${DURACION_MAX_MIN}.`);
     return;
   }
 
   const payload = {
     nombre: inputNombre.value.trim(),
-    descripcion: inputDescripcion.value.trim(),
+    descripcion,
     duracion_estimada_min: duracion
   };
 
@@ -326,21 +378,44 @@ async function guardarServicio() {
     modalServicio.classList.add('hidden');
     await cargarServicios();
   } catch (err) {
-    alert('Error al guardar en Supabase: ' + err.message);
+    mostrarError('No se pudo guardar el servicio. ' + traducirError(err));
   }
 }
 
+// BORRADO LÓGICO: no se borra la fila, solo se marca activo = false.
+// Devuelve true si se eliminó; si falla, muestra el aviso en el modal y devuelve false
 async function eliminarServicio(id) {
   try {
-    const { error } = await supabase
+    // 1. No se permite si el servicio tiene contratos activos
+    const { count, error: errorConteo } = await supabase
+      .from('condominio_servicio')
+      .select('id', { count: 'exact', head: true })
+      .eq('servicio_id', id)
+      .eq('activo', true);
+
+    if (errorConteo) throw errorConteo;
+
+    if (count > 0) {
+      const texto = count === 1 ? '1 contrato activo' : `${count} contratos activos`;
+      mostrarErrorEliminar(`No se puede eliminar: este servicio tiene ${texto}. Primero elimina sus contratos.`);
+      return false;
+    }
+
+    // 2. Desactivar. select('id') confirma que sí se actualizó una fila
+    //    (si RLS lo bloquea, Supabase no da error, solo devuelve 0 filas)
+    const { data, error } = await supabase
       .from('servicios')
-      .delete()
-      .eq('id', id);
+      .update({ activo: false })
+      .eq('id', id)
+      .select('id');
 
     if (error) throw error;
+    if (!data?.length) throw { code: '42501' };
 
     await cargarServicios();
+    return true;
   } catch (err) {
-    alert('Error al eliminar en Supabase: ' + err.message);
+    mostrarErrorEliminar('No se pudo eliminar el servicio. ' + traducirError(err));
+    return false;
   }
 }
