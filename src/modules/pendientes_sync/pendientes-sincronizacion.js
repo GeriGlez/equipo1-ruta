@@ -5,10 +5,13 @@ import {
     marcarIncidenciaComoEnviada   
   } from './db-local.js';
 
+
 import {
   getActiveSession,
-  obtenerSesionRemotaVerificada
+  obtenerSesionRemotaVerificada,
+  login
 } from '../auth/authService.js';
+
 
   const contador = document.querySelector('#pending-count');
   const mensaje = document.querySelector('#pending-message');
@@ -37,6 +40,131 @@ import {
   let tecnicoActualId = null;
   let sesionRemotaDisponible = false;
   let authUidActual = null;
+
+
+const dialogoAuth = document.querySelector('#auth-dialog');
+const formularioAuth = document.querySelector('#auth-form');
+const inputPassword = document.querySelector('#auth-password');
+const errorAuth = document.querySelector('#auth-error');
+const botonConfirmarAuth = document.querySelector('#auth-confirm');
+const botonCancelarAuth = document.querySelector('#auth-cancel');
+
+let verificacionCancelada = false;
+let verificandoIdentidad = false;
+
+function mostrarVerificacion(forzar = false) {
+  if (
+    !navigator.onLine ||
+    tecnicoActualId === null ||
+    !authUidActual ||
+    sesionRemotaDisponible ||
+    verificandoIdentidad ||
+    dialogoAuth.open ||
+    (!forzar && (verificacionCancelada || cantidadPendientes === 0))
+  ) {
+    return;
+  }
+
+  inputPassword.value = '';
+  errorAuth.hidden = true;
+  errorAuth.textContent = '';
+  dialogoAuth.showModal();
+  inputPassword.focus();
+}
+
+botonCancelarAuth.addEventListener('click', () => {
+  dialogoAuth.close();
+});
+
+dialogoAuth.addEventListener('cancel', evento => {
+  if (verificandoIdentidad) evento.preventDefault();
+});
+
+dialogoAuth.addEventListener('close', () => {
+  inputPassword.value = '';
+
+  if (!sesionRemotaDisponible) {
+    verificacionCancelada = true;
+  }
+});
+
+formularioAuth.addEventListener('submit', async evento => {
+  evento.preventDefault();
+
+  if (verificandoIdentidad) return;
+
+  const uidEsperado = authUidActual;
+  const tecnicoEsperado = String(tecnicoActualId);
+  const password = inputPassword.value;
+
+  verificandoIdentidad = true;
+  botonConfirmarAuth.disabled = true;
+  botonCancelarAuth.disabled = true;
+  errorAuth.hidden = true;
+  actualizarEstadoConexion();
+
+  try {
+    if (!navigator.onLine) {
+      throw new Error('Sin conexión');
+    }
+
+    const sesionActual = await getActiveSession();
+
+    if (
+      sesionActual?.usuario?.rol !== 'tecnico' ||
+      sesionActual?.user?.id !== uidEsperado ||
+      String(sesionActual?.usuario?.id) !== tecnicoEsperado
+    ) {
+      throw new Error('La sesión del técnico cambió.');
+    }
+
+    const resultado = await login(
+      sesionActual.usuario.correo,
+      password
+    );
+
+    if (
+      resultado?.isOffline !== false ||
+      resultado?.user?.id !== uidEsperado ||
+      String(resultado?.usuario?.id) !== tecnicoEsperado
+    ) {
+      throw new Error('No se confirmó la identidad remota.');
+    }
+
+    const verificada =
+      await obtenerSesionRemotaVerificada(tecnicoEsperado);
+
+    if (
+      !verificada ||
+      verificada.user.id !== uidEsperado
+    ) {
+      throw new Error('La sesión remota no está disponible.');
+    }
+
+    sesionRemotaDisponible = true;
+    verificacionCancelada = false;
+    dialogoAuth.close();
+
+  } catch (error) {
+    console.warn('[RUTA] Verificación no completada:', error);
+
+    errorAuth.textContent =
+      String(error?.message).includes('Invalid login credentials')
+        ? 'Contraseña incorrecta. Intenta nuevamente.'
+        : 'No fue posible verificar tu identidad. Revisa tu conexión y sesión.';
+
+    errorAuth.hidden = false;
+    inputPassword.focus();
+
+  } finally {
+    inputPassword.value = '';
+    verificandoIdentidad = false;
+    botonConfirmarAuth.disabled = false;
+    botonCancelarAuth.disabled = false;
+    actualizarEstadoConexion();
+  }
+});
+
 
   async function cargarPendientes() {
   try {
@@ -249,14 +377,27 @@ import {
     ${enLinea ? 'Con conexión' : 'Sin conexión'}
   `;
 
+    
   botonSincronizar.disabled =
     !enLinea ||
-    !sesionRemotaDisponible ||
     tecnicoActualId === null ||
-    cantidadPendientes === 0;
+    cantidadPendientes === 0 ||
+    verificandoIdentidad;
+
+  const textoSincronizar =
+    botonSincronizar.querySelector('span:last-child');
+
+  if (textoSincronizar && textoSincronizar.textContent !== 'Sincronizando...') {
+    textoSincronizar.textContent =
+      enLinea && cantidadPendientes > 0 && !sesionRemotaDisponible
+        ? 'Verificar para sincronizar'
+        : 'Sincronizar pendientes';
+  }
   }
 
-  async function revisarAutenticacionRemota() {
+
+  
+async function revisarAutenticacionRemota() {
   sesionRemotaDisponible = false;
   actualizarEstadoConexion();
 
@@ -269,7 +410,8 @@ import {
       tecnicoActualId
     );
 
-    sesionRemotaDisponible = Boolean(sesion);
+    sesionRemotaDisponible =
+      Boolean(sesion && sesion.user.id === authUidActual);
 
   } catch (error) {
     console.warn(
@@ -278,8 +420,13 @@ import {
     );
   } finally {
     actualizarEstadoConexion();
+
+    if (!sesionRemotaDisponible) {
+      mostrarVerificacion();
+    }
   }
 }
+
 
   // ==============================================
   // SUPABASE - CARGA SOLO AL SINCRONIZAR
@@ -638,6 +785,13 @@ async function sincronizarPendientes() {
     return;
   }
 
+
+if (!sesionRemotaDisponible) {
+  mostrarVerificacion(true);
+  return;
+}
+
+
   botonSincronizar.disabled = true;
 
   const textoBoton = botonSincronizar.querySelector('span:last-child') || botonSincronizar;
@@ -655,13 +809,13 @@ async function sincronizarPendientes() {
       tecnicoActualId
     );
 
+    
     if (!sesion) {
       sesionRemotaDisponible = false;
-
-      throw new Error(
-        'No hay una sesión remota válida para sincronizar.'
-      );
+      mostrarVerificacion(true);
+      return;
     }
+
 
     const supabase = await obtenerClienteSupabase();
 
