@@ -172,10 +172,10 @@ function dibujarAreas() {
 
     return `
       <tr class="${claseFila}">
-        <td>${escapar(area.nombre)}${etiquetaEditada}</td>
-        <td>${etiquetaTipo(area.tipo)}</td>
-        <td>${area.requiere_lecturas ? 'Sí' : 'No'}</td>
-        <td>${accion}</td>
+        <td class="reg-area-nombre">${escapar(area.nombre)}${etiquetaEditada}</td>
+        <td data-label="Tipo">${etiquetaTipo(area.tipo)}</td>
+        <td data-label="Lecturas">${area.requiere_lecturas ? 'Sí' : 'No'}</td>
+        <td class="reg-area-acciones">${accion}</td>
       </tr>
     `
   }).join('')
