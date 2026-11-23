@@ -86,21 +86,39 @@ function validarFormulario() {
   limpiarErrores()
   const errores = []
 
-  if (!formulario.nombre.value.trim()) {
-    errores.push([formulario.nombre, 'Escribe el nombre del condominio.'])
-  }
-  if (!formulario.direccion.value.trim()) {
-    errores.push([formulario.direccion, 'Escribe la dirección completa.'])
-  }
-  const telefono = campoTelefono.value
-  if (telefono && telefono.length !== 10) {
+  // Todos los datos generales son obligatorios
+  const obligatorios = [
+    [formulario.nombre, 'Escribe el nombre del condominio.'],
+    [formulario.direccion, 'Escribe la dirección completa.'],
+    [formulario.colonia, 'Escribe la colonia o localidad.'],
+    [formulario.notas_acceso, 'Escribe las notas de acceso para el técnico.']
+  ]
+  obligatorios.forEach(([campo, texto]) => {
+    if (!campo.value.trim()) errores.push([campo, texto])
+  })
+
+  // Contacto y teléfono comparten renglón, así que llevan un solo mensaje
+  const sinContacto = !formulario.contacto.value.trim()
+  const telefonoMal = campoTelefono.value.length !== 10
+  if (sinContacto && telefonoMal) {
+    errores.push([formulario.contacto, 'Escribe el contacto y un teléfono de 10 dígitos.'])
+    errores.push([campoTelefono, 'Escribe el contacto y un teléfono de 10 dígitos.'])
+  } else if (sinContacto) {
+    errores.push([formulario.contacto, 'Escribe el nombre del contacto en sitio.'])
+  } else if (telefonoMal) {
     errores.push([campoTelefono, 'El teléfono debe tener exactamente 10 dígitos.'])
   }
-  // Un área a medio editar, o escrita pero que no se agregó a la lista
+
+  // Áreas: nada a medio capturar y al menos una en la lista
+  const areasQueQuedan = areas.filter(a => !a.eliminar).length
   if (areaEditando !== null) {
     errores.push([areaNombre, 'Termina de editar el área ("Guardar cambios del área") o cancela la edición.'])
   } else if (areaNombre.value.trim()) {
     errores.push([areaNombre, 'Dale "+ Agregar a la lista" o borra el nombre.'])
+  } else if (areasQueQuedan === 0) {
+    errores.push([areaNombre, areas.length > 0
+      ? 'El condominio debe quedar con al menos un área. Deshaz alguna eliminación o agrega otra.'
+      : 'Agrega al menos un área a la lista.'])
   }
 
   if (errores.length === 0) return true
@@ -112,9 +130,11 @@ function validarFormulario() {
   primero.scrollIntoView({ behavior: 'smooth', block: 'center' })
   primero.focus({ preventScroll: true })
 
-  mostrarMensaje(errores.length === 1
+  // Contacto y teléfono juntos cuentan como un solo campo en el aviso
+  const totalCampos = new Set(errores.map(([campo]) => campo.closest('.form-group'))).size
+  mostrarMensaje(totalCampos === 1
     ? 'Revisa el campo marcado en rojo.'
-    : `Revisa los ${errores.length} campos marcados en rojo.`)
+    : `Revisa los ${totalCampos} campos marcados en rojo.`)
   return false
 }
 
