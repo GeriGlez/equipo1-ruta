@@ -284,7 +284,7 @@ self.addEventListener(
           
           const guardada =
             (await cache.match(event.request)) ||
-            (RECURSOS.includes(url.pathname).slice(________)
+            (RECURSOS.includes(url.pathname)
               ? await cache.match(url.pathname, {
                   ignoreSearch: true,
                   ignoreVary: true
