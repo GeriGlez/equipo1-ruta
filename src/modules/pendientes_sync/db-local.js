@@ -1832,19 +1832,58 @@ export async function obtenerCatalogoM7() {
 // ==============================================
 // OBTENER INCIDENCIAS PENDIENTES
 // ==============================================
-export async function obtenerIncidenciasPendientes() {
+
+export async function obtenerIncidenciasPendientes(authUid) {
+  const uid = String(authUid ?? '').trim();
+
+  if (!uid) {
+    throw new Error(
+      'Se requiere el identificador de autenticación del técnico.'
+    );
+  }
+
   const db = await abrirBD();
+
   return new Promise((resolve, reject) => {
-    const tx = db.transaction("incidencias", "readonly");
-    const store = tx.objectStore("incidencias");
-    
-    // Asume que creaste el índice "estado_envio" en tu tabla incidencias
-    const request = store.index("estado_envio").getAll("pendiente");
-    
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction('incidencias', 'readonly');
+    const store = tx.objectStore('incidencias');
+
+    const request = store
+      .index('estado_envio')
+      .getAll('pendiente');
+
+    let incidencias = [];
+
+    request.onsuccess = () => {
+      incidencias = (request.result || []).filter(
+        incidencia =>
+          String(incidencia.reportada_por ?? '') === uid
+      );
+    };
+
+    tx.oncomplete = () => {
+      db.close();
+      resolve(incidencias);
+    };
+
+    tx.onerror = () => {
+      db.close();
+      reject(
+        tx.error ||
+        new Error('No se pudieron consultar las incidencias.')
+      );
+    };
+
+    tx.onabort = () => {
+      db.close();
+      reject(
+        tx.error ||
+        new Error('Se canceló la consulta de incidencias.')
+      );
+    };
   });
 }
+
 
 // ==============================================
 // MARCAR INCIDENCIA COMO ENVIADA

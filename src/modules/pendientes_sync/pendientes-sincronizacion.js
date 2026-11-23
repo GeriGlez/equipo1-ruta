@@ -36,11 +36,12 @@ import {
   let cantidadPendientes = 0;
   let tecnicoActualId = null;
   let sesionRemotaDisponible = false;
+  let authUidActual = null;
 
   async function cargarPendientes() {
   try {
     const visitas = await obtenerVisitasPendientes(tecnicoActualId);
-    const incidencias = await obtenerIncidenciasPendientes();
+    const incidencias = await obtenerIncidenciasPendientes(authUidActual);
 
     let consumosPendientes = [];
     try {
@@ -596,7 +597,7 @@ async function sincronizarPendientes() {
 
     // --- AQUÍ INICIA LA UNIFICACIÓN ---
     const visitasLocales = await obtenerVisitasPendientes(tecnicoActualId);
-    const incidenciasLocales = await obtenerIncidenciasPendientes();
+    const incidenciasLocales = await obtenerIncidenciasPendientes(sesion.user.id);
 
     let consumosLocales = [];
     try {
@@ -695,6 +696,7 @@ async function inicializarPendientes() {
 
     if (
       sesion?.usuario?.rol !== 'tecnico' ||
+      !sesion?.user?.id ||
       sesion.usuario.id === null ||
       sesion.usuario.id === undefined
     ) {
@@ -703,6 +705,8 @@ async function inicializarPendientes() {
     }
 
     tecnicoActualId = sesion.usuario.id;
+
+    authUidActual = sesion.user.id;
 
     // Mostrar el nombre del técnico autenticado.
     const nombreTecnico = document.querySelector(
@@ -725,7 +729,7 @@ async function inicializarPendientes() {
       error
     );
 
-    tecnicoActualId = null;
+    authUidActual = null;
     cantidadPendientes = 0;
 
     lista.replaceChildren();
