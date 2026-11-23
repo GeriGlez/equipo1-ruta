@@ -41,14 +41,19 @@ form.addEventListener('submit', async (e) => {
   };
 
   // Obtenemos el ID del usuario desde la sesión local (funciona offline y online)
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      incidenciaData.reportada_por = session.user.id;
-    }
-  } catch (error) {
-    console.warn('No se pudo obtener la sesión local:', error);
-  }
+  
+const sesion = await getActiveSession();
+
+if (
+  sesion?.usuario?.rol !== 'tecnico' ||
+  !sesion.usuario.id
+) {
+  alert('No hay una sesión técnica válida para registrar la incidencia.');
+  return;
+}
+
+incidenciaData.reportada_por = sesion.usuario.id;
+
 
   if (!navigator.onLine) {
     try {
