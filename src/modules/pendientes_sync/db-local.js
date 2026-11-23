@@ -191,6 +191,40 @@ export function abrirBD() {
 
       }
 
+      if (!db.objectStoreNames.contains("insumos_catalogo")) {
+
+        db.createObjectStore(
+          "insumos_catalogo",
+          {
+            keyPath: "id"
+          }
+        );
+
+      }
+
+      if (!db.objectStoreNames.contains("consumos_insumo")) {
+
+        const storeConsumosInsumo = db.createObjectStore(
+          "consumos_insumo",
+          {
+            keyPath: "id"
+          }
+        );
+
+        storeConsumosInsumo.createIndex(
+          "visita_local_id",
+          "visita_local_id",
+          { unique: false }
+        );
+
+        storeConsumosInsumo.createIndex(
+          "estado_envio",
+          "estado_envio",
+          { unique: false }
+        );
+
+      }
+
       if (!db.objectStoreNames.contains("catalogo_m7")) {
         db.createObjectStore("catalogo_m7", { keyPath: "id" });
       }

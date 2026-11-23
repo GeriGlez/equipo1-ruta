@@ -55,18 +55,27 @@
     <section id="sec-cuadrillas">
       <div class="section-header">
         <h1 class="main-title">Organiza a los técnicos en equipos de trabajo</h1>
-        <p class="main-subtitle">Configura cuadrillas operativas y asigna a sus técnicos responsables</p>
+        <p class="main-subtitle">Configura cuadrillas operativas, su estado y asigna a su técnico responsable y personal de apoyo</p>
       </div>
 
       <div class="actions-bar">
-        <div class="search-wrapper">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="buscar-cuadrilla" class="search-input" placeholder="Buscar cuadrilla, responsable o técnico...">
+        <div class="filters-row">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="buscar-cuadrilla" class="search-input" placeholder="Buscar cuadrilla, responsable o técnico...">
+          </div>
+          <select id="filtro-estado-cuadrilla" class="filter-select" aria-label="Filtrar cuadrillas por estado">
+            <option value="activas">Estado: Activas</option>
+            <option value="inactivas">Estado: Inactivas</option>
+            <option value="todas">Estado: Todas</option>
+          </select>
         </div>
         <button id="btn-abrir-nueva-cuadrilla" class="btn-crear" type="button">
           + Nueva cuadrilla
         </button>
       </div>
+
+      <div id="alert-lista-cuadrillas" class="alert-box alert-danger" role="alert"></div>
 
       <!-- GRID DE TARJETAS (FIGMA) -->
       <div id="grid-cuadrillas" class="cuadrillas-grid">
@@ -78,18 +87,27 @@
     <section id="sec-personal" style="display: none;">
       <div class="section-header">
         <h1 class="main-title">Directorio de Empleados y Personal</h1>
-        <p class="main-subtitle">Gestión de técnicos disponibles y roles dentro de la plataforma</p>
+        <p class="main-subtitle">Gestión de técnicos disponibles, edición de datos, bajas y roles dentro de la plataforma</p>
       </div>
 
       <div class="actions-bar">
-        <div class="search-wrapper">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="buscar-personal" class="search-input" placeholder="Buscar por nombre, correo, rol o teléfono...">
+        <div class="filters-row">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="buscar-personal" class="search-input" placeholder="Buscar por nombre, correo, rol o teléfono...">
+          </div>
+          <select id="filtro-estado-personal" class="filter-select" aria-label="Filtrar personal por estado">
+            <option value="activos">Estado: Activos</option>
+            <option value="inactivos">Estado: Inactivos (Baja)</option>
+            <option value="todos">Estado: Todos</option>
+          </select>
         </div>
         <button id="btn-abrir-nuevo-empleado" class="btn-crear" type="button" style="background-color: #16a34a;">
           + Agregar Empleado
         </button>
       </div>
+
+      <div id="alert-lista-personal" class="alert-box alert-danger" role="alert"></div>
 
       <div class="table-wrapper">
         <table class="data-table">
@@ -99,10 +117,12 @@
               <th>Contacto</th>
               <th>Rol</th>
               <th>Cuadrillas Asignadas</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="tabla-personal-body">
-            <tr><td colspan="4" class="empty-state">Cargando personal...</td></tr>
+            <tr><td colspan="6" class="empty-state">Cargando personal...</td></tr>
           </tbody>
         </table>
       </div>
@@ -116,18 +136,24 @@
   <div id="modal-cuadrilla" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="modal-cuadrilla-title" class="modal-title">Armar Nueva Cuadrilla</h2>
-        <p class="modal-subtitle">Datos generales y asignación de equipo</p>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 id="modal-cuadrilla-title" class="modal-title">Armar Nueva Cuadrilla</h2>
+            <p class="modal-subtitle">Datos generales y asignación de equipo</p>
+          </div>
+          <button type="button" class="btn-modal-close" aria-label="Cerrar modal">&times;</button>
+        </div>
       </div>
 
-      <div id="alert-cuadrilla" class="alert-box alert-danger"></div>
+      <div id="alert-cuadrilla" class="alert-box alert-danger" role="alert"></div>
 
-      <form id="form-cuadrilla">
+      <form id="form-cuadrilla" novalidate>
         <input type="hidden" id="cuadrilla-id">
 
         <div class="form-group">
           <label class="form-label" for="cuadrilla-nombre">Nombre de la cuadrilla *</label>
           <input type="text" id="cuadrilla-nombre" class="form-input" placeholder="Ej. Cuadrilla 1 - Jardinería" required>
+          <span id="error-cuadrilla-nombre" class="field-error"></span>
         </div>
 
         <div class="form-group">
@@ -135,12 +161,13 @@
           <select id="cuadrilla-responsable" class="form-select" required>
             <option value="">Selecciona un técnico responsable...</option>
           </select>
+          <span id="error-cuadrilla-responsable" class="field-error"></span>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Miembros de la cuadrilla (Técnicos de apoyo)</label>
+          <label class="form-label">Técnicos de apoyo</label>
           <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">
-            Un técnico puede pertenecer a más de una cuadrilla simultáneamente.
+            El técnico responsable no puede seleccionarse como técnico de apoyo en la misma cuadrilla.
           </p>
           <div id="lista-miembros-checkboxes" class="tech-selection-box">
             <span style="font-size: 0.85rem; color: #94a3b8; padding: 0.5rem;">Cargando técnicos...</span>
@@ -163,31 +190,41 @@
   </div>
 
   <!-- ==========================================
-       MODAL 2: AGREGAR NUEVO EMPLEADO (FIGMA)
+       MODAL 2: AGREGAR / EDITAR EMPLEADO (FIGMA)
        ========================================== -->
   <div id="modal-empleado" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Agregar Nuevo Empleado</h2>
-        <p class="modal-subtitle">Registra a un nuevo técnico o administrativo en la plataforma</p>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 id="modal-empleado-title" class="modal-title">Agregar Nuevo Empleado</h2>
+            <p id="modal-empleado-subtitle" class="modal-subtitle">Registra a un nuevo técnico o administrativo en la plataforma</p>
+          </div>
+          <button type="button" class="btn-modal-close" aria-label="Cerrar modal">&times;</button>
+        </div>
       </div>
 
-      <div id="alert-empleado" class="alert-box alert-danger"></div>
+      <div id="alert-empleado" class="alert-box alert-danger" role="alert"></div>
 
-      <form id="form-empleado">
+      <form id="form-empleado" novalidate>
+        <input type="hidden" id="empleado-id">
+
         <div class="form-group">
           <label class="form-label" for="empleado-nombre">Nombre Completo *</label>
           <input type="text" id="empleado-nombre" class="form-input" placeholder="Ej. Carlos Mendoza" required>
+          <span id="error-empleado-nombre" class="field-error"></span>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="empleado-correo">Correo Electrónico *</label>
           <input type="email" id="empleado-correo" class="form-input" placeholder="ejemplo@empresa.com" required>
+          <span id="error-empleado-correo" class="field-error"></span>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="empleado-telefono">Teléfono *</label>
-          <input type="tel" id="empleado-telefono" class="form-input" placeholder="+52 322 123 4567" required>
+          <label class="form-label" for="empleado-telefono">Teléfono (10 dígitos) *</label>
+          <input type="tel" id="empleado-telefono" class="form-input" placeholder="Ej. 3221234567" maxlength="10" inputmode="numeric" required>
+          <span id="error-empleado-telefono" class="field-error"></span>
         </div>
 
         <div class="form-group">
