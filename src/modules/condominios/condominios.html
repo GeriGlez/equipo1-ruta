@@ -96,6 +96,17 @@
     <div class="condo-acciones-pie">
       <a href="./registrar-condominio.html" class="btn condo-btn-registrar">+ Registrar condominio</a>
     </div>
+    <!-- Confirmación para activar / desactivar un condominio -->
+    <dialog id="dialogo-estado" class="condo-dialogo" aria-labelledby="dialogo-titulo" aria-describedby="dialogo-texto">
+      <form method="dialog">
+        <h2 id="dialogo-titulo" class="condo-dialogo-titulo"></h2>
+        <p id="dialogo-texto" class="condo-dialogo-texto"></p>
+        <div class="condo-dialogo-botones">
+          <button type="submit" value="cancelar" class="btn condo-dialogo-cancelar" autofocus>Cancelar</button>
+          <button type="submit" value="confirmar" id="dialogo-confirmar" class="btn condo-dialogo-confirmar"></button>
+        </div>
+      </form>
+    </dialog>
   </main>
 
   <script type="module" src="./condominios.js"></script>
