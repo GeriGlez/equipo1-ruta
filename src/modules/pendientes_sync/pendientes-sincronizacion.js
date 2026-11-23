@@ -491,21 +491,23 @@ import {
   }
 
 
-async function sincronizarIncidencia(supabase, incidencia) {
+async function sincronizarIncidencia(supabase, incidencia, authUid) {
   const idLocal = incidencia.id_local || incidencia.id;
 
   if (!esUUID(idLocal)) {
     throw new Error('La incidencia no tiene un UUID local válido.');
   }
 
+  
   if (
-    !incidencia.reportada_por ||
-    String(incidencia.reportada_por) !== String(tecnicoActualId)
+    !authUid ||
+    String(incidencia.reportada_por) !== String(authUid)
   ) {
     throw new Error(
-      'La incidencia no corresponde al técnico autenticado.'
+      'La incidencia no corresponde al usuario autenticado.'
     );
   }
+
 
   const datosServidor = {
     id_local: idLocal,
@@ -557,19 +559,6 @@ async function sincronizarIncidencia(supabase, incidencia) {
 
   return { id: idServidor };
 }
-
-
-  const { data, error } = await supabase
-    .from('incidencias')
-    .insert([datosServidor])
-    .select('id')
-    .single();
-
-  if (error) throw error;
-
-  await marcarIncidenciaComoEnviada(incidencia.id, data.id);
-  return { id: data.id };
-
 
 async function sincronizarPendientes() {
   if (!navigator.onLine) {
@@ -631,7 +620,7 @@ async function sincronizarPendientes() {
       if (item.tipo_registro === 'visita') {
         await sincronizarVisita(supabase, item);
       } else if (item.tipo_registro === 'incidencia') {
-        await sincronizarIncidencia(supabase, item);
+        await sincronizarIncidencia(supabase, item, sesion.user.id);
       }
     }
 

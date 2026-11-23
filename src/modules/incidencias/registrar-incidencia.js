@@ -42,17 +42,27 @@ form.addEventListener('submit', async (e) => {
 
   // Obtenemos el ID del usuario desde la sesión local (funciona offline y online)
   
-const sesion = await getActiveSession();
 
-if (
-  sesion?.usuario?.rol !== 'tecnico' ||
-  !sesion.usuario.id
-) {
-  alert('No hay una sesión técnica válida para registrar la incidencia.');
-  return;
-}
+  let sesion;
 
-incidenciaData.reportada_por = sesion.usuario.id;
+  try {
+    sesion = await getActiveSession();
+  } catch (error) {
+    console.error('Error al verificar la sesión:', error);
+    alert('No fue posible verificar la sesión técnica.');
+    return;
+  }
+
+  if (
+    sesion?.usuario?.rol !== 'tecnico' ||
+    !sesion?.user?.id
+  ) {
+    alert('No hay una sesión técnica válida.');
+    return;
+  }
+
+  incidenciaData.reportada_por = sesion.user.id;
+
 
 
   if (!navigator.onLine) {
