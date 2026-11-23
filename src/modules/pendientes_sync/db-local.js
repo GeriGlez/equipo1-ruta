@@ -4,7 +4,7 @@
 // ==============================================
 
 const DB_NAME = "RUTA_Local";
-const DB_VERSION = 10;
+const DB_VERSION = 11;
 
 // Abrir o crear base de datos local
 export function abrirBD() {

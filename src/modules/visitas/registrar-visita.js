@@ -256,6 +256,12 @@ function actualizarLecturas(
 actualizarLecturas(false);
 
 
+campoQuienRecibio.addEventListener('input', () => {
+  campoQuienRecibio.setCustomValidity('');
+});
+
+
+
 // ============================================
 // SUPABASE - CARGA SOLO CUANDO HAY RED
 // ============================================
@@ -839,6 +845,15 @@ formulario.addEventListener(
       return;
 
     }
+
+      const receptor = campoQuienRecibio.value.trim();
+
+      campoQuienRecibio.setCustomValidity(
+        receptor
+          ? ''
+          : 'Escribe el nombre de quien recibió el servicio.'
+      );
+
 
 
     if (!formulario.reportValidity()) {

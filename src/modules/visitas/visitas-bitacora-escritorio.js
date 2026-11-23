@@ -253,7 +253,7 @@ function mostrarMensajeTabla(
     );
 
 
-  celda.colSpan = 7;
+  celda.colSpan = 8;
   celda.textContent =
     mensaje;
 
@@ -800,6 +800,10 @@ function renderizarVisitas(
       document.createElement(
         'td'
       );
+
+      const celdaServicio = document.createElement('td');
+
+      celdaServicio.textContent = visita.servicio_nombre || 'Servicio no disponible';
 
     celdaArea.textContent =
       visita.area_nombre;
