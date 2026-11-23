@@ -1276,12 +1276,14 @@ export async function reemplazarOrdenesContextoTecnico(
 
         const contexto = cursor.value;
 
-        if (
-          contexto.tecnico_id === tecnicoId &&
-          contexto.fecha_programada === fechaProgramada
-        ) {
-          cursor.delete();
-        }
+        
+      if (
+        String(contexto.tecnico_id) === String(tecnicoId) &&
+        contexto.fecha_programada === fechaProgramada
+      ) {
+        cursor.delete();
+      }
+
 
         cursor.continue();
         return;
@@ -1359,12 +1361,13 @@ export async function obtenerOrdenesContextoTecnico(
 
     request.onsuccess = () => {
 
-      ordenes =
-        request.result.filter(
-          orden =>
-            orden.tecnico_id === tecnicoId &&
-            orden.fecha_programada === fechaProgramada
-        );
+      
+      ordenes = request.result.filter(
+        orden =>
+          String(orden.tecnico_id) === String(tecnicoId) &&
+          orden.fecha_programada === fechaProgramada
+      );
+
 
     };
 
