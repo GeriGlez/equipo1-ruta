@@ -214,11 +214,16 @@ self.addEventListener(
 
           } catch (error) {
 
-            const guardada =
-              (await cache.match(event.request)) ||
-              (RECURSOS.includes(url.pathname)
-                ? await cache.match(url.pathname)
-                : undefined);
+            
+          const guardada =
+            (await cache.match(event.request)) ||
+            (RECURSOS.includes(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
+              : undefined);
+
 
 
             if (guardada) {
@@ -276,11 +281,16 @@ self.addEventListener(
 
         } catch (error) {
 
+          
           const guardada =
             (await cache.match(event.request)) ||
             (RECURSOS.includes(url.pathname)
-              ? await cache.match(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
               : undefined);
+
 
           return (
             guardada ||
