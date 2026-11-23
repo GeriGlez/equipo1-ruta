@@ -729,8 +729,12 @@ async function inicializarPendientes() {
       error
     );
 
+    
+    tecnicoActualId = null;
     authUidActual = null;
+    sesionRemotaDisponible = false;
     cantidadPendientes = 0;
+
 
     lista.replaceChildren();
 
