@@ -935,7 +935,7 @@ function renderizarVisitas(
 [
   buscador,
   filtroTipoArea,
-  filtroEstado,
+  // filtroEstado,
   filtroCondominio,
   filtroFecha
 ].forEach(
