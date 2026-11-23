@@ -5,7 +5,14 @@
 // =============================================================================
 
 import { supabase } from '../../services/supabase.js';
-import { getActiveSession } from '../auth/authService.js';
+
+import {
+  getActiveSession,
+  obtenerSesionRemotaVerificada
+} from '../auth/authService.js';
+
+
+
 
 import {
   guardarContextoOrden,
@@ -14,11 +21,16 @@ import {
   obtenerOrdenesContextoTecnico
 } from '../pendientes_sync/db-local.js';
 
+
 import {
   cargarCatalogosCompletos,
   consultarOrdenesServicio,
-  guardarCatalogoLocal
+  guardarCatalogoLocal,
+  obtenerCatalogoLocal
 } from './ordenes-db.js';
+
+
+
 import { mostrarNotasAcceso } from '../condominios/notas-acceso.js';
 
 const STORAGE_ESTADOS_TECNICO_KEY = 'ruta_estados_ordenes_tecnico_v1';
@@ -95,13 +107,25 @@ function formatearFolioOrden(id) {
   return `Orden ${num < 10 ? `0${num}` : num}`;
 }
 
-async function cargarCatalogosConNotas() {
-  const base = await cargarCatalogosCompletos();
+
+async function cargarCatalogosConNotas(permitirRemoto = false) {
+  const base = permitirRemoto
+    ? await cargarCatalogosCompletos()
+    : await (async () => {
+        const [condominios, areas, servicios] = await Promise.all([
+          obtenerCatalogoLocal('condominios'),
+          obtenerCatalogoLocal('areas'),
+          obtenerCatalogoLocal('servicios')
+        ]);
+
+        return { condominios, areas, servicios };
+      })();
+
   let condominios = base.condominios || [];
   const areas = base.areas || [];
   const servicios = base.servicios || [];
 
-  if (navigator.onLine) {
+  if (permitirRemoto && navigator.onLine) {
     try {
       const { data, error } = await supabase
         .from('condominios')
@@ -112,15 +136,27 @@ async function cargarCatalogosConNotas() {
         condominios = data;
         await guardarCatalogoLocal('condominios', condominios);
       }
-    } catch (err) {
-      console.warn('[Órdenes Técnico] Usando condominios en caché local:', err);
+    } catch (error) {
+      console.warn(
+        '[Órdenes Técnico] Usando condominios locales:',
+        error
+      );
     }
   }
 
-  mapaCondominios = new Map(condominios.map(c => [Number(c.id), c]));
-  mapaAreas = new Map(areas.map(a => [Number(a.id), a]));
-  mapaServicios = new Map(servicios.map(s => [Number(s.id), s]));
+  mapaCondominios = new Map(
+    condominios.map(c => [Number(c.id), c])
+  );
+
+  mapaAreas = new Map(
+    areas.map(a => [Number(a.id), a])
+  );
+
+  mapaServicios = new Map(
+    servicios.map(s => [Number(s.id), s])
+  );
 }
+
 
 async function guardarContextoDeOrdenIndividual(orden) {
   if (!usuarioActual || !orden?.id) return;
@@ -175,16 +211,40 @@ async function sincronizarContextosParaVisitas(ordenesLista) {
 }
 
 async function cargarDatosYRenderizar() {
+  
   try {
-    
-    await cargarCatalogosConNotas();
+    if (!usuarioActual?.id) {
+      throw new Error('No hay un técnico activo.');
+    }
+
+    let sesionRemota = null;
+
+    if (navigator.onLine) {
+      try {
+        sesionRemota = await obtenerSesionRemotaVerificada(
+          usuarioActual.id
+        );
+      } catch (error) {
+        console.warn(
+          '[Órdenes Técnico] Autenticación remota no disponible:',
+          error
+        );
+      }
+    }
+
+    const permitirRemoto = Boolean(
+      navigator.onLine && sesionRemota
+    );
+
+    await cargarCatalogosConNotas(permitirRemoto);
 
     const hoy = obtenerFechaLocalISO();
     const estadosLocales = obtenerEstadosLocalesTecnico();
 
-    const resultado = navigator.onLine
+    const resultado = permitirRemoto
       ? await consultarOrdenesServicio()
       : { ordenes: [], fuente: 'offline' };
+
 
     const usarPrecargaOffline = resultado.fuente === 'offline';
 
