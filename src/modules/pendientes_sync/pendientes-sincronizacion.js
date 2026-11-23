@@ -569,7 +569,7 @@ async function sincronizarIncidencia(supabase, incidencia) {
 
   await marcarIncidenciaComoEnviada(incidencia.id, data.id);
   return { id: data.id };
-}
+
 
 async function sincronizarPendientes() {
   if (!navigator.onLine) {
