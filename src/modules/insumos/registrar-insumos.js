@@ -15,7 +15,8 @@ import {
 import {
   obtenerCatalogoLocal,
   obtenerConsumosVisita,
-  guardarConsumosVisita
+  agregarConsumosVisita,
+  obtenerConsumoPendientePorInsumo
 } from './insumos-local.js';
 
 
@@ -28,6 +29,8 @@ const botonAgregar = document.querySelector('#agregar-linea');
 const botonGuardar = document.querySelector('#guardar-insumos');
 const datalist = document.querySelector('#lista-insumos');
 const mensajeError = document.querySelector('#insumos-error');
+const historial = document.querySelector('#historial-insumos');
+const historialLista = document.querySelector('#historial-lista');
 const estadoConexion = document.querySelector('#connection-status');
 const nombreUsuario = document.querySelector('.m5-user strong');
 
@@ -143,24 +146,76 @@ function refrescarBotonesQuitar() {
 
 }
 
+// Existencia que se puede consumir: la existencia conocida del insumo
+// menos lo ya capturado en este dispositivo que Supabase aún no descuenta.
+// Con red se consulta el valor actual de Supabase; sin red se usa la copia
+// local del catálogo.
+async function existenciaDisponible(insumo, { consultarServidor = false } = {}) {
+
+  let base = Number(insumo.existencia ?? insumo.stock ?? 0);
+
+  if (consultarServidor && navigator.onLine) {
+
+    try {
+
+      const { consultarExistenciaServidor } =
+        await import('./insumos-service.js');
+
+      const actual = await consultarExistenciaServidor(insumo.id);
+
+      if (actual !== null) {
+        base = actual;
+      }
+
+    } catch (error) {
+
+      console.warn(
+        '[RUTA] No se pudo consultar la existencia; se usa la copia local.',
+        error
+      );
+
+    }
+
+  }
+
+  const pendientes = await obtenerConsumoPendientePorInsumo();
+
+  return Math.max(
+    0,
+    Math.round((base - (pendientes.get(insumo.id) || 0)) * 1000) / 1000
+  );
+
+}
+
 function actualizarUnidad(linea) {
 
   const insumo = linea.insumo;
 
   linea.unidad.textContent = insumo ? insumo.unidad : '—';
 
-  if (insumo) {
-
-    const existencia = insumo.existencia ?? insumo.stock;
-    linea.ayuda.textContent =
-      `Existencia registrada: ${formatearNumero(existencia)} ${insumo.unidad}`;
-    linea.ayuda.hidden = false;
-
-  } else {
+  if (!insumo) {
 
     linea.ayuda.hidden = true;
+    return;
 
   }
+
+  existenciaDisponible(insumo)
+    .then(disponible => {
+
+      // La línea pudo cambiar de insumo mientras se calculaba.
+      if (linea.insumo !== insumo) {
+        return;
+      }
+
+      linea.ayuda.textContent =
+        `Existencia disponible: ${formatearNumero(disponible)} ${insumo.unidad}`;
+      linea.ayuda.hidden = false;
+
+    })
+    .catch(() => {
+      linea.ayuda.hidden = true;
+    });
 
 }
 
@@ -273,6 +328,32 @@ botonAgregar.addEventListener('click', () => {
 
 
 // ---------- Visitas del técnico ----------
+// Fecha local (AAAA-MM-DD) de un valor de fecha. Un texto solo con la
+// fecha se toma tal cual; una fecha con hora se pasa a la zona horaria
+// del dispositivo, así no cambia de día por diferencias de zona.
+function fechaLocal(valor) {
+
+  if (!valor) {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(valor))) {
+    return String(valor);
+  }
+
+  const fecha = new Date(valor);
+
+  if (Number.isNaN(fecha.getTime())) {
+    return null;
+  }
+
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+
+}
+
 function fechaDeVisita(visita) {
 
   const fecha = new Date(
@@ -283,6 +364,20 @@ function fechaDeVisita(visita) {
 
 }
 
+function esVisitaDeHoy(visita) {
+
+  const diaVisita = fechaLocal(
+    visita.fecha_visita_en || visita.creado_localmente_en
+  );
+
+  return diaVisita !== null && diaVisita === fechaLocal(new Date());
+
+}
+
+// Nombre de la visita: "Visita #ID: Condominio - Área".
+// - ID: el de la visita en Supabase (el mismo que muestra la bitácora).
+//   Una visita que aún no se sincroniza no lo tiene y no se inventa uno.
+// - Condominio y área: datos de su orden guardados en el dispositivo.
 async function etiquetaVisita(visita) {
 
   let lugar = null;
@@ -291,11 +386,10 @@ async function etiquetaVisita(visita) {
 
     const contexto = await obtenerContextoOrden(visita.orden_id);
 
-    if (contexto) {
+    const condominio = contexto?.condominio?.nombre;
+    const area = contexto?.area?.nombre;
 
-      lugar = `${contexto.condominio.nombre} - ${contexto.area.nombre}`;
-
-    }
+    lugar = [condominio, area].filter(Boolean).join(' - ') || null;
 
   } catch (error) {
 
@@ -303,25 +397,11 @@ async function etiquetaVisita(visita) {
 
   }
 
-  let nombre = 'Visita';
+  const encabezado = visita.visita_servidor_id
+    ? `Visita #${visita.visita_servidor_id}`
+    : 'Visita';
 
-  if (lugar) {
-    nombre = `Visita: ${lugar}`;
-  } else if (visita.visita_servidor_id) {
-    nombre = `Visita #${visita.visita_servidor_id}`;
-  }
-
-  // Fecha y hora distinguen varias visitas del mismo lugar.
-  const fecha = fechaDeVisita(visita);
-
-  const cuando = [
-    fecha
-      ? fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit' })
-      : null,
-    visita.hora_entrada || null
-  ].filter(Boolean).join(' ');
-
-  return cuando ? `${nombre} · ${cuando}` : nombre;
+  return lugar ? `${encabezado}: ${lugar}` : encabezado;
 
 }
 
@@ -435,8 +515,11 @@ async function cargarVisitas() {
 
   }
 
+  // Solo las visitas del técnico y de la fecha de hoy en este dispositivo.
   const delTecnico = todas.filter(
-    v => String(v.tecnico_id) === String(usuario.id)
+    v =>
+      String(v.tecnico_id) === String(usuario.id) &&
+      esVisitaDeHoy(v)
   );
 
   visitas = (await quitarVisitasDuplicadas(delTecnico))
@@ -447,7 +530,7 @@ async function cargarVisitas() {
   // Sin visitas no hay nada que elegir: el selector queda deshabilitado.
   if (!visitas.length) {
 
-    selectorVisita.options[0].textContent = 'Sin visitas disponibles';
+    selectorVisita.options[0].textContent = 'Sin visitas hoy';
     selectorVisita.disabled = true;
     return;
 
@@ -463,6 +546,33 @@ async function cargarVisitas() {
 
 }
 
+// Muestra, solo para consulta, lo que la visita ya tiene registrado.
+// No se carga en el formulario: cada captura empieza vacía.
+async function mostrarHistorial(visita) {
+
+  const guardados = await obtenerConsumosVisita(visita.id);
+
+  historialLista.replaceChildren(
+    ...guardados.map(consumo => {
+
+      const item = document.createElement('li');
+      const nombre = document.createElement('span');
+      const cantidad = document.createElement('strong');
+
+      nombre.textContent = consumo.insumo_nombre;
+      cantidad.textContent =
+        `${formatearNumero(consumo.cantidad)} ${consumo.unidad || ''}`.trim();
+
+      item.append(nombre, cantidad);
+      return item;
+
+    })
+  );
+
+  historial.hidden = !guardados.length;
+
+}
+
 async function alSeleccionarVisita() {
 
   mostrarError('');
@@ -472,35 +582,17 @@ async function alSeleccionarVisita() {
 
   if (!visita) {
 
+    historial.hidden = true;
     panel.hidden = true;
     botonGuardar.disabled = true;
     return;
 
   }
 
-  const guardados = await obtenerConsumosVisita(visita.id);
+  await mostrarHistorial(visita);
 
-  if (guardados.length) {
-
-    guardados.forEach(consumo => {
-
-      const insumo =
-        catalogo.find(i => i.id === consumo.insumo_id) || null;
-
-      crearLinea({
-        id: consumo.id,
-        insumo,
-        texto: consumo.insumo_nombre,
-        cantidad: consumo.cantidad
-      });
-
-    });
-
-  } else {
-
-    crearLinea();
-
-  }
+  // Captura nueva: una línea en blanco, sin datos de capturas anteriores.
+  crearLinea();
 
   panel.hidden = false;
   botonGuardar.disabled = false;
@@ -512,6 +604,8 @@ async function alSeleccionarVisita() {
 function limpiarFormulario() {
 
   limpiarLineas();
+  historialLista.replaceChildren();
+  historial.hidden = true;
   panel.hidden = true;
   selectorVisita.value = '';
   botonGuardar.disabled = true;
@@ -587,7 +681,6 @@ formulario.addEventListener('submit', async evento => {
     vistos.add(linea.insumo.id);
 
     validas.push({
-      id: linea.id,
       insumo_id: linea.insumo.id,
       insumo_nombre: linea.insumo.nombre,
       unidad: linea.insumo.unidad,
@@ -598,32 +691,53 @@ formulario.addEventListener('submit', async evento => {
 
   if (!validas.length) {
 
-    const habia = (await obtenerConsumosVisita(visita.id)).length > 0;
-
-    if (!habia) {
-      mostrarError('Agrega al menos un insumo con su cantidad.');
-      return;
-    }
-
-    const confirmar = window.confirm(
-      'No dejaste ningún insumo. ' +
-      '¿Quitar los insumos registrados en esta visita?'
-    );
-
-    if (!confirmar) {
-      return;
-    }
+    mostrarError('Agrega al menos un insumo con su cantidad.');
+    return;
 
   }
 
   guardando = true;
   botonGuardar.disabled = true;
 
+  // Validación de existencias: con red contra Supabase, sin red con la
+  // copia local. Se descuentan los consumos pendientes de sincronizar.
   try {
 
-    await guardarConsumosVisita(visita, validas);
+    for (const linea of validas) {
 
-    // Se limpia antes de avisar, para que no queden datos en pantalla.
+      const insumo = catalogo.find(i => i.id === linea.insumo_id);
+      const disponible = await existenciaDisponible(insumo, { consultarServidor: true });
+
+      if (linea.cantidad > disponible) {
+
+        mostrarError(
+          `No hay suficiente existencia de ${linea.insumo_nombre}. ` +
+          `Disponible: ${formatearNumero(disponible)} ${linea.unidad}.`
+        );
+
+        guardando = false;
+        botonGuardar.disabled = false;
+        return;
+
+      }
+
+    }
+
+  } catch (error) {
+
+    console.error('[RUTA] Error al validar existencias:', error);
+    mostrarError('No fue posible validar las existencias. Intenta de nuevo.');
+    guardando = false;
+    botonGuardar.disabled = false;
+    return;
+
+  }
+
+  try {
+
+    await agregarConsumosVisita(visita, validas);
+
+    // Los datos temporales se limpian antes de avisar.
     limpiarFormulario();
 
     alert(

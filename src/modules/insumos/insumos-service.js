@@ -9,7 +9,8 @@ import {
   guardarCatalogoLocal,
   obtenerConsumosPendientes,
   marcarConsumoEnviado,
-  eliminarConsumoLocal
+  eliminarConsumoLocal,
+  ajustarExistenciaLocal
 } from './insumos-local.js';
 
 import {
@@ -145,6 +146,75 @@ function obtenerVisitaServidorId(visita) {
 }
 
 
+function redondear(valor) {
+
+  return Math.round(Number(valor) * 1000) / 1000;
+
+}
+
+
+function errorInventario(consumo, disponible) {
+
+  const error = new Error(
+    `No hay suficiente existencia de ${consumo.insumo_nombre}` +
+    (disponible === undefined ? '.' : ` (disponible: ${disponible}).`)
+  );
+
+  error.code = 'STOCK_INSUFICIENTE';
+
+  return error;
+
+}
+
+
+// La base de datos rechaza existencias negativas (check existencia >= 0).
+function traducirErrorInventario(error, consumo) {
+
+  return error?.code === '23514'
+    ? errorInventario(consumo)
+    : error;
+
+}
+
+
+// Antes de enviar, comprueba en Supabase que alcance el inventario.
+async function validarExistenciaServidor(consumo, porDescontar) {
+
+  const { data, error } = await supabase
+    .from('insumos')
+    .select('existencia')
+    .eq('id', consumo.insumo_id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (data && Number(data.existencia) < porDescontar) {
+    throw errorInventario(consumo, Number(data.existencia));
+  }
+
+}
+
+
+// Existencia actual en Supabase de un insumo (null si no se pudo leer).
+export async function consultarExistenciaServidor(insumoId) {
+
+  const { data, error } = await supabase
+    .from('insumos')
+    .select('existencia')
+    .eq('id', insumoId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? Number(data.existencia) : null;
+
+}
+
+
 export async function sincronizarConsumosPendientes() {
 
   const pendientes = await obtenerConsumosPendientes();
@@ -185,16 +255,25 @@ export async function sincronizarConsumosPendientes() {
       // ---------- ELIMINAR ----------
       if (consumo.operacion_pendiente === 'eliminar') {
 
-        const { error } = await supabase
+        const { data: borradas, error } = await supabase
           .from('visita_insumo')
           .delete()
           .match({
             visita_id: visitaServidorId,
             insumo_id: consumo.insumo_id
-          });
+          })
+          .select('cantidad');
 
         if (error) {
           throw error;
+        }
+
+        // El trigger devolvió esa cantidad a la existencia.
+        const devuelto = (borradas || [])
+          .reduce((suma, fila) => suma + Number(fila.cantidad || 0), 0);
+
+        if (devuelto) {
+          await ajustarExistenciaLocal(consumo.insumo_id, -devuelto);
         }
 
         // Solo se borra del dispositivo cuando Supabase ya confirmó.
@@ -206,9 +285,11 @@ export async function sincronizarConsumosPendientes() {
 
       // ---------- ACTUALIZAR O INSERTAR (IDEMPOTENTE) ----------
       // Se busca por (visita, insumo): reintentar nunca duplica.
+      const nueva = Number(consumo.cantidad);
+
       const { data: filas, error: errBusqueda } = await supabase
         .from('visita_insumo')
-        .select('id')
+        .select('id, cantidad')
         .eq('visita_id', visitaServidorId)
         .eq('insumo_id', consumo.insumo_id)
         .order('id', { ascending: true })
@@ -220,17 +301,24 @@ export async function sincronizarConsumosPendientes() {
 
       const existente = filas?.[0] || null;
 
+      // Lo que Supabase todavía tiene que descontar por este consumo.
+      const yaDescontado = Number(existente?.cantidad) || 0;
+      const porDescontar = redondear(nueva - yaDescontado);
+
+      // Segunda validación de inventario (la primera fue en el celular).
+      if (porDescontar > 0) {
+        await validarExistenciaServidor(consumo, porDescontar);
+      }
+
       if (existente?.id) {
 
         const { error: errUpdate } = await supabase
           .from('visita_insumo')
-          .update({
-            cantidad: Number(consumo.cantidad)
-          })
+          .update({ cantidad: nueva })
           .eq('id', existente.id);
 
         if (errUpdate) {
-          throw errUpdate;
+          throw traducirErrorInventario(errUpdate, consumo);
         }
 
       } else {
@@ -240,17 +328,22 @@ export async function sincronizarConsumosPendientes() {
           .insert({
             visita_id: visitaServidorId,
             insumo_id: consumo.insumo_id,
-            cantidad: Number(consumo.cantidad)
+            cantidad: nueva
           });
 
         if (errInsert) {
-          throw errInsert;
+          throw traducirErrorInventario(errInsert, consumo);
         }
 
       }
 
-      // Supabase confirmó: recién ahora sale de los pendientes.
-      await marcarConsumoEnviado(consumo.id, revision);
+      // Supabase confirmó: el catálogo local refleja el descuento una
+      // sola vez y el registro sale de pendientes.
+      if (porDescontar) {
+        await ajustarExistenciaLocal(consumo.insumo_id, porDescontar);
+      }
+
+      await marcarConsumoEnviado(consumo.id, revision, nueva);
       enviados++;
 
     } catch (error) {
