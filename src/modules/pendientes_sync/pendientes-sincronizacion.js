@@ -69,77 +69,148 @@ import {
 
     lista.replaceChildren();
     errorMensaje.hidden = true;
-
+    
     // Generar tarjetas dinámicamente
     listaPendientes.forEach(item => {
       const tarjeta = document.createElement('article');
       tarjeta.className = 'm5-pending-card';
 
+      // Insertar datos como texto, nunca como HTML.
+      const ponerTexto = (selector, valor) => {
+        tarjeta.querySelector(selector).textContent = valor;
+      };
+
       if (item.tipo_registro === 'visita') {
-        // --- TARJETA DE VISITAS (Original de tu compañero) ---
         const fecha = new Date(item.creado_localmente_en);
         const fechaValida = !Number.isNaN(fecha.getTime());
 
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main">
-            <div class="m5-pending-card-icon"><img src="/hoja-de-calculo.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/hoja-de-calculo.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Visita</strong> <span class="m5-pending-badge">Pendiente</span>
+                <strong>Visita</strong>
+                <span class="m5-pending-badge">Pendiente</span>
               </div>
-              <h3 class="m5-pending-order">${item.orden_referencia || 'Orden sin referencia'}</h3>
-              <p class="m5-pending-area">${nombresAreas[item.area_tipo] || item.area_tipo || 'Área no especificada'}</p>
+              <h3 class="m5-pending-order"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
           <div class="m5-pending-card-footer">
-            <span class="m5-pending-date">${fechaValida ? `Registrada: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
-            <span class="m5-pending-hours">${item.hora_entrada}\n${item.hora_salida}</span>
+            <span class="m5-pending-date"></span>
+            <span class="m5-pending-hours"></span>
           </div>
         `;
-      } 
+
+        ponerTexto(
+          '.m5-pending-order',
+          item.orden_referencia || 'Orden sin referencia'
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          nombresAreas[item.area_tipo] ||
+          item.area_tipo ||
+          'Área no especificada'
+        );
+
+        ponerTexto(
+          '.m5-pending-date',
+          fechaValida
+            ? `Registrada: ${fecha.toLocaleDateString('es-MX')}`
+            : 'Fecha no disponible'
+        );
+
+        ponerTexto(
+          '.m5-pending-hours',
+          `${item.hora_entrada}\n${item.hora_salida}`
+        );
+      }
+
       else if (item.tipo_registro === 'incidencia') {
-        // --- TARJETA DE INCIDENCIAS (Tuya, con borde rojo) ---
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main" style="border-left: 4px solid #f44336;">
-            <div class="m5-pending-card-icon"><img src="/advertencia.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/advertencia.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Incidencia</strong> <span class="m5-pending-badge" style="background:#f44336; color:white;">Pendiente</span>
+                <strong>Incidencia</strong>
+                <span class="m5-pending-badge" style="background:#f44336; color:white;">
+                  Pendiente
+                </span>
               </div>
-              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                ${item.descripcion || 'Sin descripción'}
-              </h3>
-              <p class="m5-pending-area">Visita #${item.visita_id}</p>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
         `;
+
+        ponerTexto(
+          '.m5-pending-order',
+          item.descripcion || 'Sin descripción'
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          `Visita #${item.visita_id}`
+        );
       }
+
       else if (item.tipo_registro === 'consumo_insumo') {
         const fecha = new Date(item.creado_localmente_en);
         const fechaValida = !Number.isNaN(fecha.getTime());
 
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main" style="border-left: 4px solid #2196f3;">
-            <div class="m5-pending-card-icon"><img src="/caja.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/caja.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Insumo</strong> <span class="m5-pending-badge" style="background:#2196f3; color:white;">Pendiente</span>
+                <strong>Insumo</strong>
+                <span class="m5-pending-badge" style="background:#2196f3; color:white;">
+                  Pendiente
+                </span>
               </div>
-              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                ${item.insumo_nombre || 'Insumo'} (${item.cantidad} ${item.unidad || ''})
-              </h3>
-              <p class="m5-pending-area">${item.orden_referencia || 'Visita local'}</p>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
           <div class="m5-pending-card-footer">
-            <span class="m5-pending-date">${fechaValida ? `Registrado: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
-            <span class="m5-pending-hours">Cant: ${item.cantidad} ${item.unidad || ''}</span>
+            <span class="m5-pending-date"></span>
+            <span class="m5-pending-hours"></span>
           </div>
         `;
+
+        ponerTexto(
+          '.m5-pending-order',
+          `${item.insumo_nombre || 'Insumo'} (${item.cantidad} ${item.unidad || ''})`
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          item.orden_referencia || 'Visita local'
+        );
+
+        ponerTexto(
+          '.m5-pending-date',
+          fechaValida
+            ? `Registrado: ${fecha.toLocaleDateString('es-MX')}`
+            : 'Fecha no disponible'
+        );
+
+        ponerTexto(
+          '.m5-pending-hours',
+          `Cant: ${item.cantidad} ${item.unidad || ''}`
+        );
       }
 
       lista.appendChild(tarjeta);
     });
+
 
     console.log('Registros pendientes cargados:', cantidadPendientes);
     actualizarEstadoConexion();
