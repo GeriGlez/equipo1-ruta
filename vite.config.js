@@ -85,6 +85,21 @@ export default defineConfig({
           'src/modules/ordenes/index.html'
         ),
 
+        catalogoInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Catalogo_Insumos_Escritorio.html'
+        ),
+
+        registrarInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Registrar_Insumos_Movil.html'
+        ),
+
+        reporteInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Reporte_Insumos_Escritorio.html'
+        ),
+
         ordenesMovil: resolve(
           process.cwd(),
           'src/modules/ordenes/Ordenes_Servicio_Movil.html'
@@ -109,7 +124,6 @@ export default defineConfig({
           process.cwd(),
           'src/modules/servicios/contratos.html'
         )
-
       }
     }
   }

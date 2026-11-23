@@ -81,7 +81,7 @@
           <button id="btn-close-modal" class="modal-close-x-red" aria-label="Cerrar">&times;</button>
           <h2 id="modal-title" class="modal-title-contrato">Nuevo contrato</h2>
 
-          <form id="form-modal-contrato">
+          <form id="form-modal-contrato" novalidate>
             <input type="hidden" id="input-contrato-id">
 
             <div class="form-group-contrato">
@@ -141,9 +141,10 @@
           <p id="texto-confirmar-eliminar" class="texto-confirmar">
             ¿Estás seguro de que deseas eliminar este contrato? Esta acción no se puede deshacer.
           </p>
+          <p id="eliminar-error" class="form-error-ruta" role="alert" hidden></p>
           <div class="modal-acciones modal-acciones-centro">
             <button id="btn-confirmar-eliminar" class="btn-ruta-confirm btn-peligro">Sí, eliminar</button>
-            <button id="btn-cancelar-eliminar" class="btn-ruta-cancel">Cancelar</button>
+            <button id="btn-cancelar-eliminar" class="btn-ruta-cancel btn-cancelar-azul">Cancelar</button>
           </div>
         </div>
       </div>

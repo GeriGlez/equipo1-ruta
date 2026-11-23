@@ -35,7 +35,8 @@ const modulosAdministrador = [
   {
     titulo: 'Insumos y Consumo',
     descripcion: 'Administra insumos y consulta su consumo',
-    estilo: 'insumos'
+    estilo: 'insumos',
+    ruta: './src/modules/insumos/Catalogo_Insumos_Escritorio.html'
   },
   {
     titulo: 'Incidencias',
@@ -45,7 +46,8 @@ const modulosAdministrador = [
   {
     titulo: 'Reportes',
     descripcion: 'Consulta los reportes del sistema',
-    estilo: 'reportes'
+    estilo: 'reportes',
+    ruta: './src/modules/insumos/Reporte_Insumos_Escritorio.html'
   }
 ]
 
