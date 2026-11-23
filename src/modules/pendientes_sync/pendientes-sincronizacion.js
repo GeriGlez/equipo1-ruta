@@ -490,17 +490,74 @@ import {
 
   }
 
+
 async function sincronizarIncidencia(supabase, incidencia) {
-  // Nos aseguramos de incluir reportada_por explícitamente si viniera separada, 
-  // o dejamos que el objeto la mande completa si ya la trae dentro.
+  const idLocal = incidencia.id_local || incidencia.id;
+
+  if (!esUUID(idLocal)) {
+    throw new Error('La incidencia no tiene un UUID local válido.');
+  }
+
+  if (
+    !incidencia.reportada_por ||
+    String(incidencia.reportada_por) !== String(tecnicoActualId)
+  ) {
+    throw new Error(
+      'La incidencia no corresponde al técnico autenticado.'
+    );
+  }
+
   const datosServidor = {
+    id_local: idLocal,
     condominio_id: incidencia.condominio_id,
     area_id: incidencia.area_id,
     visita_id: incidencia.visita_id,
     descripcion: incidencia.descripcion,
     prioridad: incidencia.prioridad,
-    reportada_por: incidencia.reportada_por || tecnicoActualId // <--- ¡Vital para superar la política RLS!
+    reportada_por: incidencia.reportada_por
   };
+
+  const { data, error } = await supabase
+    .from('incidencias')
+    .insert(datosServidor)
+    .select('id')
+    .single();
+
+  let idServidor;
+
+  if (!error) {
+    idServidor = data.id;
+  } else if (error.code === '23505') {
+    // El servidor podría haber recibido un intento anterior.
+    const { data: existente, error: errorConsulta } =
+      await supabase
+        .from('incidencias')
+        .select('id')
+        .eq('id_local', idLocal)
+        .eq('reportada_por', incidencia.reportada_por)
+        .maybeSingle();
+
+    if (errorConsulta || !existente) {
+      throw errorConsulta || new Error(
+        'No se pudo confirmar la incidencia previamente enviada.'
+      );
+    }
+
+    idServidor = existente.id;
+  } else {
+    throw error;
+  }
+
+  // Confirmar localmente solo después de obtener
+  // un identificador válido del servidor.
+  await marcarIncidenciaComoEnviada(
+    incidencia.id,
+    idServidor
+  );
+
+  return { id: idServidor };
+}
+
 
   const { data, error } = await supabase
     .from('incidencias')
