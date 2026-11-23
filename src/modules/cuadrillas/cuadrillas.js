@@ -62,9 +62,13 @@ const inputEmpleadoNombre = document.getElementById('empleado-nombre')
 const inputEmpleadoCorreo = document.getElementById('empleado-correo')
 const inputEmpleadoTelefono = document.getElementById('empleado-telefono')
 const selectEmpleadoRol = document.getElementById('empleado-rol')
+const grupoEmpleadoPassword = document.getElementById('grupo-empleado-password')
+const inputEmpleadoPassword = document.getElementById('empleado-password')
+const btnToggleEmpleadoPassword = document.getElementById('btn-toggle-empleado-password')
 const errorEmpleadoNombre = document.getElementById('error-empleado-nombre')
 const errorEmpleadoCorreo = document.getElementById('error-empleado-correo')
 const errorEmpleadoTelefono = document.getElementById('error-empleado-telefono')
+const errorEmpleadoPassword = document.getElementById('error-empleado-password')
 const btnCerrarModalEmpleado = document.getElementById('btn-cerrar-modal-empleado')
 const btnGuardarEmpleado = document.getElementById('btn-guardar-empleado')
 
@@ -170,6 +174,7 @@ function limpiarErroresEmpleado() {
   marcarErrorCampo(inputEmpleadoNombre, errorEmpleadoNombre, '')
   marcarErrorCampo(inputEmpleadoCorreo, errorEmpleadoCorreo, '')
   marcarErrorCampo(inputEmpleadoTelefono, errorEmpleadoTelefono, '')
+  marcarErrorCampo(inputEmpleadoPassword, errorEmpleadoPassword, '')
 }
 
 inputCuadrillaNombre.addEventListener('input', () => marcarErrorCampo(inputCuadrillaNombre, errorCuadrillaNombre, ''))
@@ -186,6 +191,12 @@ inputEmpleadoCorreo.addEventListener('input', () => marcarErrorCampo(inputEmplea
 inputEmpleadoTelefono.addEventListener('input', () => {
   inputEmpleadoTelefono.value = inputEmpleadoTelefono.value.replace(/\D/g, '').slice(0, 10)
   marcarErrorCampo(inputEmpleadoTelefono, errorEmpleadoTelefono, '')
+})
+inputEmpleadoPassword.addEventListener('input', () => marcarErrorCampo(inputEmpleadoPassword, errorEmpleadoPassword, ''))
+btnToggleEmpleadoPassword.addEventListener('click', () => {
+  const mostrar = inputEmpleadoPassword.type === 'password'
+  inputEmpleadoPassword.type = mostrar ? 'text' : 'password'
+  btnToggleEmpleadoPassword.textContent = mostrar ? 'Ocultar' : 'Mostrar'
 })
 
 // ============================================
@@ -712,6 +723,7 @@ function abrirModalEmpleado(idEditar = null) {
     selectEmpleadoRol.value = emp.rol || 'tecnico'
     selectEmpleadoRol.disabled = esPropio
     selectEmpleadoRol.title = esPropio ? 'No puedes cambiar tu propio rol de administrador' : ''
+    grupoEmpleadoPassword.style.display = 'none'
   } else {
     modalEmpleadoTitle.textContent = 'Agregar Nuevo Empleado'
     modalEmpleadoSubtitle.textContent = 'Registra a un nuevo técnico o administrativo en la plataforma'
@@ -720,6 +732,9 @@ function abrirModalEmpleado(idEditar = null) {
     inputEmpleadoCorreo.title = ''
     selectEmpleadoRol.disabled = false
     selectEmpleadoRol.title = ''
+    grupoEmpleadoPassword.style.display = 'block'
+    inputEmpleadoPassword.type = 'password'
+    btnToggleEmpleadoPassword.textContent = 'Mostrar'
   }
 
   modalEmpleado.classList.add('active')
@@ -779,6 +794,7 @@ formEmpleado.addEventListener('submit', async (e) => {
   const correo = esPropio && empOriginal ? empOriginal.correo : inputEmpleadoCorreo.value.trim()
   const telefono = inputEmpleadoTelefono.value.replace(/[\s-]/g, '').trim()
   const rol = esPropio && empOriginal ? empOriginal.rol : selectEmpleadoRol.value
+  const password = inputEmpleadoPassword.value
 
   let hayError = false
   if (!nombre) {
@@ -807,6 +823,15 @@ formEmpleado.addEventListener('submit', async (e) => {
     marcarErrorCampo(inputEmpleadoTelefono, errorEmpleadoTelefono, 'El teléfono debe tener exactamente 10 dígitos numéricos.')
     hayError = true
   }
+  if (!id) {
+    if (!password) {
+      marcarErrorCampo(inputEmpleadoPassword, errorEmpleadoPassword, 'Por favor, ingresa una contraseña para el nuevo empleado.')
+      hayError = true
+    } else if (password.length < 6) {
+      marcarErrorCampo(inputEmpleadoPassword, errorEmpleadoPassword, 'La contraseña debe tener al menos 6 caracteres.')
+      hayError = true
+    }
+  }
 
   if (hayError) {
     alertEmpleado.textContent = 'Revisa los campos marcados en rojo antes de guardar.'
@@ -821,7 +846,7 @@ formEmpleado.addEventListener('submit', async (e) => {
     if (id) {
       await actualizarEmpleado(id, { nombre, correo, telefono, rol })
     } else {
-      await crearEmpleado({ nombre, correo, telefono, rol })
+      await crearEmpleado({ nombre, correo, telefono, rol, password })
     }
     modalEmpleado.classList.remove('active')
     await recargarDatos()

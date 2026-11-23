@@ -647,6 +647,32 @@ body {
   border-color: var(--color-primario);
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 5.5rem;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--azul-ruta);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+
+.btn-toggle-password:hover {
+  text-decoration: underline;
+}
+
 .form-input.input-error,
 .form-select.input-error {
   border-color: #dc2626;
