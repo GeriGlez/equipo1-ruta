@@ -358,22 +358,32 @@ export async function listarPersonal() {
 }
 
 /**
- * Registra un nuevo empleado en la tabla usuarios.
+ * Registra un nuevo empleado en Supabase Auth (auth.users) y en public.usuarios.
  */
 export async function crearEmpleado(datos) {
   const empleado = prepararDatosEmpleado(datos)
+  const password = String(datos?.password ?? '')
 
-  const { data: usuario, error } = await supabase
-    .from('usuarios')
-    .insert([{ ...empleado, activo: true }])
-    .select('id, nombre')
-    .single()
+  if (!password) {
+    throw new Error('Por favor, ingresa una contraseña para el nuevo empleado.')
+  }
+  if (password.length < 6) {
+    throw new Error('La contraseña debe tener al menos 6 caracteres.')
+  }
+
+  const { data: usuario, error } = await supabase.rpc('crear_empleado_con_auth', {
+    p_nombre: empleado.nombre,
+    p_correo: empleado.correo,
+    p_telefono: empleado.telefono,
+    p_rol: empleado.rol,
+    p_password: password
+  })
 
   if (error) {
-    if (error.code === '23505' || error.message?.includes('usuarios_correo_key')) {
+    if (error.code === '23505' || error.message?.includes('correo electrónico')) {
       throw new Error('Ya existe un empleado registrado con ese correo electrónico.')
     }
-    throw new Error(`No se pudo registrar al empleado: ${error.message}`)
+    throw new Error(error.message || 'No se pudo registrar al empleado.')
   }
 
   return usuario
