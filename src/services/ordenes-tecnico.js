@@ -154,9 +154,7 @@ export async function sincronizarOrdenesTecnico(
     }
 
 
-  if (!(await puedeActualizarContextos())) {
-    return obtenerContextosLocales();
-  }
+  
 
 
     return reemplazarOrdenesContextoTecnico(
@@ -394,6 +392,10 @@ export async function sincronizarOrdenesTecnico(
       }
 
     })
+
+    if (!(await puedeActualizarContextos())) {
+    return obtenerContextosLocales();
+  }
 
 
   return reemplazarOrdenesContextoTecnico(
