@@ -4,7 +4,7 @@
 // HU-08
 // ============================================
 
-const CACHE_NAME = 'ruta-app-v6';
+const CACHE_NAME = 'ruta-app-v7';
 
 const RECURSOS = [
 
@@ -192,6 +192,14 @@ self.addEventListener(
               );
 
 
+            if (respuesta.type === 'error' || respuesta.status === 0) {
+              throw new Error(
+                `Respuesta de red inválida: ${url.pathname}`
+              );
+            }
+
+
+
             if (respuesta.ok) {
 
               await cache.put(
@@ -244,6 +252,14 @@ self.addEventListener(
             await fetch(
               event.request
             );
+
+
+          if (respuesta.type === 'error' || respuesta.status === 0) {
+            throw new Error(
+              `Respuesta de red inválida: ${url.pathname}`
+            );
+          }
+
 
 
           if (respuesta.ok) {
