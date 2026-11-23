@@ -274,3 +274,148 @@ body {
     display: none;
   }
 }
+
+/* ---------- Tablas como tarjetas en teléfono ----------
+   Usada por el listado (.condo-tabla) y por las áreas del formulario
+   (.reg-tabla-areas). Cada fila se vuelve una tarjeta y cada celda muestra
+   su encabezado a la izquierda, tomado del atributo data-label. */
+
+@media (max-width: 640px) {
+  /* Los encabezados se ocultan a la vista pero los lectores de pantalla los siguen leyendo */
+  .condo-main .condo-tabla thead,
+  .condo-main .reg-tabla-areas thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .condo-main .condo-tabla,
+  .condo-main .condo-tabla tbody,
+  .condo-main .condo-tabla tr,
+  .condo-main .condo-tabla td,
+  .condo-main .reg-tabla-areas,
+  .condo-main .reg-tabla-areas tbody,
+  .condo-main .reg-tabla-areas tr,
+  .condo-main .reg-tabla-areas td {
+    display: block;
+    width: 100%;
+  }
+
+  .condo-main .condo-tabla tr,
+  .condo-main .reg-tabla-areas tr {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+
+  .condo-main .condo-tabla td,
+  .condo-main .reg-tabla-areas td {
+    padding: 0.35rem 0;
+    border: none;
+    text-align: right;
+  }
+
+  .condo-main .condo-tabla td::before,
+  .condo-main .reg-tabla-areas td::before {
+    content: attr(data-label);
+    float: left;
+    margin-right: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  /* Nombre como título de la tarjeta y acciones abajo, sin etiqueta */
+  .condo-main td.condo-nombre,
+  .condo-main td.reg-area-nombre {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .condo-main td.condo-acciones,
+  .condo-main td.reg-area-acciones {
+    margin-top: 0.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .condo-main td.condo-vacio {
+    text-align: center;
+  }
+
+  .condo-main td .condo-link:last-child {
+    margin-right: 0;
+  }
+
+  .condo-main .condo-tabla-wrap {
+    min-height: 0;
+    overflow-x: visible;
+  }
+}
+
+/* ---------- Ventana de confirmación (activar / desactivar) ---------- */
+
+.condo-dialogo {
+  width: min(420px, calc(100% - 2rem));
+  margin: auto;
+  padding: 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.condo-dialogo::backdrop {
+  background: rgb(15 23 42 / 0.5);
+}
+
+.condo-dialogo-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.condo-dialogo-texto {
+  margin: 0 0 1.5rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.condo-dialogo-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.condo-dialogo-cancelar {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-main);
+}
+
+.condo-dialogo-confirmar {
+  background: var(--condo-verde);
+  color: #fff;
+}
+
+.condo-dialogo-confirmar:hover {
+  background: var(--condo-verde-hover);
+}
+
+.condo-dialogo-peligro {
+  background: #dc2626;
+}
+
+.condo-dialogo-peligro:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .condo-dialogo-botones {
+    flex-direction: column-reverse;
+  }
+}
