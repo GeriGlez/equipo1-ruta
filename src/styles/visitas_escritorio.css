@@ -140,18 +140,11 @@
 
 .visitas-filters {
   display: grid;
-
   grid-template-columns:
-    minmax(330px, 2.6fr)
-    minmax(150px, 0.95fr)
-    minmax(140px, 0.85fr)
-    minmax(190px, 1.15fr)
-    minmax(145px, 0.8fr);
-
+    minmax(300px, 2fr)
+    repeat(3, minmax(150px, 1fr));
   gap: 1rem;
-
   align-items: end;
-
   margin-bottom: 2rem;
 }
 
@@ -295,39 +288,14 @@
    ANCHOS DE COLUMNAS
 ========================================================= */
 
-.visitas-table th:nth-child(1) {
-  width: 10%;
-}
-
-
-.visitas-table th:nth-child(2) {
-  width: 14%;
-}
-
-
-.visitas-table th:nth-child(3) {
-  width: 8%;
-}
-
-
-.visitas-table th:nth-child(4) {
-  width: 9%;
-}
-
-
-.visitas-table th:nth-child(5) {
-  width: 9%;
-}
-
-
-.visitas-table th:nth-child(6) {
-  width: 16%;
-}
-
-
-.visitas-table th:nth-child(7) {
-  width: 34%;
-}
+.visitas-table th:nth-child(1) { width: 9%; }
+.visitas-table th:nth-child(2) { width: 13%; }
+.visitas-table th:nth-child(3) { width: 9%; }
+.visitas-table th:nth-child(4) { width: 13%; }
+.visitas-table th:nth-child(5) { width: 10%; }
+.visitas-table th:nth-child(6) { width: 10%; }
+.visitas-table th:nth-child(7) { width: 14%; }
+.visitas-table th:nth-child(8) { width: 22%; }
 
 
 /* =========================================================

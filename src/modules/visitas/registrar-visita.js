@@ -6,6 +6,10 @@ import {
   actualizarVisitaLocal
 } from '../pendientes_sync/db-local.js';
 
+import {
+  getActiveSession
+} from '../auth/authService.js';
+
 
 // ============================================
 // ELEMENTOS DE LA PANTALLA
@@ -250,6 +254,12 @@ function actualizarLecturas(
 
 // Estado inicial
 actualizarLecturas(false);
+
+
+campoQuienRecibio.addEventListener('input', () => {
+  campoQuienRecibio.setCustomValidity('');
+});
+
 
 
 // ============================================
@@ -497,9 +507,7 @@ async function cargarContextoDesdeSupabase(
 // OBTENER CONTEXTO ONLINE / OFFLINE
 // ============================================
 
-async function cargarContextoOrden(
-  ordenId
-) {
+async function cargarContextoOrden(ordenId, tecnicoId) {
 
   // Primero intentamos obtener información
   // actualizada si hay conexión.
@@ -533,10 +541,10 @@ async function cargarContextoOrden(
 
   // Si no hay red o falló la consulta,
   // intentar utilizar la copia local.
-  const contextoLocal =
-    await obtenerContextoOrden(
-      ordenId
-    );
+  const contextoLocal = await obtenerContextoOrden(
+    ordenId,
+    tecnicoId
+  );
 
 
   if (contextoLocal) {
@@ -612,19 +620,7 @@ function aplicarContextoOrden(
   );
 
 
-  // Mostrar el técnico autenticado
-  // utilizando el encabezado existente.
-  const nombreUsuario =
-    document.querySelector(
-      '.m5-user strong'
-    );
 
-  if (nombreUsuario) {
-
-    nombreUsuario.textContent =
-      contexto.tecnico_nombre;
-
-  }
 
 
   botonGuardar.disabled = false;
@@ -763,10 +759,37 @@ async function inicializarPantalla() {
 
   try {
 
-    contextoOrdenActual =
-      await cargarContextoOrden(
-        ordenId
+    const sesion = await getActiveSession();
+
+    if (
+      sesion?.usuario?.rol !== 'tecnico' ||
+      !sesion.usuario.id
+    ) {
+      throw new Error('No hay una sesión técnica activa.');
+    }
+
+    const nombreUsuario = document.querySelector('.m5-user strong');
+
+    if (nombreUsuario) {
+      nombreUsuario.textContent =
+        sesion.usuario.nombre || 'Técnico';
+    }
+
+    const contexto = await cargarContextoOrden(ordenId, sesion.usuario.id);
+
+    const sesionVigente = await getActiveSession();
+
+    if (
+      sesionVigente?.usuario?.rol !== 'tecnico' ||
+      String(sesionVigente.usuario.id) !== String(sesion.usuario.id) ||
+      String(contexto.tecnico_id) !== String(sesion.usuario.id)
+    ) {
+      throw new Error(
+        'El contexto de esta orden no pertenece al técnico autenticado.'
       );
+    }
+
+    contextoOrdenActual = contexto;
 
     ocultarErrorContexto();
 
@@ -822,6 +845,15 @@ formulario.addEventListener(
       return;
 
     }
+
+      const receptor = campoQuienRecibio.value.trim();
+
+      campoQuienRecibio.setCustomValidity(
+        receptor
+          ? ''
+          : 'Escribe el nombre de quien recibió el servicio.'
+      );
+
 
 
     if (!formulario.reportValidity()) {
@@ -928,6 +960,18 @@ formulario.addEventListener(
 
       const estabaEditando = Boolean(visitaLocalActual);
 
+      const sesion = await getActiveSession();
+
+      if (
+        sesion?.usuario?.rol !== 'tecnico' ||
+        String(sesion.usuario.id) !==
+          String(contextoOrdenActual.tecnico_id)
+      ) {
+        throw new Error(
+          'La sesión actual no corresponde al técnico de la visita.'
+        );
+      }
+      
       let visita;
       if (visitaLocalActual) {
 

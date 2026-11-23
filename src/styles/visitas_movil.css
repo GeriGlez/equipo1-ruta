@@ -1626,14 +1626,16 @@
 
 /* INFORMACIÓN */
 
+
 .m5-log-order {
   margin: 0 0 0.2rem;
 
-  color: #000000;
+  color: #075f80;
 
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   font-weight: 800;
 }
+
 
 
 .m5-log-card-info p {
@@ -1723,4 +1725,75 @@
 
 .m5-log-empty[hidden] {
   display: none !important;
+}
+
+
+/* Verificación de identidad para sincronización */
+
+.m5-auth-dialog {
+  width: min(90%, 380px);
+  max-width: 380px;
+  padding: 1.5rem;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  color: #0d1b2a;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+
+.m5-auth-dialog::backdrop {
+  background: rgba(0, 0, 0, .55);
+}
+
+.m5-auth-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+
+.m5-auth-dialog h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #075f80;
+}
+
+.m5-auth-dialog p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.m5-auth-dialog label {
+  font-weight: 600;
+}
+
+.m5-auth-dialog input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: .8rem;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.m5-auth-dialog input:focus-visible {
+  outline: 2px solid #075f80;
+  outline-offset: 2px;
+}
+
+.m5-auth-dialog #auth-error {
+  color: #b91c1c;
+}
+
+.m5-auth-dialog #auth-error[hidden] {
+  display: none;
+}
+
+.m5-auth-actions {
+  display: flex;
+  gap: .75rem;
+}
+
+.m5-auth-actions button {
+  flex: 1;
+  min-height: 44px;
 }
