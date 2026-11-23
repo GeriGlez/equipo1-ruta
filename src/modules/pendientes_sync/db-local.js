@@ -1069,31 +1069,37 @@ export async function marcarVisitaComoEnviada(
 // GUARDAR CONTEXTO DE ORDEN
 // ==============================================
 
+
 export async function guardarContextoOrden(contextoOrden) {
+  const ordenId = Number(contextoOrden?.orden_id);
+  const tecnicoId = String(contextoOrden?.tecnico_id ?? '').trim();
+
+  if (!Number.isSafeInteger(ordenId) || ordenId <= 0 || !tecnicoId) {
+    throw new Error(
+      'El contexto necesita una orden y un técnico válidos.'
+    );
+  }
 
   const db = await abrirBD();
 
   return new Promise((resolve, reject) => {
-
     const transaction = db.transaction(
-      "ordenes_contexto",
-      "readwrite"
-    );
-
-    const store = transaction.objectStore(
-      "ordenes_contexto"
+      ['ordenes_contexto', 'ordenes_contexto_tecnico'],
+      'readwrite'
     );
 
     const contexto = {
       ...contextoOrden,
-
-      orden_id: Number(contextoOrden.orden_id),
-
-      actualizado_localmente_en:
-        new Date().toISOString()
+      orden_id: ordenId,
+      tecnico_id: tecnicoId,
+      actualizado_localmente_en: new Date().toISOString()
     };
 
-    store.put(contexto);
+    // Compatibilidad temporal con las funciones actuales.
+    transaction.objectStore('ordenes_contexto').put(contexto);
+
+    // Copia independiente por orden y técnico.
+    transaction.objectStore('ordenes_contexto_tecnico').put(contexto);
 
     transaction.oncomplete = () => {
       db.close();
@@ -1102,47 +1108,59 @@ export async function guardarContextoOrden(contextoOrden) {
 
     transaction.onerror = () => {
       db.close();
-      reject(transaction.error);
+      reject(
+        transaction.error ||
+        new Error('No se pudo guardar el contexto de la orden.')
+      );
     };
 
     transaction.onabort = () => {
       db.close();
-
       reject(
         transaction.error ||
-        new Error(
-          "No se pudo guardar el contexto de la orden"
-        )
+        new Error('Se canceló el almacenamiento del contexto.')
       );
     };
-
   });
-
 }
+
 
 
 // ==============================================
 // OBTENER CONTEXTO DE ORDEN
 // ==============================================
 
-export async function obtenerContextoOrden(ordenId) {
+export async function obtenerContextoOrden(ordenId, tecnicoId = null) {
+
+  const idOrden = Number(ordenId);
+  const porTecnico = tecnicoId !== null && tecnicoId !== undefined;
+  const idTecnico = porTecnico ? String(tecnicoId).trim() : null;
+
+  if (
+    !Number.isSafeInteger(idOrden) ||
+    idOrden <= 0 ||
+    (porTecnico && !idTecnico)
+  ) {
+    throw new Error('Orden o técnico no válido.');
+  }
+
+  const almacen = porTecnico
+    ? 'ordenes_contexto_tecnico'
+    : 'ordenes_contexto';
 
   const db = await abrirBD();
 
   return new Promise((resolve, reject) => {
 
-    const transaction = db.transaction(
-      "ordenes_contexto",
-      "readonly"
-    );
+  const transaction = db.transaction(almacen, 'readonly');
 
-    const store = transaction.objectStore(
-      "ordenes_contexto"
-    );
+  const store = transaction.objectStore(almacen);
 
-    const request = store.get(
-      Number(ordenId)
-    );
+  const request = store.get(
+    porTecnico
+      ? [idOrden, idTecnico]
+      : idOrden
+  );
 
     let contexto = null;
 

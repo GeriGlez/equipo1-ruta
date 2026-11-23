@@ -501,9 +501,7 @@ async function cargarContextoDesdeSupabase(
 // OBTENER CONTEXTO ONLINE / OFFLINE
 // ============================================
 
-async function cargarContextoOrden(
-  ordenId
-) {
+async function cargarContextoOrden(ordenId, tecnicoId) {
 
   // Primero intentamos obtener información
   // actualizada si hay conexión.
@@ -537,10 +535,10 @@ async function cargarContextoOrden(
 
   // Si no hay red o falló la consulta,
   // intentar utilizar la copia local.
-  const contextoLocal =
-    await obtenerContextoOrden(
-      ordenId
-    );
+  const contextoLocal = await obtenerContextoOrden(
+    ordenId,
+    tecnicoId
+  );
 
 
   if (contextoLocal) {
@@ -771,7 +769,7 @@ async function inicializarPantalla() {
         sesion.usuario.nombre || 'Técnico';
     }
 
-    const contexto = await cargarContextoOrden(ordenId);
+    const contexto = await cargarContextoOrden(ordenId, sesion.usuario.id);
 
     const sesionVigente = await getActiveSession();
 
