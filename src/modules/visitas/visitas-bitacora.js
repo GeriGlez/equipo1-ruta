@@ -208,9 +208,38 @@ async function renderizarVisitas(
       )
 
 
-    orden.textContent =
-      visita.orden_referencia ||
-      `Orden #${visita.orden_id}`
+    const etiquetaOrden = fragmento.querySelector(
+      '.m5-log-card-header strong'
+    );
+
+    const numeroOrden = Number(visita.orden_id);
+
+    etiquetaOrden.textContent =
+      Number.isSafeInteger(numeroOrden) && numeroOrden > 0
+        ? `Orden #${numeroOrden}`
+        : 'Orden sin número';
+
+
+
+    
+    const idServidor = Number(visita.visita_servidor_id);
+
+    const idHistorico = /^servidor:(\d+)$/.exec(
+      String(visita.id ?? '')
+    );
+
+    const numeroVisita =
+      Number.isSafeInteger(idServidor) && idServidor > 0
+        ? idServidor
+        : idHistorico &&
+            Number.isSafeInteger(Number(idHistorico[1]))
+          ? Number(idHistorico[1])
+          : null;
+
+    orden.textContent = numeroVisita !== null
+      ? `Visita #${numeroVisita}`
+      : 'Visita sin número asignado';
+
 
 
     condominio.textContent =

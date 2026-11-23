@@ -1626,14 +1626,16 @@
 
 /* INFORMACIÓN */
 
+
 .m5-log-order {
   margin: 0 0 0.2rem;
 
-  color: #000000;
+  color: #075f80;
 
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   font-weight: 800;
 }
+
 
 
 .m5-log-card-info p {
