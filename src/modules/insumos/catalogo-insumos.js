@@ -129,7 +129,11 @@ formulario.addEventListener('submit', async evento => {
   const editando = modo === 'editar';
 
   const nombre = campoNombre.value.trim();
-  const unidad = campoUnidad.value.trim();
+  // Al editar, la unidad es la que ya tiene el insumo (el campo está bloqueado).
+  const unidadOriginal = editando
+    ? catalogo.find(i => String(i.id) === String(id))?.unidad
+    : null;
+  const unidad = (unidadOriginal ?? campoUnidad.value).trim();
   const existencia = Number(campoExistencia.value);
 
   if (!nombre || !unidad) {

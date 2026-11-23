@@ -57,6 +57,9 @@
       errorAgregar.textContent = '';
       errorAgregar.hidden = true;
 
+      // La unidad solo se define al crear: al editar no se puede cambiar.
+      campoUnidad.disabled = modo === 'editar';
+
       if (modo === 'editar') {
         campoNombre.value = insumo.nombre ?? '';
         campoUnidad.value = insumo.unidad ?? '';
