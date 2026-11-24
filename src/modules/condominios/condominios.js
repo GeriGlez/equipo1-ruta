@@ -16,6 +16,7 @@ const textoMostrando = document.querySelector('#texto-mostrando')
 const contenedorPaginas = document.querySelector('#paginas')
 const mensaje = document.querySelector('#mensaje')
 const nombreUsuario = document.querySelector('#nombre-usuario')
+const dialogo = document.querySelector('#dialogo-estado')
 
 // Lo que el usuario tiene elegido en este momento
 const estado = {
@@ -52,10 +53,10 @@ function filaCondominio(c) {
   return `
     <tr>
       <td class="condo-nombre">${escapar(c.nombre)}</td>
-      <td>${colonia}<span class="condo-muted">${escapar(c.direccion)}</span></td>
-      <td class="condo-centro">${c.total_areas}</td>
-      <td>${contacto}</td>
-      <td>${etiquetaEstado}</td>
+      <td data-label="Colonia / Dir.">${colonia}<span class="condo-muted">${escapar(c.direccion)}</span></td>
+      <td data-label="Áreas" class="condo-centro">${c.total_areas}</td>
+      <td data-label="Contacto / Tel">${contacto}</td>
+      <td data-label="Estado">${etiquetaEstado}</td>
       <td class="condo-acciones">
         <a href="./registrar-condominio.html?id=${c.id}" class="condo-link">Editar</a>
         <button type="button" class="condo-link" data-id="${c.id}" data-activo="${c.activo}">
@@ -97,6 +98,36 @@ async function cargar() {
   }
 }
 
+// ---------- Ventana de confirmación ----------
+
+// Abre la ventana propia en lugar del confirm() del navegador.
+// Devuelve una promesa: true si el usuario confirma, false si cancela,
+// presiona Esc o hace clic fuera de la ventana.
+function confirmarCambioEstado(nombre, activar) {
+  dialogo.querySelector('#dialogo-titulo').textContent = activar
+    ? 'Activar condominio'
+    : 'Desactivar condominio'
+  dialogo.querySelector('#dialogo-texto').textContent = activar
+    ? `"${nombre}" volverá a aparecer en Activos y se le podrán programar servicios.`
+    : `"${nombre}" ya no se podrá usar para programar servicios. Sus áreas, órdenes e historial se conservan y puedes volver a activarlo cuando quieras.`
+
+  const botonConfirmar = dialogo.querySelector('#dialogo-confirmar')
+  botonConfirmar.textContent = activar ? 'Sí, activar' : 'Sí, desactivar'
+  botonConfirmar.classList.toggle('condo-dialogo-peligro', !activar)
+
+  dialogo.returnValue = ''
+  dialogo.showModal()
+
+  return new Promise((resolve) => {
+    dialogo.addEventListener('close', () => resolve(dialogo.returnValue === 'confirmar'), { once: true })
+  })
+}
+
+// Clic en el fondo oscuro (fuera de la ventana) = cancelar
+dialogo.addEventListener('click', (evento) => {
+  if (evento.target === dialogo) dialogo.close('')
+})
+
 // ---------- Eventos ----------
 
 // Espera a que el usuario deje de escribir 300 ms antes de buscar
@@ -135,10 +166,8 @@ cuerpoTabla.addEventListener('click', async (evento) => {
   if (!boton) return
 
   const activar = boton.dataset.activo !== 'true'
-  const pregunta = activar
-    ? '¿Activar este condominio? Podrá volver a programarse servicio.'
-    : '¿Desactivar este condominio? Ya no se podrán programar servicios, pero se conserva su historial.'
-  if (!confirm(pregunta)) return
+  const nombre = boton.closest('tr').querySelector('.condo-nombre').textContent
+  if (!await confirmarCambioEstado(nombre, activar)) return
 
   boton.disabled = true
   try {
