@@ -2,6 +2,12 @@ import {
   supabase
 } from './supabase.js'
 
+
+import {
+  obtenerSesionRemotaVerificada
+} from '../modules/auth/authService.js';
+
+
 import {
   reemplazarOrdenesContextoTecnico,
   obtenerOrdenesContextoTecnico
@@ -53,14 +59,52 @@ export async function sincronizarOrdenesTecnico(
   // SIN CONEXIÓN
   // ------------------------------------------
 
+  
+  // Conservar la precarga si no existe autorización remota.
+  const obtenerContextosLocales = () =>
+    obtenerOrdenesContextoTecnico(usuario.id, fecha);
+
   if (!navigator.onLine) {
-
-    return obtenerOrdenesContextoTecnico(
-      usuario.id,
-      fecha
-    )
-
+    return obtenerContextosLocales();
   }
+
+  let sesionRemota = null;
+
+  try {
+    sesionRemota = await obtenerSesionRemotaVerificada(
+      usuario.id
+    );
+  } catch (error) {
+    console.warn(
+      '[RUTA] No se pudo verificar la sesión para actualizar órdenes:',
+      error
+    );
+  }
+
+  if (!sesionRemota) {
+    return obtenerContextosLocales();
+  }
+
+  // Comprobar nuevamente la autenticación justo antes
+  // de reemplazar los datos de IndexedDB.
+  async function puedeActualizarContextos() {
+    try {
+      const vigente = await obtenerSesionRemotaVerificada(
+        usuario.id
+      );
+
+      return (
+        vigente?.user?.id === sesionRemota.user.id
+      );
+    } catch (error) {
+      console.warn(
+        '[RUTA] Se interrumpió la validación remota:',
+        error
+      );
+      return false;
+    }
+  }
+
 
 
   // ------------------------------------------
@@ -102,15 +146,24 @@ export async function sincronizarOrdenesTecnico(
   // Si hoy no tiene órdenes, también debemos
   // limpiar cualquier copia local anterior.
 
+  
   if (!ordenes.length) {
+    // Cero órdenes es válido únicamente con sesión confirmada.
+    if (!(await puedeActualizarContextos())) {
+      return obtenerContextosLocales();
+    }
+
+
+  
+
 
     return reemplazarOrdenesContextoTecnico(
       usuario.id,
       fecha,
       []
-    )
-
+    );
   }
+
 
 
   // ------------------------------------------
@@ -339,6 +392,10 @@ export async function sincronizarOrdenesTecnico(
       }
 
     })
+
+    if (!(await puedeActualizarContextos())) {
+    return obtenerContextosLocales();
+  }
 
 
   return reemplazarOrdenesContextoTecnico(

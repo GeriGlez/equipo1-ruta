@@ -5,17 +5,32 @@
 // =============================================================================
 
 import { supabase } from '../../services/supabase.js';
-import { getActiveSession } from '../auth/authService.js';
+
+import {
+  getActiveSession,
+  obtenerSesionRemotaVerificada
+} from '../auth/authService.js';
+
+
+
+
 import {
   guardarContextoOrden,
   obtenerContextoOrden,
-  obtenerVisitaPorOrden
+  obtenerVisitaPorOrden,
+  obtenerOrdenesContextoTecnico
 } from '../pendientes_sync/db-local.js';
+
+
 import {
   cargarCatalogosCompletos,
   consultarOrdenesServicio,
-  guardarCatalogoLocal
+  guardarCatalogoLocal,
+  obtenerCatalogoLocal
 } from './ordenes-db.js';
+
+
+
 import { mostrarNotasAcceso } from '../condominios/notas-acceso.js';
 
 const STORAGE_ESTADOS_TECNICO_KEY = 'ruta_estados_ordenes_tecnico_v1';
@@ -92,13 +107,25 @@ function formatearFolioOrden(id) {
   return `Orden ${num < 10 ? `0${num}` : num}`;
 }
 
-async function cargarCatalogosConNotas() {
-  const base = await cargarCatalogosCompletos();
+
+async function cargarCatalogosConNotas(permitirRemoto = false) {
+  const base = permitirRemoto
+    ? await cargarCatalogosCompletos()
+    : await (async () => {
+        const [condominios, areas, servicios] = await Promise.all([
+          obtenerCatalogoLocal('condominios'),
+          obtenerCatalogoLocal('areas'),
+          obtenerCatalogoLocal('servicios')
+        ]);
+
+        return { condominios, areas, servicios };
+      })();
+
   let condominios = base.condominios || [];
   const areas = base.areas || [];
   const servicios = base.servicios || [];
 
-  if (navigator.onLine) {
+  if (permitirRemoto && navigator.onLine) {
     try {
       const { data, error } = await supabase
         .from('condominios')
@@ -109,15 +136,27 @@ async function cargarCatalogosConNotas() {
         condominios = data;
         await guardarCatalogoLocal('condominios', condominios);
       }
-    } catch (err) {
-      console.warn('[Órdenes Técnico] Usando condominios en caché local:', err);
+    } catch (error) {
+      console.warn(
+        '[Órdenes Técnico] Usando condominios locales:',
+        error
+      );
     }
   }
 
-  mapaCondominios = new Map(condominios.map(c => [Number(c.id), c]));
-  mapaAreas = new Map(areas.map(a => [Number(a.id), a]));
-  mapaServicios = new Map(servicios.map(s => [Number(s.id), s]));
+  mapaCondominios = new Map(
+    condominios.map(c => [Number(c.id), c])
+  );
+
+  mapaAreas = new Map(
+    areas.map(a => [Number(a.id), a])
+  );
+
+  mapaServicios = new Map(
+    servicios.map(s => [Number(s.id), s])
+  );
 }
+
 
 async function guardarContextoDeOrdenIndividual(orden) {
   if (!usuarioActual || !orden?.id) return;
@@ -172,40 +211,128 @@ async function sincronizarContextosParaVisitas(ordenesLista) {
 }
 
 async function cargarDatosYRenderizar() {
+  
   try {
-    await cargarCatalogosConNotas();
-    const resultado = await consultarOrdenesServicio();
-    const estadosLocales = obtenerEstadosLocalesTecnico();
-    const hoy = obtenerFechaLocalISO();
-
-    // Obtener las cuadrillas del técnico (y respaldarlas localmente para modo offline)
-    const claveCuadrillas = `ruta_cuadrillas_tec_${usuarioActual?.id || 'anon'}`;
-    let misCuadrillas = JSON.parse(localStorage.getItem(claveCuadrillas) || '[]');
-
-    if (navigator.onLine && usuarioActual?.id) {
-      const [{ data: comoMiembro }, { data: comoResp }] = await Promise.all([
-        supabase.from('cuadrilla_usuario').select('cuadrilla_id').eq('usuario_id', usuarioActual.id),
-        supabase.from('cuadrillas').select('id').eq('responsable_id', usuarioActual.id)
-      ]);
-      misCuadrillas = [
-        ...new Set([
-          ...(comoMiembro || []).map(m => Number(m.cuadrilla_id)),
-          ...(comoResp || []).map(c => Number(c.id))
-        ])
-      ];
-      localStorage.setItem(claveCuadrillas, JSON.stringify(misCuadrillas));
+    if (!usuarioActual?.id) {
+      throw new Error('No hay un técnico activo.');
     }
 
-    // Mostrar solo las órdenes activas del día asignadas a la cuadrilla del técnico
-    const activas = (resultado.ordenes || []).filter(
-      o =>
-        o.activo !== false &&
-        o.estado !== 'cancelada' &&
-        o.operacion_pendiente !== 'eliminar' &&
-        o.fecha_programada === hoy &&
-        o.cuadrilla_id !== null &&
-        misCuadrillas.includes(Number(o.cuadrilla_id))
+    let sesionRemota = null;
+
+    if (navigator.onLine) {
+      try {
+        sesionRemota = await obtenerSesionRemotaVerificada(
+          usuarioActual.id
+        );
+      } catch (error) {
+        console.warn(
+          '[Órdenes Técnico] Autenticación remota no disponible:',
+          error
+        );
+      }
+    }
+
+    const permitirRemoto = Boolean(
+      navigator.onLine && sesionRemota
     );
+
+    await cargarCatalogosConNotas(permitirRemoto);
+
+    const hoy = obtenerFechaLocalISO();
+    const estadosLocales = obtenerEstadosLocalesTecnico();
+
+    const resultado = permitirRemoto
+      ? await consultarOrdenesServicio()
+      : { ordenes: [], fuente: 'offline' };
+
+
+    const usarPrecargaOffline = resultado.fuente === 'offline';
+
+    let ordenesDisponibles = resultado.ordenes || [];
+    let misCuadrillas = [];
+
+    if (usarPrecargaOffline) {
+      // Contextos descargados previamente para este técnico y fecha.
+      const contextos = await obtenerOrdenesContextoTecnico(
+        usuarioActual.id,
+        hoy
+      );
+
+      ordenesDisponibles = contextos
+        .filter(contexto =>
+          String(contexto.tecnico_id) === String(usuarioActual.id) &&
+          contexto.fecha_programada === hoy &&
+          Number.isSafeInteger(Number(contexto.orden_id)) &&
+          Number(contexto.orden_id) > 0
+        )
+        .map(contexto => ({
+          id: Number(contexto.orden_id),
+          clave_local: `srv:${Number(contexto.orden_id)}`,
+          condominio_id: contexto.condominio?.id,
+          area_id: contexto.area?.id,
+          servicio_id: contexto.servicio?.id,
+          cuadrilla_id: contexto.cuadrilla_id,
+          fecha_programada: contexto.fecha_programada,
+          estado: contexto.estado,
+          activo: true,
+          operacion_pendiente: null
+        }));
+
+    } else {
+      // Con conexión, conservar el filtrado de cuadrillas existente.
+      const claveCuadrillas =
+        `ruta_cuadrillas_tec_${usuarioActual.id}`;
+
+      misCuadrillas = JSON.parse(
+        localStorage.getItem(claveCuadrillas) || '[]'
+      );
+
+      if (navigator.onLine) {
+        const [
+          { data: comoMiembro, error: errorMiembro },
+          { data: comoResp, error: errorResp }
+        ] = await Promise.all([
+          supabase
+            .from('cuadrilla_usuario')
+            .select('cuadrilla_id')
+            .eq('usuario_id', usuarioActual.id),
+
+          supabase
+            .from('cuadrillas')
+            .select('id')
+            .eq('responsable_id', usuarioActual.id)
+        ]);
+
+        if (!errorMiembro && !errorResp) {
+          misCuadrillas = [
+            ...new Set([
+              ...(comoMiembro || []).map(m => Number(m.cuadrilla_id)),
+              ...(comoResp || []).map(c => Number(c.id))
+            ])
+          ];
+
+          localStorage.setItem(
+            claveCuadrillas,
+            JSON.stringify(misCuadrillas)
+          );
+        }
+      }
+    }
+
+    // Offline: la precarga ya fue limitada por RLS en Supabase.
+    // Online: mantener el filtro explícito de cuadrillas.
+    const activas = ordenesDisponibles.filter(o =>
+      o.activo !== false &&
+      o.estado !== 'cancelada' &&
+      o.operacion_pendiente !== 'eliminar' &&
+      o.fecha_programada === hoy &&
+      o.cuadrilla_id != null &&
+      (
+        usarPrecargaOffline ||
+        misCuadrillas.includes(Number(o.cuadrilla_id))
+      )
+    );
+
 
     // Sincronizar el estado con las visitas locales o el progreso iniciado por el técnico
     for (const orden of activas) {
