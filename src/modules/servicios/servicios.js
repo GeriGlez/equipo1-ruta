@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const nombreUser = document.querySelector('.visitas-user-info strong');
+    const nombreUser = document.querySelector('#nombre-admin');
     if (nombreUser && sesion.usuario.nombre) {
       nombreUser.textContent = sesion.usuario.nombre;
     }
