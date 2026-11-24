@@ -4,6 +4,10 @@ import { renderLogin } from './modules/auth/loginView.js'
 import {   renderAdminApp } from './adminapp.js'
 import {  renderTecnicoApp} from './tecnicoapp.js'
 
+import {
+  precargarBitacoraTecnico
+} from './services/precarga-bitacora.js';
+
 const app = document.querySelector('#app')
 
 // ============================================
@@ -103,6 +107,15 @@ if (
     }
   )
 
+  if (navigator.onLine && !session.isOffline) {
+    precargarBitacoraTecnico(session).catch(error => {
+      console.warn(
+        '[RUTA] No se pudo completar la precarga offline:',
+        error
+      );
+    });
+  }
+
   return
 }
 
@@ -115,4 +128,21 @@ if (
 // iniciar
 showApp()
 
+window.addEventListener('online', async () => {
+  try {
+    const sesion = await getActiveSession();
+
+    if (
+      sesion?.usuario?.rol === 'tecnico' &&
+      !sesion.isOffline
+    ) {
+      await precargarBitacoraTecnico(sesion);
+    }
+  } catch (error) {
+    console.warn(
+      '[RUTA] No fue posible actualizar los datos al reconectar:',
+      error
+    );
+  }
+});
 

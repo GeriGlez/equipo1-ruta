@@ -4,7 +4,7 @@
 // HU-08
 // ============================================
 
-const CACHE_NAME = 'ruta-app-v5';
+const CACHE_NAME = 'ruta-app-v7';
 
 const RECURSOS = [
 
@@ -24,6 +24,7 @@ const RECURSOS = [
   '/src/services/supabase.js',
 
   '/src/services/ordenes-tecnico.js',
+  '/src/services/precarga-bitacora.js',
 
   // IndexedDB
   '/src/modules/pendientes_sync/db-local.js',
@@ -192,6 +193,14 @@ self.addEventListener(
               );
 
 
+            if (respuesta.type === 'error' || respuesta.status === 0) {
+              throw new Error(
+                `Respuesta de red inválida: ${url.pathname}`
+              );
+            }
+
+
+
             if (respuesta.ok) {
 
               await cache.put(
@@ -206,10 +215,16 @@ self.addEventListener(
 
           } catch (error) {
 
-            const guardada =
-              await cache.match(
-                event.request
-              );
+            
+          const guardada =
+            (await cache.match(event.request)) ||
+            (RECURSOS.includes(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
+              : undefined);
+
 
 
             if (guardada) {
@@ -245,6 +260,14 @@ self.addEventListener(
             );
 
 
+          if (respuesta.type === 'error' || respuesta.status === 0) {
+            throw new Error(
+              `Respuesta de red inválida: ${url.pathname}`
+            );
+          }
+
+
+
           if (respuesta.ok) {
 
             await cache.put(
@@ -259,10 +282,15 @@ self.addEventListener(
 
         } catch (error) {
 
+          
           const guardada =
-            await cache.match(
-              event.request
-            );
+            (await cache.match(event.request)) ||
+            (RECURSOS.includes(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
+              : undefined);
 
 
           return (

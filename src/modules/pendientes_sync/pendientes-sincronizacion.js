@@ -5,9 +5,13 @@ import {
     marcarIncidenciaComoEnviada   
   } from './db-local.js';
 
+
 import {
-    getActiveSession
-  } from '../auth/authService.js';
+  getActiveSession,
+  obtenerSesionRemotaVerificada,
+  login
+} from '../auth/authService.js';
+
 
   const contador = document.querySelector('#pending-count');
   const mensaje = document.querySelector('#pending-message');
@@ -34,11 +38,138 @@ import {
 
   let cantidadPendientes = 0;
   let tecnicoActualId = null;
+  let sesionRemotaDisponible = false;
+  let authUidActual = null;
+
+
+const dialogoAuth = document.querySelector('#auth-dialog');
+const formularioAuth = document.querySelector('#auth-form');
+const inputPassword = document.querySelector('#auth-password');
+const errorAuth = document.querySelector('#auth-error');
+const botonConfirmarAuth = document.querySelector('#auth-confirm');
+const botonCancelarAuth = document.querySelector('#auth-cancel');
+
+let verificacionCancelada = false;
+let verificandoIdentidad = false;
+
+function mostrarVerificacion(forzar = false) {
+  if (
+    !navigator.onLine ||
+    tecnicoActualId === null ||
+    !authUidActual ||
+    sesionRemotaDisponible ||
+    verificandoIdentidad ||
+    dialogoAuth.open ||
+    (!forzar && (verificacionCancelada || cantidadPendientes === 0))
+  ) {
+    return;
+  }
+
+  inputPassword.value = '';
+  errorAuth.hidden = true;
+  errorAuth.textContent = '';
+  dialogoAuth.showModal();
+  inputPassword.focus();
+}
+
+botonCancelarAuth.addEventListener('click', () => {
+  dialogoAuth.close();
+});
+
+dialogoAuth.addEventListener('cancel', evento => {
+  if (verificandoIdentidad) evento.preventDefault();
+});
+
+dialogoAuth.addEventListener('close', () => {
+  inputPassword.value = '';
+
+  if (!sesionRemotaDisponible) {
+    verificacionCancelada = true;
+  }
+});
+
+formularioAuth.addEventListener('submit', async evento => {
+  evento.preventDefault();
+
+  if (verificandoIdentidad) return;
+
+  const uidEsperado = authUidActual;
+  const tecnicoEsperado = String(tecnicoActualId);
+  const password = inputPassword.value;
+
+  verificandoIdentidad = true;
+  botonConfirmarAuth.disabled = true;
+  botonCancelarAuth.disabled = true;
+  errorAuth.hidden = true;
+  actualizarEstadoConexion();
+
+  try {
+    if (!navigator.onLine) {
+      throw new Error('Sin conexión');
+    }
+
+    const sesionActual = await getActiveSession();
+
+    if (
+      sesionActual?.usuario?.rol !== 'tecnico' ||
+      sesionActual?.user?.id !== uidEsperado ||
+      String(sesionActual?.usuario?.id) !== tecnicoEsperado
+    ) {
+      throw new Error('La sesión del técnico cambió.');
+    }
+
+    const resultado = await login(
+      sesionActual.usuario.correo,
+      password
+    );
+
+    if (
+      resultado?.isOffline !== false ||
+      resultado?.user?.id !== uidEsperado ||
+      String(resultado?.usuario?.id) !== tecnicoEsperado
+    ) {
+      throw new Error('No se confirmó la identidad remota.');
+    }
+
+    const verificada =
+      await obtenerSesionRemotaVerificada(tecnicoEsperado);
+
+    if (
+      !verificada ||
+      verificada.user.id !== uidEsperado
+    ) {
+      throw new Error('La sesión remota no está disponible.');
+    }
+
+    sesionRemotaDisponible = true;
+    verificacionCancelada = false;
+    dialogoAuth.close();
+
+  } catch (error) {
+    console.warn('[RUTA] Verificación no completada:', error);
+
+    errorAuth.textContent =
+      String(error?.message).includes('Invalid login credentials')
+        ? 'Contraseña incorrecta. Intenta nuevamente.'
+        : 'No fue posible verificar tu identidad. Revisa tu conexión y sesión.';
+
+    errorAuth.hidden = false;
+    inputPassword.focus();
+
+  } finally {
+    inputPassword.value = '';
+    verificandoIdentidad = false;
+    botonConfirmarAuth.disabled = false;
+    botonCancelarAuth.disabled = false;
+    actualizarEstadoConexion();
+  }
+});
+
 
   async function cargarPendientes() {
   try {
     const visitas = await obtenerVisitasPendientes(tecnicoActualId);
-    const incidencias = await obtenerIncidenciasPendientes();
+    const incidencias = await obtenerIncidenciasPendientes(authUidActual);
 
     let consumosPendientes = [];
     try {
@@ -66,77 +197,148 @@ import {
 
     lista.replaceChildren();
     errorMensaje.hidden = true;
-
+    
     // Generar tarjetas dinámicamente
     listaPendientes.forEach(item => {
       const tarjeta = document.createElement('article');
       tarjeta.className = 'm5-pending-card';
 
+      // Insertar datos como texto, nunca como HTML.
+      const ponerTexto = (selector, valor) => {
+        tarjeta.querySelector(selector).textContent = valor;
+      };
+
       if (item.tipo_registro === 'visita') {
-        // --- TARJETA DE VISITAS (Original de tu compañero) ---
         const fecha = new Date(item.creado_localmente_en);
         const fechaValida = !Number.isNaN(fecha.getTime());
 
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main">
-            <div class="m5-pending-card-icon"><img src="/hoja-de-calculo.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/hoja-de-calculo.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Visita</strong> <span class="m5-pending-badge">Pendiente</span>
+                <strong>Visita</strong>
+                <span class="m5-pending-badge">Pendiente</span>
               </div>
-              <h3 class="m5-pending-order">${item.orden_referencia || 'Orden sin referencia'}</h3>
-              <p class="m5-pending-area">${nombresAreas[item.area_tipo] || item.area_tipo || 'Área no especificada'}</p>
+              <h3 class="m5-pending-order"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
           <div class="m5-pending-card-footer">
-            <span class="m5-pending-date">${fechaValida ? `Registrada: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
-            <span class="m5-pending-hours">${item.hora_entrada}\n${item.hora_salida}</span>
+            <span class="m5-pending-date"></span>
+            <span class="m5-pending-hours"></span>
           </div>
         `;
-      } 
+
+        ponerTexto(
+          '.m5-pending-order',
+          item.orden_referencia || 'Orden sin referencia'
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          nombresAreas[item.area_tipo] ||
+          item.area_tipo ||
+          'Área no especificada'
+        );
+
+        ponerTexto(
+          '.m5-pending-date',
+          fechaValida
+            ? `Registrada: ${fecha.toLocaleDateString('es-MX')}`
+            : 'Fecha no disponible'
+        );
+
+        ponerTexto(
+          '.m5-pending-hours',
+          `${item.hora_entrada}\n${item.hora_salida}`
+        );
+      }
+
       else if (item.tipo_registro === 'incidencia') {
-        // --- TARJETA DE INCIDENCIAS (Tuya, con borde rojo) ---
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main" style="border-left: 4px solid #f44336;">
-            <div class="m5-pending-card-icon"><img src="/advertencia.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/advertencia.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Incidencia</strong> <span class="m5-pending-badge" style="background:#f44336; color:white;">Pendiente</span>
+                <strong>Incidencia</strong>
+                <span class="m5-pending-badge" style="background:#f44336; color:white;">
+                  Pendiente
+                </span>
               </div>
-              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                ${item.descripcion || 'Sin descripción'}
-              </h3>
-              <p class="m5-pending-area">Visita #${item.visita_id}</p>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
         `;
+
+        ponerTexto(
+          '.m5-pending-order',
+          item.descripcion || 'Sin descripción'
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          `Visita #${item.visita_id}`
+        );
       }
+
       else if (item.tipo_registro === 'consumo_insumo') {
         const fecha = new Date(item.creado_localmente_en);
         const fechaValida = !Number.isNaN(fecha.getTime());
 
         tarjeta.innerHTML = `
           <div class="m5-pending-card-main" style="border-left: 4px solid #2196f3;">
-            <div class="m5-pending-card-icon"><img src="/caja.png" alt=""></div>
+            <div class="m5-pending-card-icon">
+              <img src="/caja.png" alt="">
+            </div>
             <div class="m5-pending-card-info">
               <div class="m5-pending-card-header">
-                <strong>Insumo</strong> <span class="m5-pending-badge" style="background:#2196f3; color:white;">Pendiente</span>
+                <strong>Insumo</strong>
+                <span class="m5-pending-badge" style="background:#2196f3; color:white;">
+                  Pendiente
+                </span>
               </div>
-              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                ${item.insumo_nombre || 'Insumo'} (${item.cantidad} ${item.unidad || ''})
-              </h3>
-              <p class="m5-pending-area">${item.orden_referencia || 'Visita local'}</p>
+              <h3 class="m5-pending-order" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></h3>
+              <p class="m5-pending-area"></p>
             </div>
           </div>
           <div class="m5-pending-card-footer">
-            <span class="m5-pending-date">${fechaValida ? `Registrado: ${fecha.toLocaleDateString('es-MX')}` : 'Fecha no disponible'}</span>
-            <span class="m5-pending-hours">Cant: ${item.cantidad} ${item.unidad || ''}</span>
+            <span class="m5-pending-date"></span>
+            <span class="m5-pending-hours"></span>
           </div>
         `;
+
+        ponerTexto(
+          '.m5-pending-order',
+          `${item.insumo_nombre || 'Insumo'} (${item.cantidad} ${item.unidad || ''})`
+        );
+
+        ponerTexto(
+          '.m5-pending-area',
+          item.orden_referencia || 'Visita local'
+        );
+
+        ponerTexto(
+          '.m5-pending-date',
+          fechaValida
+            ? `Registrado: ${fecha.toLocaleDateString('es-MX')}`
+            : 'Fecha no disponible'
+        );
+
+        ponerTexto(
+          '.m5-pending-hours',
+          `Cant: ${item.cantidad} ${item.unidad || ''}`
+        );
       }
 
       lista.appendChild(tarjeta);
     });
+
 
     console.log('Registros pendientes cargados:', cantidadPendientes);
     actualizarEstadoConexion();
@@ -175,11 +377,56 @@ import {
     ${enLinea ? 'Con conexión' : 'Sin conexión'}
   `;
 
+    
   botonSincronizar.disabled =
     !enLinea ||
     tecnicoActualId === null ||
-    cantidadPendientes === 0;
+    cantidadPendientes === 0 ||
+    verificandoIdentidad;
+
+  const textoSincronizar =
+    botonSincronizar.querySelector('span:last-child');
+
+  if (textoSincronizar && textoSincronizar.textContent !== 'Sincronizando...') {
+    textoSincronizar.textContent =
+      enLinea && cantidadPendientes > 0 && !sesionRemotaDisponible
+        ? 'Verificar para sincronizar'
+        : 'Sincronizar pendientes';
   }
+  }
+
+
+  
+async function revisarAutenticacionRemota() {
+  sesionRemotaDisponible = false;
+  actualizarEstadoConexion();
+
+  if (!navigator.onLine || tecnicoActualId === null) {
+    return;
+  }
+
+  try {
+    const sesion = await obtenerSesionRemotaVerificada(
+      tecnicoActualId
+    );
+
+    sesionRemotaDisponible =
+      Boolean(sesion && sesion.user.id === authUidActual);
+
+  } catch (error) {
+    console.warn(
+      '[RUTA] No hay autenticación remota disponible:',
+      error
+    );
+  } finally {
+    actualizarEstadoConexion();
+
+    if (!sesionRemotaDisponible) {
+      mostrarVerificacion();
+    }
+  }
+}
+
 
   // ==============================================
   // SUPABASE - CARGA SOLO AL SINCRONIZAR
@@ -462,28 +709,74 @@ import {
 
   }
 
-async function sincronizarIncidencia(supabase, incidencia) {
-  // Nos aseguramos de incluir reportada_por explícitamente si viniera separada, 
-  // o dejamos que el objeto la mande completa si ya la trae dentro.
+
+async function sincronizarIncidencia(supabase, incidencia, authUid) {
+  const idLocal = incidencia.id_local || incidencia.id;
+
+  if (!esUUID(idLocal)) {
+    throw new Error('La incidencia no tiene un UUID local válido.');
+  }
+
+  
+  if (
+    !authUid ||
+    String(incidencia.reportada_por) !== String(authUid)
+  ) {
+    throw new Error(
+      'La incidencia no corresponde al usuario autenticado.'
+    );
+  }
+
+
   const datosServidor = {
+    id_local: idLocal,
     condominio_id: incidencia.condominio_id,
     area_id: incidencia.area_id,
     visita_id: incidencia.visita_id,
     descripcion: incidencia.descripcion,
     prioridad: incidencia.prioridad,
-    reportada_por: incidencia.reportada_por || tecnicoActualId // <--- ¡Vital para superar la política RLS!
+    reportada_por: incidencia.reportada_por
   };
 
   const { data, error } = await supabase
     .from('incidencias')
-    .insert([datosServidor])
+    .insert(datosServidor)
     .select('id')
     .single();
 
-  if (error) throw error;
+  let idServidor;
 
-  await marcarIncidenciaComoEnviada(incidencia.id, data.id);
-  return { id: data.id };
+  if (!error) {
+    idServidor = data.id;
+  } else if (error.code === '23505') {
+    // El servidor podría haber recibido un intento anterior.
+    const { data: existente, error: errorConsulta } =
+      await supabase
+        .from('incidencias')
+        .select('id')
+        .eq('id_local', idLocal)
+        .eq('reportada_por', incidencia.reportada_por)
+        .maybeSingle();
+
+    if (errorConsulta || !existente) {
+      throw errorConsulta || new Error(
+        'No se pudo confirmar la incidencia previamente enviada.'
+      );
+    }
+
+    idServidor = existente.id;
+  } else {
+    throw error;
+  }
+
+  // Confirmar localmente solo después de obtener
+  // un identificador válido del servidor.
+  await marcarIncidenciaComoEnviada(
+    incidencia.id,
+    idServidor
+  );
+
+  return { id: idServidor };
 }
 
 async function sincronizarPendientes() {
@@ -491,6 +784,13 @@ async function sincronizarPendientes() {
     actualizarEstadoConexion();
     return;
   }
+
+
+if (!sesionRemotaDisponible) {
+  mostrarVerificacion(true);
+  return;
+}
+
 
   botonSincronizar.disabled = true;
 
@@ -505,34 +805,24 @@ async function sincronizarPendientes() {
       throw new Error('No hay una sesión técnica activa.');
     }
 
-    const sesion = await getActiveSession();
+    const sesion = await obtenerSesionRemotaVerificada(
+      tecnicoActualId
+    );
 
-    const sesionValida =
-      sesion?.usuario?.rol === 'tecnico' &&
-      String(sesion.usuario.id) === String(tecnicoActualId) &&
-      Boolean(sesion.user?.id);
-
-    if (!sesionValida) {
-      tecnicoActualId = null;
-      cantidadPendientes = 0;
-      lista.replaceChildren();
-      throw new Error('La sesión del técnico cambió o dejó de estar disponible.');
+    
+    if (!sesion) {
+      sesionRemotaDisponible = false;
+      mostrarVerificacion(true);
+      return;
     }
+
 
     const supabase = await obtenerClienteSupabase();
 
-    const { data: datosAuth, error: errorAuth } = await supabase.auth.getUser();
-
-    if (errorAuth || !datosAuth?.user || datosAuth.user.id !== sesion.user.id) {
-      tecnicoActualId = null;
-      cantidadPendientes = 0;
-      lista.replaceChildren();
-      throw new Error('No se pudo confirmar la identidad en Supabase.');
-    }
 
     // --- AQUÍ INICIA LA UNIFICACIÓN ---
     const visitasLocales = await obtenerVisitasPendientes(tecnicoActualId);
-    const incidenciasLocales = await obtenerIncidenciasPendientes();
+    const incidenciasLocales = await obtenerIncidenciasPendientes(sesion.user.id);
 
     let consumosLocales = [];
     try {
@@ -556,7 +846,7 @@ async function sincronizarPendientes() {
       if (item.tipo_registro === 'visita') {
         await sincronizarVisita(supabase, item);
       } else if (item.tipo_registro === 'incidencia') {
-        await sincronizarIncidencia(supabase, item);
+        await sincronizarIncidencia(supabase, item, sesion.user.id);
       }
     }
 
@@ -592,13 +882,13 @@ async function sincronizarPendientes() {
 
   window.addEventListener(
     'online',
-    actualizarEstadoConexion
+    revisarAutenticacionRemota
   );
 
-  window.addEventListener(
-    'offline',
-    actualizarEstadoConexion
-  );
+  window.addEventListener('offline', () => {
+    sesionRemotaDisponible = false;
+    actualizarEstadoConexion();
+  });
 
   botonSincronizar.addEventListener(
     'click',
@@ -631,6 +921,7 @@ async function inicializarPendientes() {
 
     if (
       sesion?.usuario?.rol !== 'tecnico' ||
+      !sesion?.user?.id ||
       sesion.usuario.id === null ||
       sesion.usuario.id === undefined
     ) {
@@ -639,6 +930,8 @@ async function inicializarPendientes() {
     }
 
     tecnicoActualId = sesion.usuario.id;
+
+    authUidActual = sesion.user.id;
 
     // Mostrar el nombre del técnico autenticado.
     const nombreTecnico = document.querySelector(
@@ -653,14 +946,20 @@ async function inicializarPendientes() {
 
     await cargarPendientes();
 
+    await revisarAutenticacionRemota();
+
   } catch (error) {
     console.error(
       '[RUTA] No fue posible validar la sesión:',
       error
     );
 
+    
     tecnicoActualId = null;
+    authUidActual = null;
+    sesionRemotaDisponible = false;
     cantidadPendientes = 0;
+
 
     lista.replaceChildren();
 

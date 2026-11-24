@@ -26,10 +26,10 @@ const filtroTipoArea =
     '#tipo-area'
   );
 
-const filtroEstado =
-  document.querySelector(
-    '#estado'
-  );
+// const filtroEstado =
+//   document.querySelector(
+//     '#estado'
+//   );
 
 const filtroCondominio =
   document.querySelector(
@@ -253,7 +253,7 @@ function mostrarMensajeTabla(
     );
 
 
-  celda.colSpan = 7;
+  celda.colSpan = 8;
   celda.textContent =
     mensaje;
 
@@ -543,44 +543,44 @@ async function cargarVisitas() {
 
 function cargarOpcionesFiltros() {
 
-  const estados =
-    [
-      ...new Set(
-        visitasCargadas
-          .map(
-            visita =>
-              visita.orden_estado
-          )
-          .filter(Boolean)
-      )
-    ].sort();
+  // const estados =
+  //   [
+  //     ...new Set(
+  //       visitasCargadas
+  //         .map(
+  //           visita =>
+  //             visita.orden_estado
+  //         )
+  //         .filter(Boolean)
+  //     )
+  //   ].sort();
 
 
-  filtroEstado.innerHTML =
-    '<option value="">Todos</option>';
+  // filtroEstado.innerHTML =
+  //   '<option value="">Todos</option>';
 
 
-  for (
-    const estado
-    of estados
-  ) {
+  // for (
+  //   const estado
+  //   of estados
+  // ) {
 
-    const option =
-      document.createElement(
-        'option'
-      );
+  //   const option =
+  //     document.createElement(
+  //       'option'
+  //     );
 
-    option.value =
-      estado;
+  //   option.value =
+  //     estado;
 
-    option.textContent =
-      estado;
+  //   option.textContent =
+  //     estado;
 
-    filtroEstado.appendChild(
-      option
-    );
+  //   filtroEstado.appendChild(
+  //     option
+  //   );
 
-  }
+  // }
 
 
   const condominios =
@@ -643,8 +643,8 @@ function aplicarFiltros() {
   const tipoArea =
     filtroTipoArea.value;
 
-  const estado =
-    filtroEstado.value;
+  // const estado =
+  //   filtroEstado.value;
 
   const condominio =
     filtroCondominio.value;
@@ -684,10 +684,10 @@ function aplicarFiltros() {
             tipoArea;
 
 
-        const coincideEstado =
-          !estado ||
-          visita.orden_estado ===
-            estado;
+        // const coincideEstado =
+        //   !estado ||
+        //   visita.orden_estado ===
+        //     estado;
 
 
         const coincideCondominio =
@@ -709,7 +709,7 @@ function aplicarFiltros() {
         return (
           coincideBusqueda &&
           coincideTipo &&
-          coincideEstado &&
+          // coincideEstado &&
           coincideCondominio &&
           coincideFecha
         );
@@ -800,6 +800,10 @@ function renderizarVisitas(
       document.createElement(
         'td'
       );
+
+      const celdaServicio = document.createElement('td');
+
+      celdaServicio.textContent = visita.servicio_nombre || 'Servicio no disponible';
 
     celdaArea.textContent =
       visita.area_nombre;
@@ -901,15 +905,18 @@ function renderizarVisitas(
     }
 
 
+
     fila.append(
       celdaVisita,
       celdaCondominio,
       celdaArea,
+      celdaServicio,
       celdaTecnico,
       celdaHorario,
       celdaActualizacion,
       celdaObservaciones
     );
+
 
 
     cuerpoTabla.appendChild(
@@ -928,7 +935,7 @@ function renderizarVisitas(
 [
   buscador,
   filtroTipoArea,
-  filtroEstado,
+  // filtroEstado,
   filtroCondominio,
   filtroFecha
 ].forEach(

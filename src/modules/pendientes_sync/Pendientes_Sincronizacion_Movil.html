@@ -269,6 +269,47 @@
 
   </div>
 
+
+<dialog
+  id="auth-dialog"
+  class="m5-auth-dialog"
+  aria-labelledby="auth-dialog-title"
+  aria-describedby="auth-dialog-description"
+>
+  <form id="auth-form">
+    <h2 id="auth-dialog-title">
+      Verificación requerida
+    </h2>
+
+    <p id="auth-dialog-description">
+      Para sincronizar tus registros necesitamos confirmar tu identidad.
+    </p>
+
+    <label for="auth-password">
+      Ingrese su contraseña por favor
+    </label>
+
+    <input
+      id="auth-password"
+      type="password"
+      autocomplete="current-password"
+      required
+    >
+
+    <p id="auth-error" role="alert" hidden></p>
+
+    <div class="m5-auth-actions">
+      <button type="button" id="auth-cancel" class="btn">
+        Cancelar
+      </button>
+      <button type="submit" id="auth-confirm" class="btn btn-primary">
+        Verificar
+      </button>
+    </div>
+  </form>
+</dialog>
+
+
 <script
   type="module"
   src="./pendientes-sincronizacion.js"

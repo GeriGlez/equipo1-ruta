@@ -683,3 +683,44 @@ body:has(dialog[open]) {
   }
 
 }
+
+/* Campo bloqueado (por ejemplo, Unidad al editar) */
+.ins-input:disabled,
+.form-input:disabled {
+  background-color: #eef0f2;
+  color: #5c6670;
+  cursor: not-allowed;
+}
+
+/* Historial de insumos ya registrados en la visita (solo lectura) */
+.ins-history {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: #eef6fb;
+}
+
+.ins-history[hidden] {
+  display: none;
+}
+
+.ins-history-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ins-history-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+}
+
+.ins-history-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
