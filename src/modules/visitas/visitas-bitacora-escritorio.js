@@ -302,7 +302,8 @@ async function cargarVisitas() {
       observaciones,
       quien_recibio,
       pendiente_envio,
-      created_at
+      created_at,
+      updated_at
     `)
     .order(
       'hora_entrada',
@@ -838,7 +839,7 @@ function renderizarVisitas(
 
     celdaActualizacion.textContent =
       formatearFechaHora(
-        visita.created_at
+        visita.updated_at ?? visita.created_at
       );
 
 
