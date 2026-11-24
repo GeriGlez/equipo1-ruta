@@ -20,12 +20,12 @@ import {
   puedeCancelarOrden,
   puedeEliminarOrden
 } from './ordenes-db.js';
-import {
-  calcularRangoSemana,
-  generarVistaPreviaSemanal,
-  confirmarProgramacionSemanal,
-  guardarPreferenciaAreaContrato
-} from './programacion-semanal.js';
+// import {
+//   calcularRangoSemana,
+//   generarVistaPreviaSemanal,
+//   confirmarProgramacionSemanal,
+//   guardarPreferenciaAreaContrato
+// } from './programacion-semanal.js';
 
 // =============================================================================
 // 1. ESTADO DEL MÓDULO
@@ -51,7 +51,7 @@ let modoSoloLectura = false;
 let usuarioActualId = null;
 
 // Estado de la vista previa de programación semanal
-let vistaPreviaActual = null;
+// let vistaPreviaActual = null;
 
 // =============================================================================
 // 2. REFERENCIAS AL DOM
@@ -88,8 +88,8 @@ const alertaOrdenes = document.getElementById('alerta-ordenes');
 const nombreUsuarioOrden = document.getElementById('nombre-usuario-orden');
 const estadoConexionOrdenes = document.getElementById('estado-conexion-ordenes');
 const textoConexionOrdenes = document.getElementById('texto-conexion-ordenes');
-const btnSincronizarOrdenes = document.getElementById('btn-sincronizar-ordenes');
-const badgePendientesSync = document.getElementById('badge-pendientes-sync');
+// const btnSincronizarOrdenes = document.getElementById('btn-sincronizar-ordenes');
+// const badgePendientesSync = document.getElementById('badge-pendientes-sync');
 const resumenSincronizacionBarra = document.getElementById('resumen-sincronizacion-barra');
 
 // Filtros
@@ -99,24 +99,24 @@ const filtroEstadoOrden = document.getElementById('filtro-estado-orden');
 const filtroFechaOrden = document.getElementById('filtro-fecha-orden');
 const btnLimpiarFiltros = document.getElementById('btn-limpiar-filtros');
 
-// Programación semanal
-const btnAbrirProgramacionSemanal = document.getElementById('btn-abrir-programacion-semanal');
-const inputSemanaProgramacion = document.getElementById('input-semana-programacion');
-const inputFechaReferenciaSemana = document.getElementById('input-fecha-referencia-semana');
-const btnGenerarVistaPrevia = document.getElementById('btn-generar-vista-previa');
-const btnAutocompletarAreas = document.getElementById('btn-autocompletar-areas');
-const btnConfirmarProgramacionSemanal = document.getElementById('btn-confirmar-programacion-semanal');
-const rangoSemanaBanner = document.getElementById('rango-semana-banner');
-const cuerpoVistaPreviaSemanal = document.getElementById('cuerpo-vista-previa-semanal');
-const resumenPropuestasCount = document.getElementById('resumen-propuestas-count');
-const resumenExistentesCount = document.getElementById('resumen-existentes-count');
-const resumenErroresCount = document.getElementById('resumen-errores-count');
-const resumenOmitidosCount = document.getElementById('resumen-omitidos-count');
-const seccionNoGenerables = document.getElementById('seccion-no-generables');
-const listaContratosNoGenerables = document.getElementById('lista-contratos-no-generables');
-const seccionOmitidosFrecuencia = document.getElementById('seccion-omitidos-frecuencia');
-const listaContratosOmitidos = document.getElementById('lista-contratos-omitidos');
-const resultadoProgramacionSemanal = document.getElementById('resultado-programacion-semanal');
+// // Programación semanal
+// const btnAbrirProgramacionSemanal = document.getElementById('btn-abrir-programacion-semanal');
+// const inputSemanaProgramacion = document.getElementById('input-semana-programacion');
+// const inputFechaReferenciaSemana = document.getElementById('input-fecha-referencia-semana');
+// const btnGenerarVistaPrevia = document.getElementById('btn-generar-vista-previa');
+// const btnAutocompletarAreas = document.getElementById('btn-autocompletar-areas');
+// const btnConfirmarProgramacionSemanal = document.getElementById('btn-confirmar-programacion-semanal');
+// const rangoSemanaBanner = document.getElementById('rango-semana-banner');
+// const cuerpoVistaPreviaSemanal = document.getElementById('cuerpo-vista-previa-semanal');
+// const resumenPropuestasCount = document.getElementById('resumen-propuestas-count');
+// const resumenExistentesCount = document.getElementById('resumen-existentes-count');
+// const resumenErroresCount = document.getElementById('resumen-errores-count');
+// const resumenOmitidosCount = document.getElementById('resumen-omitidos-count');
+// const seccionNoGenerables = document.getElementById('seccion-no-generables');
+// const listaContratosNoGenerables = document.getElementById('lista-contratos-no-generables');
+// const seccionOmitidosFrecuencia = document.getElementById('seccion-omitidos-frecuencia');
+// const listaContratosOmitidos = document.getElementById('lista-contratos-omitidos');
+// const resultadoProgramacionSemanal = document.getElementById('resultado-programacion-semanal');
 
 // =============================================================================
 // 3. UTILIDADES DE INTERFAZ
@@ -169,13 +169,13 @@ async function actualizarIndicadoresConexionYSync() {
   try {
     const cola = await obtenerColaSyncOrdenes();
     const cantidad = cola.length;
-    if (badgePendientesSync) {
-      badgePendientesSync.textContent = String(cantidad);
-    }
-    if (btnSincronizarOrdenes) {
-      btnSincronizarOrdenes.hidden = cantidad === 0 || modoSoloLectura;
-      btnSincronizarOrdenes.disabled = !enLinea;
-    }
+    // if (badgePendientesSync) {
+    //   badgePendientesSync.textContent = String(cantidad);
+    // }
+    // if (btnSincronizarOrdenes) {
+    //   btnSincronizarOrdenes.hidden = cantidad === 0 || modoSoloLectura;
+    //   btnSincronizarOrdenes.disabled = !enLinea;
+    // }
     if (resumenSincronizacionBarra) {
       if (modoSoloLectura) {
         resumenSincronizacionBarra.textContent = 'Modo vista (solo lectura de órdenes de servicio).';
@@ -827,333 +827,333 @@ btnConfirmarEliminacion.addEventListener('click', async () => {
 // 9. PROGRAMACIÓN SEMANAL AUTOMÁTICA DESDE CONTRATOS
 // =============================================================================
 
-function sincronizarControlesSemana(entrada) {
-  const infoSemana = calcularRangoSemana(entrada);
-  if (inputSemanaProgramacion) {
-    inputSemanaProgramacion.value = infoSemana.codigoSemana;
-  }
-  if (inputFechaReferenciaSemana) {
-    inputFechaReferenciaSemana.value = infoSemana.fechaInicio;
-  }
-  if (rangoSemanaBanner) {
-    rangoSemanaBanner.textContent =
-      `Semana seleccionada (${infoSemana.codigoSemana}): Lunes ${infoSemana.fechaInicio} al Domingo ${infoSemana.fechaFin}`;
-  }
-  return infoSemana;
-}
+// function sincronizarControlesSemana(entrada) {
+//   const infoSemana = calcularRangoSemana(entrada);
+//   if (inputSemanaProgramacion) {
+//     inputSemanaProgramacion.value = infoSemana.codigoSemana;
+//   }
+//   if (inputFechaReferenciaSemana) {
+//     inputFechaReferenciaSemana.value = infoSemana.fechaInicio;
+//   }
+//   if (rangoSemanaBanner) {
+//     rangoSemanaBanner.textContent =
+//       `Semana seleccionada (${infoSemana.codigoSemana}): Lunes ${infoSemana.fechaInicio} al Domingo ${infoSemana.fechaFin}`;
+//   }
+//   return infoSemana;
+// }
 
-function renderVistaPreviaSemanal() {
-  if (!vistaPreviaActual) return;
+// function renderVistaPreviaSemanal() {
+//   if (!vistaPreviaActual) return;
 
-  const { semana, propuestas, noGenerables, omitidosPorFrecuencia } = vistaPreviaActual;
+//   const { semana, propuestas, noGenerables, omitidosPorFrecuencia } = vistaPreviaActual;
 
-  const nuevasPropuestas = propuestas.filter(p => !p.yaExiste);
-  const existentes = propuestas.filter(p => p.yaExiste);
+//   const nuevasPropuestas = propuestas.filter(p => !p.yaExiste);
+//   const existentes = propuestas.filter(p => p.yaExiste);
 
-  resumenPropuestasCount.textContent = String(nuevasPropuestas.length);
-  resumenExistentesCount.textContent = String(existentes.length);
-  resumenErroresCount.textContent = String(noGenerables.length);
-  resumenOmitidosCount.textContent = String(omitidosPorFrecuencia.length);
+//   resumenPropuestasCount.textContent = String(nuevasPropuestas.length);
+//   resumenExistentesCount.textContent = String(existentes.length);
+//   resumenErroresCount.textContent = String(noGenerables.length);
+//   resumenOmitidosCount.textContent = String(omitidosPorFrecuencia.length);
 
-  cuerpoVistaPreviaSemanal.innerHTML = '';
+//   cuerpoVistaPreviaSemanal.innerHTML = '';
 
-  if (propuestas.length === 0) {
-    cuerpoVistaPreviaSemanal.innerHTML = `
-      <tr>
-        <td colspan="7" style="padding: 24px; color: #64748b;">
-          No hay órdenes propuestas para esta semana con los contratos actuales.
-        </td>
-      </tr>
-    `;
-  } else {
-    propuestas.forEach((prop, idx) => {
-      const tr = document.createElement('tr');
-      if (prop.yaExiste) {
-        tr.style.backgroundColor = '#f8fafc';
-      }
+//   if (propuestas.length === 0) {
+//     cuerpoVistaPreviaSemanal.innerHTML = `
+//       <tr>
+//         <td colspan="7" style="padding: 24px; color: #64748b;">
+//           No hay órdenes propuestas para esta semana con los contratos actuales.
+//         </td>
+//       </tr>
+//     `;
+//   } else {
+//     propuestas.forEach((prop, idx) => {
+//       const tr = document.createElement('tr');
+//       if (prop.yaExiste) {
+//         tr.style.backgroundColor = '#f8fafc';
+//       }
 
-      const opcionesArea = [
-        `<option value="">-- Seleccionar área (${prop.areas_disponibles.length}) --</option>`,
-        ...prop.areas_disponibles.map(
-          a =>
-            `<option value="${a.id}" ${Number(prop.area_id) === Number(a.id) ? 'selected' : ''}>
-              ${escaparHTML(a.nombre)} (${escaparHTML(a.tipo)})
-            </option>`
-        )
-      ].join('');
+//       const opcionesArea = [
+//         `<option value="">-- Seleccionar área (${prop.areas_disponibles.length}) --</option>`,
+//         ...prop.areas_disponibles.map(
+//           a =>
+//             `<option value="${a.id}" ${Number(prop.area_id) === Number(a.id) ? 'selected' : ''}>
+//               ${escaparHTML(a.nombre)} (${escaparHTML(a.tipo)})
+//             </option>`
+//         )
+//       ].join('');
 
-      const sugerenciaHTML =
-        !prop.area_id && prop.area_sugerida_nombre
-          ? `<div style="font-size:11px; color:#0369a1; margin-top:3px;">Sugerida: ${escaparHTML(prop.area_sugerida_nombre)}</div>`
-          : '';
+//       const sugerenciaHTML =
+//         !prop.area_id && prop.area_sugerida_nombre
+//           ? `<div style="font-size:11px; color:#0369a1; margin-top:3px;">Sugerida: ${escaparHTML(prop.area_sugerida_nombre)}</div>`
+//           : '';
 
-      const avisosHTML =
-        prop.avisos && prop.avisos.length > 0
-          ? `<div style="font-size:11px; color:#92400e; margin-top:3px;">${prop.avisos.map(escaparHTML).join('<br>')}</div>`
-          : '';
+//       const avisosHTML =
+//         prop.avisos && prop.avisos.length > 0
+//           ? `<div style="font-size:11px; color:#92400e; margin-top:3px;">${prop.avisos.map(escaparHTML).join('<br>')}</div>`
+//           : '';
 
-      let estadoPreviaHTML = '';
-      if (prop.yaExiste) {
-        estadoPreviaHTML = `<span class="sync-badge sync-ok">Ya existe (Orden #${prop.ordenExistenteId || 'local'})</span>`;
-      } else if (!prop.incluir) {
-        estadoPreviaHTML = `<span class="origen-tag origen-manual">Omitida manualmente</span>`;
-      } else if (!prop.area_id) {
-        estadoPreviaHTML = `<span class="sync-badge sync-pending">⚠️ Falta elegir área</span>`;
-      } else if (prop.requiereConfirmacionFrecuencia) {
-        estadoPreviaHTML = `<span class="sync-badge sync-pending"> Confirmar periodicidad</span>`;
-      } else {
-        estadoPreviaHTML = `<span class="sync-badge sync-ok">Lista para programar</span>`;
-      }
+//       let estadoPreviaHTML = '';
+//       if (prop.yaExiste) {
+//         estadoPreviaHTML = `<span class="sync-badge sync-ok">Ya existe (Orden #${prop.ordenExistenteId || 'local'})</span>`;
+//       } else if (!prop.incluir) {
+//         estadoPreviaHTML = `<span class="origen-tag origen-manual">Omitida manualmente</span>`;
+//       } else if (!prop.area_id) {
+//         estadoPreviaHTML = `<span class="sync-badge sync-pending">⚠️ Falta elegir área</span>`;
+//       } else if (prop.requiereConfirmacionFrecuencia) {
+//         estadoPreviaHTML = `<span class="sync-badge sync-pending"> Confirmar periodicidad</span>`;
+//       } else {
+//         estadoPreviaHTML = `<span class="sync-badge sync-ok">Lista para programar</span>`;
+//       }
 
-      tr.innerHTML = `
-        <td>
-          <input
-            type="checkbox"
-            class="chk-incluir-previa"
-            data-index="${idx}"
-            ${prop.incluir ? 'checked' : ''}
-            ${prop.yaExiste ? 'disabled' : ''}
-          >
-        </td>
-        <td>
-          <strong>Contrato #${prop.contrato_id}</strong><br>
-          <span style="font-size:11px; color:#475569;">${escaparHTML(prop.frecuencia)} (${escaparHTML(prop.dias_preferenciales)})</span>
-        </td>
-        <td><strong>${escaparHTML(prop.condominio_nombre)}</strong></td>
-        <td>
-          <span class="badge">${escaparHTML(prop.servicio_nombre)}</span>
-          ${avisosHTML}
-        </td>
-        <td>
-          <select
-            class="select-area-previa ${!prop.area_id && !prop.yaExiste ? 'falta-area' : ''}"
-            data-index="${idx}"
-            ${prop.yaExiste ? 'disabled' : ''}
-          >
-            ${opcionesArea}
-          </select>
-          ${sugerenciaHTML}
-        </td>
-        <td>
-          <input
-            type="date"
-            class="input-fecha-previa"
-            data-index="${idx}"
-            min="${semana.fechaInicio}"
-            max="${semana.fechaFin}"
-            value="${escaparHTML(prop.fecha_programada)}"
-            ${prop.yaExiste ? 'disabled' : ''}
-          >
-          <div style="font-size:11px; color:#64748b; margin-top:2px;">${escaparHTML(prop.dia_semana_nombre || '')}</div>
-        </td>
-        <td>${estadoPreviaHTML}</td>
-      `;
+//       tr.innerHTML = `
+//         <td>
+//           <input
+//             type="checkbox"
+//             class="chk-incluir-previa"
+//             data-index="${idx}"
+//             ${prop.incluir ? 'checked' : ''}
+//             ${prop.yaExiste ? 'disabled' : ''}
+//           >
+//         </td>
+//         <td>
+//           <strong>Contrato #${prop.contrato_id}</strong><br>
+//           <span style="font-size:11px; color:#475569;">${escaparHTML(prop.frecuencia)} (${escaparHTML(prop.dias_preferenciales)})</span>
+//         </td>
+//         <td><strong>${escaparHTML(prop.condominio_nombre)}</strong></td>
+//         <td>
+//           <span class="badge">${escaparHTML(prop.servicio_nombre)}</span>
+//           ${avisosHTML}
+//         </td>
+//         <td>
+//           <select
+//             class="select-area-previa ${!prop.area_id && !prop.yaExiste ? 'falta-area' : ''}"
+//             data-index="${idx}"
+//             ${prop.yaExiste ? 'disabled' : ''}
+//           >
+//             ${opcionesArea}
+//           </select>
+//           ${sugerenciaHTML}
+//         </td>
+//         <td>
+//           <input
+//             type="date"
+//             class="input-fecha-previa"
+//             data-index="${idx}"
+//             min="${semana.fechaInicio}"
+//             max="${semana.fechaFin}"
+//             value="${escaparHTML(prop.fecha_programada)}"
+//             ${prop.yaExiste ? 'disabled' : ''}
+//           >
+//           <div style="font-size:11px; color:#64748b; margin-top:2px;">${escaparHTML(prop.dia_semana_nombre || '')}</div>
+//         </td>
+//         <td>${estadoPreviaHTML}</td>
+//       `;
 
-      cuerpoVistaPreviaSemanal.appendChild(tr);
-    });
-  }
+//       cuerpoVistaPreviaSemanal.appendChild(tr);
+//     });
+//   }
 
-  if (noGenerables.length > 0) {
-    seccionNoGenerables.hidden = false;
-    listaContratosNoGenerables.innerHTML = noGenerables
-      .map(
-        item =>
-          `<li><strong>Contrato #${escaparHTML(item.contrato_id ?? '?')} (${escaparHTML(item.nombre_condominio)} - ${escaparHTML(item.servicio_nombre)}):</strong> ${escaparHTML(item.motivo)}</li>`
-      )
-      .join('');
-  } else {
-    seccionNoGenerables.hidden = true;
-    listaContratosNoGenerables.innerHTML = '';
-  }
+//   if (noGenerables.length > 0) {
+//     seccionNoGenerables.hidden = false;
+//     listaContratosNoGenerables.innerHTML = noGenerables
+//       .map(
+//         item =>
+//           `<li><strong>Contrato #${escaparHTML(item.contrato_id ?? '?')} (${escaparHTML(item.nombre_condominio)} - ${escaparHTML(item.servicio_nombre)}):</strong> ${escaparHTML(item.motivo)}</li>`
+//       )
+//       .join('');
+//   } else {
+//     seccionNoGenerables.hidden = true;
+//     listaContratosNoGenerables.innerHTML = '';
+//   }
 
-  if (omitidosPorFrecuencia.length > 0) {
-    seccionOmitidosFrecuencia.hidden = false;
-    listaContratosOmitidos.innerHTML = omitidosPorFrecuencia
-      .map(
-        item =>
-          `<li><strong>Contrato #${escaparHTML(item.contrato_id)} (${escaparHTML(item.nombre_condominio)} - ${escaparHTML(item.servicio_nombre)}):</strong> ${escaparHTML(item.motivo)}</li>`
-      )
-      .join('');
-  } else {
-    seccionOmitidosFrecuencia.hidden = true;
-    listaContratosOmitidos.innerHTML = '';
-  }
-}
+//   if (omitidosPorFrecuencia.length > 0) {
+//     seccionOmitidosFrecuencia.hidden = false;
+//     listaContratosOmitidos.innerHTML = omitidosPorFrecuencia
+//       .map(
+//         item =>
+//           `<li><strong>Contrato #${escaparHTML(item.contrato_id)} (${escaparHTML(item.nombre_condominio)} - ${escaparHTML(item.servicio_nombre)}):</strong> ${escaparHTML(item.motivo)}</li>`
+//       )
+//       .join('');
+//   } else {
+//     seccionOmitidosFrecuencia.hidden = true;
+//     listaContratosOmitidos.innerHTML = '';
+//   }
+// }
 
-async function calcularYMostrarVistaPrevia(entradaSemana) {
-  resultadoProgramacionSemanal.hidden = true;
-  resultadoProgramacionSemanal.innerHTML = '';
+// async function calcularYMostrarVistaPrevia(entradaSemana) {
+//   resultadoProgramacionSemanal.hidden = true;
+//   resultadoProgramacionSemanal.innerHTML = '';
 
-  await cargarCatalogos();
-  const resOrdenes = await consultarOrdenesServicio();
-  ordenes = resOrdenes.ordenes || [];
+//   await cargarCatalogos();
+//   const resOrdenes = await consultarOrdenesServicio();
+//   ordenes = resOrdenes.ordenes || [];
 
-  const semanaInfo = sincronizarControlesSemana(entradaSemana);
+//   const semanaInfo = sincronizarControlesSemana(entradaSemana);
 
-  vistaPreviaActual = generarVistaPreviaSemanal({
-    entradaSemana: semanaInfo.fechaInicio,
-    contratos: catalogos.contratos,
-    condominios: catalogos.condominios,
-    areas: catalogos.areas,
-    servicios: catalogos.servicios,
-    ordenesExistentes: ordenes
-  });
+//   vistaPreviaActual = generarVistaPreviaSemanal({
+//     entradaSemana: semanaInfo.fechaInicio,
+//     contratos: catalogos.contratos,
+//     condominios: catalogos.condominios,
+//     areas: catalogos.areas,
+//     servicios: catalogos.servicios,
+//     ordenesExistentes: ordenes
+//   });
 
-  renderVistaPreviaSemanal();
-}
+//   renderVistaPreviaSemanal();
+// }
 
-btnAbrirProgramacionSemanal?.addEventListener('click', async () => {
-  if (modoSoloLectura) return;
-  const hoyIso = obtenerHoyISO();
-  sincronizarControlesSemana(hoyIso);
-  modalProgramacionSemanal.classList.add('active');
-  await calcularYMostrarVistaPrevia(hoyIso);
-});
+// btnAbrirProgramacionSemanal?.addEventListener('click', async () => {
+//   if (modoSoloLectura) return;
+//   const hoyIso = obtenerHoyISO();
+//   sincronizarControlesSemana(hoyIso);
+//   modalProgramacionSemanal.classList.add('active');
+//   await calcularYMostrarVistaPrevia(hoyIso);
+// });
 
-inputSemanaProgramacion?.addEventListener('change', async () => {
-  if (inputSemanaProgramacion.value) {
-    await calcularYMostrarVistaPrevia(inputSemanaProgramacion.value);
-  }
-});
+// inputSemanaProgramacion?.addEventListener('change', async () => {
+//   if (inputSemanaProgramacion.value) {
+//     await calcularYMostrarVistaPrevia(inputSemanaProgramacion.value);
+//   }
+// });
 
-inputFechaReferenciaSemana?.addEventListener('change', async () => {
-  if (inputFechaReferenciaSemana.value) {
-    await calcularYMostrarVistaPrevia(inputFechaReferenciaSemana.value);
-  }
-});
+// inputFechaReferenciaSemana?.addEventListener('change', async () => {
+//   if (inputFechaReferenciaSemana.value) {
+//     await calcularYMostrarVistaPrevia(inputFechaReferenciaSemana.value);
+//   }
+// });
 
-btnGenerarVistaPrevia?.addEventListener('click', async () => {
-  const entrada =
-    inputSemanaProgramacion?.value ||
-    inputFechaReferenciaSemana?.value ||
-    obtenerHoyISO();
-  await calcularYMostrarVistaPrevia(entrada);
-});
+// btnGenerarVistaPrevia?.addEventListener('click', async () => {
+//   const entrada =
+//     inputSemanaProgramacion?.value ||
+//     inputFechaReferenciaSemana?.value ||
+//     obtenerHoyISO();
+//   await calcularYMostrarVistaPrevia(entrada);
+// });
 
-btnAutocompletarAreas?.addEventListener('click', () => {
-  if (!vistaPreviaActual?.propuestas) return;
-  let asignadas = 0;
-  vistaPreviaActual.propuestas.forEach(prop => {
-    if (!prop.yaExiste && !prop.area_id) {
-      if (prop.area_sugerida_id) {
-        prop.area_id = Number(prop.area_sugerida_id);
-        guardarPreferenciaAreaContrato(prop.contrato_id, prop.area_id);
-        asignadas++;
-      } else if (prop.areas_disponibles.length === 1) {
-        prop.area_id = Number(prop.areas_disponibles[0].id);
-        guardarPreferenciaAreaContrato(prop.contrato_id, prop.area_id);
-        asignadas++;
-      }
-    }
-  });
-  renderVistaPreviaSemanal();
-  if (asignadas === 0) {
-    alert('No había áreas sugeridas inequívocas pendientes por autocompletar. Selecciona manualmente las áreas restantes.');
-  }
-});
+// btnAutocompletarAreas?.addEventListener('click', () => {
+//   if (!vistaPreviaActual?.propuestas) return;
+//   let asignadas = 0;
+//   vistaPreviaActual.propuestas.forEach(prop => {
+//     if (!prop.yaExiste && !prop.area_id) {
+//       if (prop.area_sugerida_id) {
+//         prop.area_id = Number(prop.area_sugerida_id);
+//         guardarPreferenciaAreaContrato(prop.contrato_id, prop.area_id);
+//         asignadas++;
+//       } else if (prop.areas_disponibles.length === 1) {
+//         prop.area_id = Number(prop.areas_disponibles[0].id);
+//         guardarPreferenciaAreaContrato(prop.contrato_id, prop.area_id);
+//         asignadas++;
+//       }
+//     }
+//   });
+//   renderVistaPreviaSemanal();
+//   if (asignadas === 0) {
+//     alert('No había áreas sugeridas inequívocas pendientes por autocompletar. Selecciona manualmente las áreas restantes.');
+//   }
+// });
 
-cuerpoVistaPreviaSemanal?.addEventListener('change', (e) => {
-  if (!vistaPreviaActual?.propuestas) return;
+// cuerpoVistaPreviaSemanal?.addEventListener('change', (e) => {
+//   if (!vistaPreviaActual?.propuestas) return;
 
-  const chk = e.target.closest('.chk-incluir-previa');
-  if (chk) {
-    const idx = Number(chk.dataset.index);
-    if (vistaPreviaActual.propuestas[idx]) {
-      vistaPreviaActual.propuestas[idx].incluir = chk.checked;
-      renderVistaPreviaSemanal();
-    }
-    return;
-  }
+//   const chk = e.target.closest('.chk-incluir-previa');
+//   if (chk) {
+//     const idx = Number(chk.dataset.index);
+//     if (vistaPreviaActual.propuestas[idx]) {
+//       vistaPreviaActual.propuestas[idx].incluir = chk.checked;
+//       renderVistaPreviaSemanal();
+//     }
+//     return;
+//   }
 
-  const selArea = e.target.closest('.select-area-previa');
-  if (selArea) {
-    const idx = Number(selArea.dataset.index);
-    const prop = vistaPreviaActual.propuestas[idx];
-    if (prop) {
-      const nuevoAreaId = selArea.value ? Number(selArea.value) : null;
-      prop.area_id = nuevoAreaId;
-      if (nuevoAreaId) {
-        guardarPreferenciaAreaContrato(prop.contrato_id, nuevoAreaId);
-        vistaPreviaActual.propuestas.forEach(otra => {
-          if (otra.contrato_id === prop.contrato_id && !otra.yaExiste && !otra.area_id) {
-            otra.area_id = nuevoAreaId;
-          }
-        });
-      }
-      renderVistaPreviaSemanal();
-    }
-    return;
-  }
+//   const selArea = e.target.closest('.select-area-previa');
+//   if (selArea) {
+//     const idx = Number(selArea.dataset.index);
+//     const prop = vistaPreviaActual.propuestas[idx];
+//     if (prop) {
+//       const nuevoAreaId = selArea.value ? Number(selArea.value) : null;
+//       prop.area_id = nuevoAreaId;
+//       if (nuevoAreaId) {
+//         guardarPreferenciaAreaContrato(prop.contrato_id, nuevoAreaId);
+//         vistaPreviaActual.propuestas.forEach(otra => {
+//           if (otra.contrato_id === prop.contrato_id && !otra.yaExiste && !otra.area_id) {
+//             otra.area_id = nuevoAreaId;
+//           }
+//         });
+//       }
+//       renderVistaPreviaSemanal();
+//     }
+//     return;
+//   }
 
-  const inpFecha = e.target.closest('.input-fecha-previa');
-  if (inpFecha) {
-    const idx = Number(inpFecha.dataset.index);
-    const prop = vistaPreviaActual.propuestas[idx];
-    if (prop && inpFecha.value) {
-      prop.fecha_programada = inpFecha.value;
-      renderVistaPreviaSemanal();
-    }
-  }
-});
+//   const inpFecha = e.target.closest('.input-fecha-previa');
+//   if (inpFecha) {
+//     const idx = Number(inpFecha.dataset.index);
+//     const prop = vistaPreviaActual.propuestas[idx];
+//     if (prop && inpFecha.value) {
+//       prop.fecha_programada = inpFecha.value;
+//       renderVistaPreviaSemanal();
+//     }
+//   }
+// });
 
-btnConfirmarProgramacionSemanal?.addEventListener('click', async () => {
-  if (!vistaPreviaActual) return;
+// btnConfirmarProgramacionSemanal?.addEventListener('click', async () => {
+//   if (!vistaPreviaActual) return;
 
-  btnConfirmarProgramacionSemanal.disabled = true;
+//   btnConfirmarProgramacionSemanal.disabled = true;
 
-  try {
-    const resumen = await confirmarProgramacionSemanal({
-      semana: vistaPreviaActual.semana,
-      propuestasRevisadas: vistaPreviaActual.propuestas,
-      noGenerablesPrevios: vistaPreviaActual.noGenerables,
-      catalogos,
-      ordenesExistentes: [...ordenes]
-    });
+//   try {
+//     const resumen = await confirmarProgramacionSemanal({
+//       semana: vistaPreviaActual.semana,
+//       propuestasRevisadas: vistaPreviaActual.propuestas,
+//       noGenerablesPrevios: vistaPreviaActual.noGenerables,
+//       catalogos,
+//       ordenesExistentes: [...ordenes]
+//     });
 
-    if (navigator.onLine && usuarioActualId && resumen.generadas > 0) {
-      await supabase
-        .from('ordenes_servicio')
-        .update({ creada_por: usuarioActualId })
-        .is('creada_por', null);
-    }
+//     if (navigator.onLine && usuarioActualId && resumen.generadas > 0) {
+//       await supabase
+//         .from('ordenes_servicio')
+//         .update({ creada_por: usuarioActualId })
+//         .is('creada_por', null);
+//     }
 
-    await obtenerOrdenes();
+//     await obtenerOrdenes();
 
-    vistaPreviaActual = generarVistaPreviaSemanal({
-      entradaSemana: vistaPreviaActual.semana.fechaInicio,
-      contratos: catalogos.contratos,
-      condominios: catalogos.condominios,
-      areas: catalogos.areas,
-      servicios: catalogos.servicios,
-      ordenesExistentes: ordenes
-    });
-    renderVistaPreviaSemanal();
+//     vistaPreviaActual = generarVistaPreviaSemanal({
+//       entradaSemana: vistaPreviaActual.semana.fechaInicio,
+//       contratos: catalogos.contratos,
+//       condominios: catalogos.condominios,
+//       areas: catalogos.areas,
+//       servicios: catalogos.servicios,
+//       ordenesExistentes: ordenes
+//     });
+//     renderVistaPreviaSemanal();
 
-    const listaErrores =
-      resumen.detalleNoGeneradas.length > 0
-        ? `<ul style="margin-top:6px; margin-left:18px;">${resumen.detalleNoGeneradas
-            .map(
-              err =>
-                `<li><strong>${escaparHTML(err.nombre_condominio || 'Contrato')} (${escaparHTML(err.servicio_nombre || '')}):</strong> ${escaparHTML(err.motivo)}</li>`
-            )
-            .join('')}</ul>`
-        : '';
+//     const listaErrores =
+//       resumen.detalleNoGeneradas.length > 0
+//         ? `<ul style="margin-top:6px; margin-left:18px;">${resumen.detalleNoGeneradas
+//             .map(
+//               err =>
+//                 `<li><strong>${escaparHTML(err.nombre_condominio || 'Contrato')} (${escaparHTML(err.servicio_nombre || '')}):</strong> ${escaparHTML(err.motivo)}</li>`
+//             )
+//             .join('')}</ul>`
+//         : '';
 
-    resultadoProgramacionSemanal.hidden = false;
-    resultadoProgramacionSemanal.innerHTML = `
-      <strong>Resultado de la programación semanal (${escaparHTML(vistaPreviaActual.semana.codigoSemana)}):</strong><br>
-      • Órdenes nuevas generadas: <strong>${resumen.generadas}</strong> ${resumen.guardadoEnServidor ? '(guardadas en Supabase)' : '(guardadas localmente en IndexedDB para sincronizar)'}<br>
-      • Órdenes que ya existían (no duplicadas): <strong>${resumen.yaExistentes}</strong><br>
-      • Contratos/propuestas que no pudieron generarse: <strong>${resumen.noGeneradas}</strong>
-      ${listaErrores}
-    `;
-  } catch (error) {
-    console.error('[Órdenes] Error al confirmar programación semanal:', error);
-    mostrarAlerta(`Error en la programación semanal: ${error.message}`, 'error');
-  } finally {
-    btnConfirmarProgramacionSemanal.disabled = false;
-  }
-});
+//     resultadoProgramacionSemanal.hidden = false;
+//     resultadoProgramacionSemanal.innerHTML = `
+//       <strong>Resultado de la programación semanal (${escaparHTML(vistaPreviaActual.semana.codigoSemana)}):</strong><br>
+//       • Órdenes nuevas generadas: <strong>${resumen.generadas}</strong> ${resumen.guardadoEnServidor ? '(guardadas en Supabase)' : '(guardadas localmente en IndexedDB para sincronizar)'}<br>
+//       • Órdenes que ya existían (no duplicadas): <strong>${resumen.yaExistentes}</strong><br>
+//       • Contratos/propuestas que no pudieron generarse: <strong>${resumen.noGeneradas}</strong>
+//       ${listaErrores}
+//     `;
+//   } catch (error) {
+//     console.error('[Órdenes] Error al confirmar programación semanal:', error);
+//     mostrarAlerta(`Error en la programación semanal: ${error.message}`, 'error');
+//   } finally {
+//     btnConfirmarProgramacionSemanal.disabled = false;
+//   }
+// });
 
 // =============================================================================
 // 10. EVENTOS DE FILTROS, MODALES Y SINCRONIZACIÓN
@@ -1179,7 +1179,7 @@ botonesCerrar.forEach(boton => {
     modalNuevaOrden?.classList.remove('active');
     modalCancelarOrden?.classList.remove('active');
     modalEliminarOrden?.classList.remove('active');
-    modalProgramacionSemanal?.classList.remove('active');
+    // modalProgramacionSemanal?.classList.remove('active');
   });
 });
 
@@ -1211,9 +1211,9 @@ async function ejecutarSincronizacionManualOAutomatica(mostrarMensajeExito = fal
   }
 }
 
-btnSincronizarOrdenes?.addEventListener('click', () => {
-  ejecutarSincronizacionManualOAutomatica(true);
-});
+// btnSincronizarOrdenes?.addEventListener('click', () => {
+//   ejecutarSincronizacionManualOAutomatica(true);
+// });
 
 window.addEventListener('online', () => {
   mostrarAlerta('Conexión restablecida. Actualizando órdenes desde Supabase...', 'info');

@@ -45,9 +45,9 @@ const modulosAdministrador = [
   },
   {
     titulo: 'Reportes',
-    descripcion: 'Consulta los reportes del sistema',
+    descripcion: 'Cumplimiento de ruta y desglose de canceladas',
     estilo: 'reportes',
-    ruta: './src/modules/insumos/Reporte_Insumos_Escritorio.html'
+    ruta: './src/modules/reportes/reportes.html'
   }
 ]
 
