@@ -2,7 +2,8 @@ import {
     obtenerVisitasPendientes,
     marcarVisitaComoEnviada,
     obtenerIncidenciasPendientes, 
-    marcarIncidenciaComoEnviada   
+    marcarIncidenciaComoEnviada,
+    obtenerVisitasLocales   
   } from './db-local.js';
 
 
@@ -283,7 +284,7 @@ formularioAuth.addEventListener('submit', async evento => {
 
         ponerTexto(
           '.m5-pending-area',
-          `Visita #${item.visita_id}`
+          item.visita_id ? `Visita #${item.visita_id}` : 'Visita local (pendiente de envío)'
         );
       }
 
@@ -717,7 +718,6 @@ async function sincronizarIncidencia(supabase, incidencia, authUid) {
     throw new Error('La incidencia no tiene un UUID local válido.');
   }
 
-  
   if (
     !authUid ||
     String(incidencia.reportada_por) !== String(authUid)
@@ -727,12 +727,30 @@ async function sincronizarIncidencia(supabase, incidencia, authUid) {
     );
   }
 
+  // Si la incidencia se creó apuntando a una visita offline (visita_id === null),
+  // buscamos el número oficial que Supabase acaba de asignarle en el paso anterior.
+  let visitaIdFinal = incidencia.visita_id;
+
+  if (!visitaIdFinal && incidencia.visita_local_id) {
+    const visitasLocales = await obtenerVisitasLocales();
+    const visitaPadre = visitasLocales.find(
+      v => String(v.id) === String(incidencia.visita_local_id)
+    );
+
+    if (!visitaPadre?.visita_servidor_id) {
+      throw new Error(
+        'La visita asociada aún no tiene un ID confirmado en el servidor.'
+      );
+    }
+
+    visitaIdFinal = visitaPadre.visita_servidor_id;
+  }
 
   const datosServidor = {
     id_local: idLocal,
     condominio_id: incidencia.condominio_id,
     area_id: incidencia.area_id,
-    visita_id: incidencia.visita_id,
+    visita_id: visitaIdFinal,
     descripcion: incidencia.descripcion,
     prioridad: incidencia.prioridad,
     reportada_por: incidencia.reportada_por
@@ -749,7 +767,6 @@ async function sincronizarIncidencia(supabase, incidencia, authUid) {
   if (!error) {
     idServidor = data.id;
   } else if (error.code === '23505') {
-    // El servidor podría haber recibido un intento anterior.
     const { data: existente, error: errorConsulta } =
       await supabase
         .from('incidencias')
@@ -769,8 +786,6 @@ async function sincronizarIncidencia(supabase, incidencia, authUid) {
     throw error;
   }
 
-  // Confirmar localmente solo después de obtener
-  // un identificador válido del servidor.
   await marcarIncidenciaComoEnviada(
     incidencia.id,
     idServidor
