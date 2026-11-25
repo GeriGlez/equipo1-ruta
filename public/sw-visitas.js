@@ -63,9 +63,10 @@ const RECURSOS = [
 
   // Pantallas del módulo 7 (Incidencias)
   '/src/modules/incidencias/Registrar_Incidencia_Movil.html', 
-  
-  // JS del módulo 7
+  '/src/modules/incidencias/incidencias-admin.html',
   '/src/modules/incidencias/registrar-incidencia.js',
+  '/src/modules/incidencias/incidencias-admin.js',
+  '/src/modules/incidencias/incidencias-admin.css',
 
   // Estilos
   '/src/styles/main.css',
