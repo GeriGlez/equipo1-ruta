@@ -81,7 +81,7 @@ body {
 
 /* Panel Lateral */
 .incidencias-sidebar {
-  width: 350px;
+  width: 500px;
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
