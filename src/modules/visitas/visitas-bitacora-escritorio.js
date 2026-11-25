@@ -43,7 +43,7 @@ const filtroFecha =
 
 const nombreAdministrador =
   document.querySelector(
-    '.visitas-user-info strong'
+    '.visitas-user-name'
   );
 
 
