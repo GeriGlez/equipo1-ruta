@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA | Registrar condominio</title>
+
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles/adminapp.css">
+  <link rel="stylesheet" href="./condominios.css">
+  <link rel="stylesheet" href="./registrar-condominio.css">
+</head>
+<body>
+
+  <!-- Encabezado estándar, igual al de home (estilos en adminapp.css) -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <div class="admin-brand-main">
+        <img src="/logo-ruta.png" class="admin-logo" alt="">
+        <span class="admin-brand-name">RUTA</span>
+      </div>
+      <span class="admin-brand-subtitle">Gestión de servicios en campo</span>
+    </div>
+    <div class="admin-user" style="cursor: default">
+      <img src="/avatar.png" class="admin-avatar" alt="">
+      <strong id="nombre-usuario">Usuario</strong>
+      <span>Administrador</span>
+    </div>
+  </header>
+
+  <nav class="condo-subbar">
+    <a href="./condominios.html" class="condo-back">← Volver</a>
+  </nav>
+
+  <main class="condo-main">
+    <h1 class="condo-title" id="titulo">Registrar Condominio</h1>
+
+    <form id="form-condominio" novalidate>
+
+      <!-- 1. Información general -->
+      <section class="reg-card">
+        <h2 class="reg-card-title">1. Información general</h2>
+
+        <div class="reg-grid">
+          <div class="form-group">
+            <label for="nombre" class="form-label">Nombre del condominio *</label>
+            <input id="nombre" name="nombre" class="form-input" required
+                   placeholder="Ej. Las Palmas Residencial">
+          </div>
+
+          <div class="form-group">
+            <label for="direccion" class="form-label">Dirección completa *</label>
+            <input id="direccion" name="direccion" class="form-input" required
+                   placeholder="Ej. Av. Paseo de los Cocos 124">
+          </div>
+
+          <div class="form-group">
+            <label for="colonia" class="form-label">Colonia / Localidad *</label>
+            <input id="colonia" name="colonia" class="form-input" required
+                   placeholder="Ej. Nuevo Nayarit">
+          </div>
+
+          <div class="form-group">
+            <label for="contacto" class="form-label">Contacto en sitio y Teléfono *</label>
+            <div class="reg-doble">
+              <input id="contacto" name="contacto" class="form-input" required
+                     placeholder="Ej. Roberto Gómez" aria-label="Contacto en sitio">
+                            <input id="telefono" name="telefono" class="form-input" type="tel" required
+                     inputmode="numeric" maxlength="10" pattern="[0-9]{10}"
+                     placeholder="Ej. 3221234567" aria-label="Teléfono (10 dígitos)">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="notas_acceso" class="form-label">Notas de acceso (claves para el técnico en campo) *</label>
+          <textarea id="notas_acceso" name="notas_acceso" class="form-input" rows="3" required
+                    placeholder="Ej. Reportarse en caseta principal, pedir llave del cuarto de máquinas a conserjería..."></textarea>
+        </div>
+
+        <label class="reg-check">
+          <input type="checkbox" id="activo" name="activo" checked>
+          Condominio activo (habilitado para programar servicios)
+        </label>
+      </section>
+
+      <!-- 2. Áreas -->
+      <section class="reg-card">
+        <h2 class="reg-card-title">2. Áreas del condominio *</h2>
+
+        <div class="reg-area-nueva">
+          <div class="form-group">
+            <label for="area-nombre" class="form-label">Nombre del área</label>
+            <input id="area-nombre" class="form-input" placeholder="Ej. Alberca Principal">
+          </div>
+
+          <div class="form-group">
+            <label for="area-tipo" class="form-label">Tipo de área</label>
+            <select id="area-tipo" class="form-input"></select>
+          </div>
+
+          <label class="reg-check reg-check-area">
+            <input type="checkbox" id="area-lecturas">
+            Requiere lecturas
+          </label>
+
+          <div class="reg-area-botones">
+            <button type="button" id="btn-agregar-area" class="btn btn-primary reg-btn-agregar">
+              + Agregar a la lista
+            </button>
+            <button type="button" id="btn-cancelar-area" class="condo-link" hidden>
+              Cancelar edición
+            </button>
+          </div>
+        </div>
+        <p id="area-aviso-tipo" class="reg-aviso-tipo" hidden>
+          El tipo no se puede cambiar porque esta área ya tiene órdenes de servicio.
+        </p>
+
+        <table class="reg-tabla-areas">
+          <thead>
+            <tr>
+              <th>Nombre del área</th>
+              <th>Tipo</th>
+              <th>Lecturas (pH/Cloro)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="lista-areas"></tbody>
+        </table>
+      </section>
+
+      <p id="mensaje" class="condo-mensaje reg-aviso" role="alert" hidden></p>
+
+      <div class="reg-botones">
+        <a href="./condominios.html" class="btn reg-btn-cancelar">Cancelar</a>
+        <button type="submit" id="btn-guardar" class="btn reg-btn-guardar">Guardar condominio y áreas</button>
+      </div>
+    </form>
+  </main>
+
+  <script type="module" src="./registrar-condominio.js"></script>
+</body>
+</html>

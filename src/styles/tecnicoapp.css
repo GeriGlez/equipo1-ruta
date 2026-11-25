@@ -1,0 +1,630 @@
+/* =========================================================
+   RUTA - INICIO DEL TÉCNICO
+========================================================= */
+
+.tecnico-app {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+
+  margin: 0 auto;
+
+  background: #075f80;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+========================================================= */
+
+.tecnico-header {
+  min-height: 180px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 1rem 1.25rem;
+
+  background: #075f80;
+  color: #ffffff;
+}
+
+
+/* -------------------------
+   MARCA RUTA
+------------------------- */
+
+.tecnico-brand {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.25rem;
+}
+
+
+.tecnico-brand-main {
+  display: flex;
+  align-items: center;
+
+  gap: 0.35rem;
+}
+
+
+.tecnico-logo {
+  width: 88px;
+  height: 88px;
+
+  object-fit: contain;
+}
+
+
+.tecnico-brand-name {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+
+  color: #ffffff;
+}
+
+
+.tecnico-brand-subtitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  color: #d6d6d6;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   PERFIL DEL TÉCNICO
+========================================================= */
+
+.tecnico-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #ffffff;
+
+  text-align: center;
+  font: inherit;
+
+  cursor: pointer;
+}
+
+
+.tecnico-avatar {
+  width: 72px;
+  height: 72px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+}
+
+
+
+.tecnico-profile strong {
+  margin-top: 0.2rem;
+
+  max-width: 130px;
+
+  overflow: hidden;
+
+  font-size: 1.1rem;
+  line-height: 1.1;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tecnico-profile > span {
+  font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   AJUSTE PARA TELÉFONOS PEQUEÑOS
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .tecnico-header {
+    min-height: 220px;
+
+    gap: 16px;
+
+    padding: 24px 20px;
+  }
+
+
+  .tecnico-logo {
+    width: 92px;
+    height: 92px;
+  }
+
+
+  .tecnico-brand-main {
+    gap: 12px;
+  }
+
+
+  .tecnico-brand-name {
+    font-size: 2.2rem;
+  }
+
+
+  .tecnico-brand-subtitle {
+    font-size: 0.95rem;
+  }
+
+
+  .tecnico-avatar {
+    width: 84px;
+    height: 84px;
+  }
+
+
+  .tecnico-profile strong {
+    max-width: 120px;
+
+    font-size: 1.1rem;
+  }
+
+
+  .tecnico-profile > span {
+    font-size: 1rem;
+  }
+
+}
+
+/* =========================================================
+   SALUDO
+========================================================= */
+
+.tecnico-main {
+  width: 100%;
+
+  padding: 0 1.25rem 2rem;
+
+  border-radius: 34px 34px 0 0;
+
+  background: #ffffff;
+}
+
+
+.tecnico-welcome {
+  padding: 32px 0 28px;
+
+  text-align: center;
+}
+
+
+.tecnico-welcome h1 {
+  margin: 0;
+
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+
+  color: #000000;
+}
+
+
+.tecnico-welcome p {
+  margin: 0.4rem 0 0;
+
+  font-size: 1.15rem;
+  font-weight: 700;
+
+  color: #666666;
+}
+
+@media (max-width: 480px) {
+
+  .tecnico-main {
+    padding: 0 20px 24px;
+  }
+
+
+  .tecnico-welcome {
+    padding: 26px 0 24px;
+  }
+
+
+  .tecnico-welcome h1 {
+    font-size: 1.85rem;
+  }
+
+
+  .tecnico-welcome p {
+    font-size: 1.1rem;
+  }
+
+}
+
+/* =========================================================
+   MENÚ DEL TÉCNICO
+========================================================= */
+
+.tecnico-menu {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+}
+
+
+/* =========================================================
+   TARJETAS
+========================================================= */
+
+.tecnico-menu-card {
+  width: 100%;
+  min-height: 128px;
+
+  display: grid;
+  grid-template-columns:
+    96px
+    minmax(0, 1fr)
+    26px;
+
+  align-items: center;
+
+  gap: 0.9rem;
+
+  padding: 0.9rem 1rem;
+
+  background: #f4f4f4;
+
+  border: 0;
+  border-radius: 18px;
+
+  box-shadow:
+    0 5px 8px rgba(0, 0, 0, 0.18);
+
+  color: #000000;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  font: inherit;
+}
+
+
+.tecnico-menu-card:hover {
+  transform: translateY(-1px);
+}
+
+
+.tecnico-menu-card:active {
+  transform: translateY(1px);
+}
+
+/* =========================================================
+   ICONOS
+========================================================= */
+
+.tecnico-menu-icon {
+  width: 90px;
+  height: 90px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+}
+
+
+.tecnico-menu-icon img {
+  width: 58px;
+  height: 58px;
+
+  object-fit: contain;
+}
+
+/* Colores según la maqueta */
+
+.tecnico-menu-icon--ordenes {
+  background: #83bb87;
+}
+
+
+.tecnico-menu-icon--visitas {
+  background: #9a63aa;
+}
+
+
+.tecnico-menu-icon--insumos {
+  background: #f45100;
+}
+
+
+.tecnico-menu-icon--incidencias {
+  background: #2a9e99;
+}
+
+
+/* =========================================================
+   TEXTO DE LAS TARJETAS
+========================================================= */
+
+.tecnico-menu-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.25rem;
+}
+
+
+.tecnico-menu-info strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+
+.tecnico-menu-info span {
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  line-height: 1.25;
+
+  color: #575757;
+}
+
+
+
+/* =========================================================
+   FLECHA
+========================================================= */
+
+.tecnico-menu-arrow {
+  justify-self: end;
+
+  font-size: 2.7rem;
+  font-weight: 300;
+
+  line-height: 1;
+
+  color: #969696;
+}
+
+
+/* =========================================================
+   TELÉFONOS
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .tecnico-menu {
+    gap: 16px;
+  }
+
+
+  .tecnico-menu-card {
+    min-height: 138px;
+
+    grid-template-columns:
+      105px
+      minmax(0, 1fr)
+      24px;
+
+    gap: 14px;
+
+    padding: 16px;
+
+    border-radius: 18px;
+  }
+
+
+  .tecnico-menu-icon {
+    width: 96px;
+    height: 96px;
+  }
+
+
+  .tecnico-menu-icon img {
+    width: 60px;
+    height: 60px;
+  }
+
+
+  .tecnico-menu-info strong {
+    font-size: 1.15rem;
+  }
+
+
+  .tecnico-menu-info span {
+    font-size: 0.95rem;
+  }
+
+
+  .tecnico-menu-arrow {
+    font-size: 2.8rem;
+  }
+
+}
+
+/* =========================================================
+   PENDIENTES DE SINCRONIZACIÓN
+========================================================= */
+
+.tecnico-pending {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns:
+    68px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 0.75rem;
+
+  margin-top: 0;
+  padding: 1rem 1.25rem;
+
+  background: #fff1e9;
+}
+
+
+/* =========================================================
+   ICONO
+========================================================= */
+
+.tecnico-pending-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #ff7a00;
+}
+
+
+.tecnico-pending-icon img {
+  width: 42px;
+  height: 42px;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   INFORMACIÓN
+========================================================= */
+
+.tecnico-pending-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.2rem;
+}
+
+
+.tecnico-pending-info strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+
+  line-height: 1.05;
+
+  color: #000000;
+}
+
+
+.tecnico-pending-info span {
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  line-height: 1.15;
+
+  color: #777777;
+}
+
+
+/* =========================================================
+   BOTÓN
+========================================================= */
+
+.tecnico-pending-button {
+  padding: 0.7rem 0.85rem;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: #ff7a00;
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+
+.tecnico-pending-button:hover {
+  filter: brightness(0.96);
+}
+
+
+.tecnico-pending-button:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   TELÉFONOS
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .tecnico-pending {
+    grid-template-columns:
+      72px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 12px;
+
+    padding: 18px 20px;
+  }
+
+
+  .tecnico-pending-icon {
+    width: 66px;
+    height: 66px;
+  }
+
+
+  .tecnico-pending-icon img {
+    width: 44px;
+    height: 44px;
+  }
+
+
+  .tecnico-pending-info strong {
+    font-size: 1rem;
+  }
+
+
+  .tecnico-pending-info span {
+    font-size: 0.88rem;
+  }
+
+
+  .tecnico-pending-button {
+    padding: 12px 14px;
+
+    border-radius: 14px;
+
+    font-size: 0.9rem;
+  }
+
+}

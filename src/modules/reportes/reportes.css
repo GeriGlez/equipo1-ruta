@@ -1,0 +1,610 @@
+/* ==========================================================================
+   RUTA - REPORTE 2: CUMPLIMIENTO DE RUTA (Solo lectura · Administrador)
+   ========================================================================== */
+
+body {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* Subbarra Volver (idéntica al módulo de Órdenes) */
+.rep-subbar {
+  width: 100%;
+  background-color: #dcebf3;
+  border-bottom: 1px solid #c5dce8;
+  padding: 12px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rep-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #075f80;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.rep-back-link:hover {
+  text-decoration: underline;
+}
+
+.rep-back-arrow {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.rep-readonly-pill {
+  background-color: #ffffff;
+  color: #075f80;
+  border: 1px solid #93c5fd;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Contenedor principal */
+.rep-container {
+  width: min(1320px, calc(100% - 48px));
+  margin: 28px auto 64px;
+}
+
+.rep-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.rep-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.rep-subtitle {
+  color: #475569;
+  font-size: 14px;
+  max-width: 740px;
+}
+
+.rep-alerta {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* Botones */
+.btn-rep-primary {
+  background-color: #075f80;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-rep-primary:hover {
+  background-color: #054a64;
+}
+
+.btn-rep-secondary {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-rep-secondary:hover {
+  background-color: #e2e8f0;
+}
+
+/* Filtros */
+.rep-filtros {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.rep-filtros-campos {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rep-filtro-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 170px;
+}
+
+.rep-filtro-item label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rep-filtro-item input,
+.rep-filtro-item select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.rep-atajos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.rep-atajos-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.btn-atajo {
+  background-color: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-atajo:hover {
+  border-color: #075f80;
+  color: #075f80;
+}
+
+.btn-atajo.active {
+  background-color: #075f80;
+  border-color: #075f80;
+  color: #ffffff;
+}
+
+.rep-periodo-info {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* KPIs */
+.rep-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 4px solid #64748b;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi-card--primary { border-top-color: #075f80; }
+.kpi-card--success { border-top-color: #16a34a; }
+.kpi-card--danger  { border-top-color: #dc2626; }
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #0f172a;
+}
+
+.kpi-card--success .kpi-value { color: #15803d; }
+.kpi-card--danger .kpi-value  { color: #b91c1c; }
+.kpi-card--primary .kpi-value { color: #075f80; }
+
+.kpi-hint {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.kpi-progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.kpi-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background-color: #075f80;
+  transition: width 0.3s ease;
+}
+
+/* Secciones */
+.rep-section {
+  margin-bottom: 34px;
+}
+
+.rep-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.rep-section-head h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.rep-section-note {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.rep-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 28px 16px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* Tarjetas por Cuadrilla */
+.cuadrillas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.cuadrilla-rep-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cuadrilla-rep-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cuadrilla-rep-nombre {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cuadrilla-rep-resp {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.pct-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pct-alto  { background-color: #dcfce7; color: #166534; }
+.pct-medio { background-color: #fef3c7; color: #92400e; }
+.pct-bajo  { background-color: #fee2e2; color: #991b1b; }
+
+.barra-track {
+  width: 100%;
+  height: 10px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.barra-alto  { background-color: #16a34a; }
+.barra-medio { background-color: #f59e0b; }
+.barra-bajo  { background-color: #dc2626; }
+
+.cuadrilla-rep-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 6px;
+}
+
+.stat-mini-num {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stat-mini-lbl {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Bloques por Semana */
+.semanas-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.semana-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+}
+
+.semana-card-header {
+  background-color: #f1f5f9;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.semana-titulo {
+  font-size: 15px;
+  font-weight: 800;
+  color: #075f80;
+}
+
+.semana-resumen-chips {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.semana-tabla-wrap {
+  overflow-x: auto;
+}
+
+.semana-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.semana-tabla th {
+  text-align: left;
+  padding: 10px 16px;
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.semana-tabla td {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+}
+
+.semana-tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.celda-num {
+  text-align: center !important;
+  font-weight: 700;
+}
+
+.celda-progreso {
+  min-width: 180px;
+}
+
+.inline-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inline-bar-track {
+  flex: 1;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.inline-bar-pct {
+  min-width: 44px;
+  text-align: right;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Desglose de canceladas */
+.rep-count-badge {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.canceladas-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+.cancelada-card {
+  background-color: #fff5f5;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cancelada-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cancelada-folio {
+  font-size: 14px;
+  font-weight: 800;
+  color: #991b1b;
+}
+
+.cancelada-fecha {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7f1d1d;
+  background-color: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.cancelada-meta {
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.45;
+}
+
+.cancelada-motivo {
+  background-color: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #7f1d1d;
+}
+
+.cancelada-pie {
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .rep-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .rep-container {
+    width: calc(100% - 24px);
+  }
+  .rep-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Impresión limpia */
+@media print {
+  .rep-subbar,
+  .rep-filtros,
+  #btn-imprimir-reporte {
+    display: none !important;
+  }
+  .rep-container {
+    width: 100%;
+    margin: 0;
+  }
+  .semana-card,
+  .cuadrilla-rep-card,
+  .cancelada-card {
+    break-inside: avoid;
+  }
+}

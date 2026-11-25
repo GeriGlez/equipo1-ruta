@@ -1,0 +1,360 @@
+/* Módulo 1 · Condominios y áreas */
+
+:root {
+  --condo-azul: #075f80;
+  --condo-azul-claro: #dceaf1;
+  --condo-verde: #16a34a;
+  --condo-verde-hover: #15803d;
+}
+
+body {
+  background: var(--color-surface);
+}
+
+/* ---------- Barra "Volver" ----------
+   El encabezado usa el estándar de home (.admin-header en adminapp.css) */
+
+.condo-subbar {
+  padding: 0.4rem 2rem;
+  background: var(--condo-azul-claro);
+}
+
+.condo-back {
+  color: var(--condo-azul);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.condo-back:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Contenido ---------- */
+
+.condo-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.condo-title {
+  margin-bottom: 2rem;
+  font-size: 1.35rem;
+  text-align: center;
+}
+
+/* Filtros */
+
+.condo-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.condo-buscador {
+  position: relative;
+  flex: 2 1 280px;
+}
+
+.condo-buscador-icono {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+}
+
+.condo-buscador .form-input {
+  padding-left: 2.25rem;
+}
+
+.condo-filtro {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+/* Tabla */
+
+.condo-tabla-wrap {
+  min-height: 260px;
+  overflow-x: auto;
+}
+
+.condo-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.condo-tabla th {
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--color-border);
+  font-size: 0.85rem;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.condo-tabla td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.condo-nombre {
+  font-weight: 600;
+}
+
+.condo-muted {
+  color: var(--color-text-muted);
+}
+
+.condo-centro {
+  text-align: center;
+}
+
+.condo-vacio {
+  padding: 2.5rem 0 !important;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.condo-badge-inactivo {
+  background: #f1f5f9;
+  color: var(--color-text-muted);
+}
+
+.condo-acciones {
+  white-space: nowrap;
+}
+
+.condo-link {
+  margin-right: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.condo-link:hover {
+  text-decoration: underline;
+}
+
+.condo-link:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Paginación */
+
+.condo-paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.condo-paginas button {
+  margin-left: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.condo-paginas button.activa {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+
+.condo-paginas button:disabled {
+  color: var(--color-text-light);
+  cursor: default;
+}
+
+.condo-mensaje {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.condo-acciones-pie {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.condo-btn-registrar {
+  padding: 0.8rem 2rem;
+  background: var(--condo-verde);
+  color: #fff;
+}
+
+.condo-btn-registrar:hover {
+  background: var(--condo-verde-hover);
+}
+
+@media (max-width: 640px) {
+  .condo-subbar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ---------- Tablas como tarjetas en teléfono ----------
+   Usada por el listado (.condo-tabla) y por las áreas del formulario
+   (.reg-tabla-areas). Cada fila se vuelve una tarjeta y cada celda muestra
+   su encabezado a la izquierda, tomado del atributo data-label. */
+
+@media (max-width: 640px) {
+  /* Los encabezados se ocultan a la vista pero los lectores de pantalla los siguen leyendo */
+  .condo-main .condo-tabla thead,
+  .condo-main .reg-tabla-areas thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .condo-main .condo-tabla,
+  .condo-main .condo-tabla tbody,
+  .condo-main .condo-tabla tr,
+  .condo-main .condo-tabla td,
+  .condo-main .reg-tabla-areas,
+  .condo-main .reg-tabla-areas tbody,
+  .condo-main .reg-tabla-areas tr,
+  .condo-main .reg-tabla-areas td {
+    display: block;
+    width: 100%;
+  }
+
+  .condo-main .condo-tabla tr,
+  .condo-main .reg-tabla-areas tr {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+
+  .condo-main .condo-tabla td,
+  .condo-main .reg-tabla-areas td {
+    padding: 0.35rem 0;
+    border: none;
+    text-align: right;
+  }
+
+  .condo-main .condo-tabla td::before,
+  .condo-main .reg-tabla-areas td::before {
+    content: attr(data-label);
+    float: left;
+    margin-right: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  /* Nombre como título de la tarjeta y acciones abajo, sin etiqueta */
+  .condo-main td.condo-nombre,
+  .condo-main td.reg-area-nombre {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .condo-main td.condo-acciones,
+  .condo-main td.reg-area-acciones {
+    margin-top: 0.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .condo-main td.condo-vacio {
+    text-align: center;
+  }
+
+  .condo-main td .condo-link:last-child {
+    margin-right: 0;
+  }
+
+  .condo-main .condo-tabla-wrap {
+    min-height: 0;
+    overflow-x: visible;
+  }
+}
+
+/* ---------- Ventana de confirmación (activar / desactivar) ---------- */
+
+.condo-dialogo {
+  width: min(420px, calc(100% - 2rem));
+  margin: auto;
+  padding: 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.condo-dialogo::backdrop {
+  background: rgb(15 23 42 / 0.5);
+}
+
+.condo-dialogo-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.condo-dialogo-texto {
+  margin: 0 0 1.5rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.condo-dialogo-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.condo-dialogo-cancelar {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-main);
+}
+
+.condo-dialogo-confirmar {
+  background: var(--condo-verde);
+  color: #fff;
+}
+
+.condo-dialogo-confirmar:hover {
+  background: var(--condo-verde-hover);
+}
+
+.condo-dialogo-peligro {
+  background: #dc2626;
+}
+
+.condo-dialogo-peligro:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .condo-dialogo-botones {
+    flex-direction: column-reverse;
+  }
+}

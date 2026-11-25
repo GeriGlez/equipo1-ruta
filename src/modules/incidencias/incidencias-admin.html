@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Editar Incidencias | RUTA</title>
+  <link rel="stylesheet" href="incidencias-admin.css">
+  <link rel="stylesheet" href="../../styles/adminapp.css">
+</head>
+<body>
+    <!-- Encabezado Superior -->
+    <header class="admin-header">
+        <div class="admin-brand">
+          <div class="admin-brand-main">
+            <img src="/logo-ruta.png" class="admin-logo" alt="">
+            <span class="admin-brand-name">RUTA</span>
+          </div>
+          <span class="admin-brand-subtitle">Gestión de servicios en campo</span>
+        </div>
+
+        <button
+          id="btn-logout"
+          class="admin-user"
+          type="button"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión de administrador"
+        >
+          <img src="/avatar.png" class="admin-avatar" alt="">
+          <strong id="admin-user-name">Usuario</strong>
+          <span>Administrador</span>
+        </button>
+      </header>
+
+  <!-- Barra de Navegación -->
+  <nav class="sub-nav">
+    <button class="btn-volver" onclick="history.back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Volver
+    </button>
+  </nav>
+
+  <!-- Contenedor Principal -->
+  <main class="admin-layout">
+    <!-- Panel Lateral: Lista de Incidencias -->
+    <aside class="incidencias-sidebar">
+      <div class="search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="buscarIncidencia" placeholder="Buscar por #ID, condominio o técnico">
+      </div>
+
+      <div class="filter-bar" style="padding: 0 12px 12px 12px;">
+        <select id="filtroEstado" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #fff;">
+          <option value="todos">Todos los estados</option>
+          <option value="reportada">Reportada</option>
+          <option value="en_revision">En revisión</option>
+          <option value="resuelta">Resuelta</option>
+          <option value="descartada">Descartada</option>
+        </select>
+      </div>
+
+      <div class="incidencias-lista" id="listaIncidencias">
+        <!-- Las tarjetas se inyectarán por JS -->
+      </div>
+    </aside>
+
+    <!-- Panel Principal: Formulario de Edición -->
+    <section class="incidencias-content">
+      <h2 class="form-title">Editar incidencia</h2>
+      
+      <form id="formEditarIncidencia" class="form-grid">
+        <div class="form-group full-width">
+          <label for="condominio">Condominio</label>
+          <select id="condominio" disabled>
+            <option value="">Selecciona un condominio</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="area">Área</label>
+          <select id="area" disabled>
+            <option value="">Selecciona un área</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="visita">Número de visita</label>
+          <select id="visita" disabled>
+            <option value="">Selecciona una visita</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reportado_por">Reportado por</label>
+          <select id="reportado_por" disabled>
+            <option value="">Usuario</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="prioridad">Prioridad</label>
+          <select id="prioridad" disabled>
+            <option value="">Selecciona la prioridad</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="descripcion">Descripción</label>
+          <textarea id="descripcion" rows="3" readonly placeholder="Describe detalladamente cuál es la incidencia encontrada"></textarea>
+        </div>
+
+        <!-- Campos editables por el administrador -->
+        <div class="form-group">
+          <label for="estado">Estatus</label>
+          <select id="estado" required>
+            <option value="reportada">Reportada</option>
+            <option value="en_revision">En revisión</option>
+            <option value="resuelta">Resuelta</option>
+            <option value="descartada">Descartada</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="resuelto_por">Resuelto por</label>
+          <select id="resuelto_por" disabled>
+            <option value="">Usuario Administrador</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="nota_resolucion">Notas</label>
+          <textarea id="nota_resolucion" rows="3" placeholder="Describe el motivo de cierre de la incidencia"></textarea>
+        </div>
+
+        <div class="form-actions full-width">
+          <button type="submit" id="btnGuardar" class="btn-guardar">Guardar cambios</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="./incidencias-admin.js"></script>
+</body>
+</html>

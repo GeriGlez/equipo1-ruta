@@ -1,0 +1,246 @@
+/* Módulo 1 · Formulario de registro / edición
+   Usa también condominios.css (encabezado, colores y mensajes) */
+
+.condo-main form {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Tarjetas de cada sección */
+
+.reg-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f5f6f8;
+  box-shadow: var(--shadow-md);
+}
+
+.reg-card-title {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+.reg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1.5rem;
+}
+
+.reg-doble {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.reg-card textarea {
+  resize: vertical;
+}
+
+.reg-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reg-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--condo-azul);
+}
+
+/* Fila para capturar un área nueva */
+
+.reg-area-nueva {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr auto auto;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: #e1e2f0;
+}
+
+.reg-area-nueva .form-group {
+  margin: 0;
+}
+
+.reg-check-area {
+  padding-bottom: 0.7rem;
+}
+
+.reg-btn-agregar {
+  background: var(--condo-azul);
+}
+
+.reg-btn-agregar:hover {
+  background: #054a64;
+}
+
+/* Tabla de áreas agregadas */
+
+.reg-tabla-areas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.reg-tabla-areas th {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.reg-tabla-areas td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Botones finales */
+
+.reg-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.reg-btn-cancelar {
+  background: #fff;
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-md);
+}
+
+.reg-btn-guardar {
+  background: var(--condo-azul);
+  color: #fff;
+}
+
+.reg-btn-guardar:hover {
+  background: #054a64;
+}
+
+.reg-btn-guardar:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 720px) {
+
+  .reg-grid,
+  .reg-area-nueva {
+    grid-template-columns: 1fr;
+  }
+
+  .reg-check-area {
+    padding-bottom: 0;
+  }
+
+  .reg-botones {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Áreas guardadas marcadas para eliminar */
+
+.reg-area-eliminada td:not(:last-child) {
+  color: var(--color-text-light);
+  text-decoration: line-through;
+}
+
+.reg-etiqueta-eliminar {
+  margin-right: 0.5rem;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reg-link-peligro {
+  color: #b91c1c;
+}
+/* Errores junto a cada campo */
+
+.form-input.reg-campo-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.form-input.reg-campo-error:focus {
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.2);
+}
+
+.reg-error-texto {
+  display: block;
+  margin-top: 0.3rem;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Aviso flotante arriba de la pantalla */
+
+.reg-aviso {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  z-index: 100;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  transform: translateX(-50%);
+  border: 1px solid #fecaca;
+  box-shadow: var(--shadow-lg);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Editar áreas ya registradas */
+
+.reg-area-botones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.reg-area-botones .condo-link {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.form-input:disabled {
+  background: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.reg-aviso-tipo {
+  margin: -0.5rem 0 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.reg-area-en-edicion td {
+  background: #eef6fb;
+}
+
+.reg-etiqueta-editada {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #dceaf1;
+  color: var(--condo-azul);
+  font-size: 0.7rem;
+  font-weight: 600;
+}

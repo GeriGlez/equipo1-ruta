@@ -1,0 +1,135 @@
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'node:path';
+
+export default defineConfig({
+  plugins: [
+    VitePWA({
+      strategies: 'generateSW',
+
+      // Registraremos el SW manualmente
+      injectRegister: false,
+
+      // Toda la PWA RUTA
+      scope: '/',
+
+      // Evitar generar otro manifiesto
+      // mientras revisamos el existente
+      manifest: false,
+
+      // Conservar nuestro SW actual en desarrollo
+      devOptions: {
+        enabled: false
+      },
+
+      workbox: {
+        globPatterns: [
+          '**/*.{html,js,css,png,svg,webp,ico,json}'
+        ],
+
+        navigateFallback: null,
+
+        ignoreURLParametersMatching: [
+          /^utm_/,
+          /^fbclid$/,
+          /^orden_id$/
+        ],
+
+        cleanupOutdatedCaches: true
+      }
+    })
+  ],
+
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(process.cwd(), 'index.html'),
+
+        registrarVisita: resolve(
+          process.cwd(),
+          'src/modules/visitas/Registrar_Visita_Movil.html'
+        ),
+
+        pendientesVisitas: resolve(
+          process.cwd(),
+          'src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html'
+        ),
+
+        bitacoraVisitas: resolve(
+          process.cwd(),
+          'src/modules/visitas/Visitas_y_Bitacora_Movil.html'
+        ),
+
+        bitacoraVisitasEscritorio: resolve(
+          process.cwd(),
+          'src/modules/visitas/Visitas_y_Bitacora_Escritorio.html'
+        ),
+
+                condominios: resolve(
+          process.cwd(),
+          'src/modules/condominios/condominios.html'
+        ),
+
+        registrarCondominio: resolve(
+          process.cwd(),
+          'src/modules/condominios/registrar-condominio.html'
+        ),
+
+        cuadrillas: resolve(
+          process.cwd(),
+          'src/modules/cuadrillas/cuadrillas.html'
+        ),
+
+        ordenes: resolve(
+          process.cwd(),
+          'src/modules/ordenes/index.html'
+        ),
+
+        catalogoInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Catalogo_Insumos_Escritorio.html'
+        ),
+
+        registrarInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Registrar_Insumos_Movil.html'
+        ),
+
+        reporteInsumos: resolve(
+          process.cwd(),
+          'src/modules/insumos/Reporte_Insumos_Escritorio.html'
+        ),
+
+        ordenesMovil: resolve(
+          process.cwd(),
+          'src/modules/ordenes/Ordenes_Servicio_Movil.html'
+        ),
+
+        registrarIncidencia: resolve(
+          process.cwd(),
+          'src/modules/incidencias/Registrar_Incidencia_Movil.html'
+        ),
+
+        modulosServicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/modulos.html'
+        ),
+
+        servicios: resolve(
+          process.cwd(),
+          'src/modules/servicios/servicios.html'
+        ),
+
+        contratos: resolve(
+          process.cwd(),
+          'src/modules/servicios/contratos.html'
+        ),
+
+        reportes: resolve(
+          process.cwd(),
+          'src/modules/reportes/reportes.html'
+        )
+      }
+    }
+  }
+});

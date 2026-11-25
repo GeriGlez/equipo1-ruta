@@ -1,0 +1,307 @@
+// ============================================
+// RUTA - MÓDULO 5
+// Service Worker para funcionamiento offline
+// HU-08
+// ============================================
+
+const CACHE_NAME = 'ruta-app-v7';
+
+const RECURSOS = [
+
+  // App Shell general
+  '/',
+  '/index.html',
+
+  '/src/main.js',
+  '/src/adminapp.js',
+  '/src/tecnicoapp.js',
+
+  // Autenticación
+  '/src/modules/auth/authService.js',
+  '/src/modules/auth/loginView.js',
+
+  // Supabase
+  '/src/services/supabase.js',
+
+  '/src/services/ordenes-tecnico.js',
+  '/src/services/precarga-bitacora.js',
+
+  // IndexedDB
+  '/src/modules/pendientes_sync/db-local.js',
+  '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+  '/src/modules/pendientes_sync/pendientes-sincronizacion.js',
+
+  // Pantallas del módulo 5
+  '/src/modules/visitas/Registrar_Visita_Movil.html',
+  '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
+  '/src/modules/visitas/Visitas_y_Bitacora_Escritorio.html',
+
+  // JS del módulo 5
+  '/src/modules/visitas/registrar-visita.js',
+  '/src/modules/visitas/visitas-bitacora.js',
+
+  // Componente HU-02 Notas de acceso
+  '/src/modules/condominios/notas-acceso.js',
+  '/src/modules/condominios/notas-acceso.css',
+
+  // Órdenes de servicio y programación semanal
+  '/src/modules/ordenes/index.html',
+  '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
+  '/src/modules/ordenes/ordenes.css',
+  '/src/modules/ordenes/ordenes_movil.css',
+  '/src/modules/ordenes/ordenes.js',
+  '/src/modules/ordenes/ordenes-tecnico-movil.js',
+  '/src/modules/ordenes/ordenes-db.js',
+  '/src/modules/ordenes/programacion-semanal.js',
+
+  // Insumos y consumo (HU-11)
+  '/src/modules/insumos/Registrar_Insumos_Movil.html',
+  '/src/modules/insumos/registrar-insumos.js',
+  '/src/modules/insumos/insumos-local.js',
+  '/src/modules/insumos/insumos-service.js',
+  '/src/modules/insumos/insumos.css',
+
+  // Pantallas del módulo 7 (Incidencias)
+  '/src/modules/incidencias/Registrar_Incidencia_Movil.html', 
+  '/src/modules/incidencias/incidencias-admin.html',
+  '/src/modules/incidencias/registrar-incidencia.js',
+  '/src/modules/incidencias/incidencias-admin.js',
+  '/src/modules/incidencias/incidencias-admin.css',
+
+  // Estilos
+  '/src/styles/main.css',
+  '/src/styles/tecnicoapp.css',
+  '/src/styles/visitas_movil.css',
+
+  // Identidad
+  '/logo-ruta.png',
+  '/avatar.png',
+
+  // Inicio técnico
+  '/portapapeles.png',
+  '/ubicacion.png',
+  '/caja.png',
+  '/advertencia.png',
+  '/reloj.png',
+
+  // Visitas
+  '/hoja-de-calculo.png',
+  '/estadistico.png',
+  '/nota-adhesiva.png',
+  '/cuenta-de-usuario.png',
+  '/herramienta-blanca.png',
+
+  // Sincronización
+  '/sincronizar.png',
+  '/sincronizar-blanco.png'
+
+];
+
+
+
+// Instalar y almacenar recursos esenciales
+self.addEventListener('install', (event) => {
+
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(RECURSOS))
+      .then(() => self.skipWaiting())
+  );
+
+});
+
+// Activar y limpiar versiones anteriores propias
+self.addEventListener('activate', (event) => {
+
+  event.waitUntil((async () => {
+
+    const nombres = await caches.keys();
+
+    await Promise.all(
+      nombres
+        .filter(nombre =>
+          (
+            nombre.startsWith('ruta-visitas-') ||
+            nombre.startsWith('ruta-app-')
+          ) &&
+          nombre !== CACHE_NAME
+        )
+        .map(nombre => caches.delete(nombre))
+    );
+
+    await self.clients.claim();
+
+  })());
+
+});
+
+// ============================================
+// PETICIONES
+// ============================================
+
+self.addEventListener(
+  'fetch',
+  (event) => {
+
+    if (
+      event.request.method !== 'GET'
+    ) {
+      return;
+    }
+
+
+    const url =
+      new URL(
+        event.request.url
+      );
+
+
+    // Solo recursos propios de RUTA.
+    // Supabase continúa siendo responsabilidad
+    // de la red.
+    if (
+      url.origin !==
+      self.location.origin
+    ) {
+      return;
+    }
+
+
+    event.respondWith(
+      (async () => {
+
+        const cache =
+          await caches.open(
+            CACHE_NAME
+          );
+
+
+        // ------------------------------------
+        // NAVEGACIÓN
+        // ------------------------------------
+
+        if (
+          event.request.mode ===
+          'navigate'
+        ) {
+
+          try {
+
+            const respuesta =
+              await fetch(
+                event.request
+              );
+
+
+            if (respuesta.type === 'error' || respuesta.status === 0) {
+              throw new Error(
+                `Respuesta de red inválida: ${url.pathname}`
+              );
+            }
+
+
+
+            if (respuesta.ok) {
+
+              await cache.put(
+                event.request,
+                respuesta.clone()
+              );
+
+            }
+
+
+            return respuesta;
+
+          } catch (error) {
+
+            
+          const guardada =
+            (await cache.match(event.request)) ||
+            (RECURSOS.includes(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
+              : undefined);
+
+
+
+            if (guardada) {
+              return guardada;
+            }
+
+
+            const inicio =
+              await cache.match(
+                '/index.html'
+              );
+
+
+            return (
+              inicio ||
+              Response.error()
+            );
+
+          }
+
+        }
+
+
+        // ------------------------------------
+        // RECURSOS ESTÁTICOS / MÓDULOS
+        // ------------------------------------
+
+        try {
+
+          const respuesta =
+            await fetch(
+              event.request
+            );
+
+
+          if (respuesta.type === 'error' || respuesta.status === 0) {
+            throw new Error(
+              `Respuesta de red inválida: ${url.pathname}`
+            );
+          }
+
+
+
+          if (respuesta.ok) {
+
+            await cache.put(
+              event.request,
+              respuesta.clone()
+            );
+
+          }
+
+
+          return respuesta;
+
+        } catch (error) {
+
+          
+          const guardada =
+            (await cache.match(event.request)) ||
+            (RECURSOS.includes(url.pathname)
+              ? await cache.match(url.pathname, {
+                  ignoreSearch: true,
+                  ignoreVary: true
+                })
+              : undefined);
+
+
+          return (
+            guardada ||
+            Response.error()
+          );
+
+        }
+
+      })()
+    );
+
+  }
+);

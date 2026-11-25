@@ -1,0 +1,501 @@
+/* =========================================================
+   MÓDULO 5 - VISITAS / BITÁCORA
+   Estilos exclusivos de la vista desktop
+========================================================= */
+
+
+/* =========================================================
+   PÁGINA
+========================================================= */
+
+.visitas-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--color-surface);
+}
+
+
+/* =========================================================
+   ENCABEZADO
+========================================================= */
+
+.visitas-header {
+  width: 100%;
+  min-height: 136px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  padding: 16px 30px;
+
+  background-color: #075f80;
+  color: #ffffff;
+}
+
+
+/* Marca */
+
+.visitas-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+
+.visitas-brand-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.visitas-logo {
+  width: 94px;
+  height: 82px;
+
+  object-fit: contain;
+}
+
+
+.visitas-brand-name {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+
+.visitas-brand-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c9e0eb;
+}
+
+
+/* Usuario */
+
+.visitas-user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+
+.visitas-avatar {
+  width: 66px;
+  height: 66px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1px solid #328db1;
+}
+
+
+.visitas-user-name {
+  font-size: 16px;
+}
+
+
+.visitas-user-role {
+  font-size: 14px;
+  color: #d2e5ed;
+}
+
+
+.visitas-user-arrow {
+  margin-left: 0.5rem;
+
+  font-size: 2rem;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   CONTENIDO
+========================================================= */
+
+.visitas-container {
+  width: min(1400px, calc(100% - 6rem));
+
+  margin: 0 auto;
+
+  padding: 3.2rem 0 5rem;
+
+  flex: 1;
+}
+
+
+.visitas-title {
+  margin-bottom: 4rem;
+
+  text-align: center;
+
+  font-size: 2rem;
+  font-weight: 800;
+
+  color: var(--color-text-main);
+}
+
+
+/* =========================================================
+   FILTROS
+========================================================= */
+
+.visitas-filters {
+  display: grid;
+  grid-template-columns:
+    minmax(300px, 2fr)
+    repeat(3, minmax(150px, 1fr));
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 2rem;
+}
+
+
+/*
+  main.css agrega margin-bottom a .form-group.
+  Dentro de esta barra no lo necesitamos.
+*/
+
+.visitas-filter {
+  margin-bottom: 0;
+}
+
+
+.visitas-filter .form-label {
+  margin-bottom: 0.25rem;
+
+  font-weight: 700;
+
+  color: var(--color-text-main);
+}
+
+
+.visitas-filter .form-input {
+  height: 40px;
+
+  padding: 0.4rem 0.75rem;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.visitas-search {
+  position: relative;
+}
+
+
+.visitas-search-input {
+  height: 43px;
+
+  padding-left: 3rem;
+}
+
+
+.visitas-search-icon {
+  position: absolute;
+
+  z-index: 1;
+
+  top: 50%;
+  left: 1rem;
+
+  transform: translateY(-50%);
+
+  font-size: 1.8rem;
+
+  color: var(--color-text-light);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   CONTENEDOR DE TABLA
+========================================================= */
+
+.visitas-table-container {
+  min-height: 505px;
+
+  overflow: hidden;
+
+  background-color: #f5f7fa;
+
+  box-shadow: var(--shadow-md);
+}
+
+
+/* =========================================================
+   TABLA
+========================================================= */
+
+.visitas-table {
+  width: 100%;
+
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  color: var(--color-text-main);
+}
+
+
+/* Encabezados */
+
+.visitas-table thead th {
+  height: 80px;
+
+  padding: 1rem 0.6rem;
+
+  vertical-align: bottom;
+
+  text-align: center;
+
+  font-size: 1.05rem;
+  font-weight: 800;
+
+  border-right: 1px solid #c7c7c7;
+  border-bottom: 1px solid #9a9a9a;
+}
+
+
+.visitas-table thead th:last-child {
+  border-right: none;
+}
+
+
+/* Filas futuras */
+
+.visitas-table tbody td {
+  padding: 0.65rem;
+
+  text-align: center;
+  vertical-align: middle;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  border-right: 1px solid #d0d0d0;
+}
+
+
+.visitas-table tbody td:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   ANCHOS DE COLUMNAS
+========================================================= */
+
+.visitas-table th:nth-child(1) { width: 9%; }
+.visitas-table th:nth-child(2) { width: 13%; }
+.visitas-table th:nth-child(3) { width: 9%; }
+.visitas-table th:nth-child(4) { width: 13%; }
+.visitas-table th:nth-child(5) { width: 10%; }
+.visitas-table th:nth-child(6) { width: 10%; }
+.visitas-table th:nth-child(7) { width: 14%; }
+.visitas-table th:nth-child(8) { width: 22%; }
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.visitas-footer {
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 1rem;
+
+  border-top: 1px solid var(--color-border);
+
+  color: var(--color-text-light);
+
+  font-size: 0.95rem;
+}
+
+
+.visitas-footer-group {
+  display: flex;
+
+  gap: 0.9rem;
+
+  align-items: center;
+}
+
+
+/* =========================================================
+   RESPONSIVE DESKTOP / TABLET
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .visitas-container {
+    width: calc(100% - 2rem);
+  }
+
+
+  .visitas-filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+
+  .visitas-search {
+    grid-column: 1 / -1;
+  }
+
+
+  .visitas-table-container {
+    overflow-x: auto;
+  }
+
+
+  .visitas-table {
+    min-width: 1000px;
+  }
+
+}
+
+
+/* =========================================================
+   MÓVIL
+   De momento únicamente evita que esta vista se rompa.
+   La vista móvil definitiva puede tratarse por separado.
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .visitas-header {
+    min-height: 100px;
+    padding: 12px 16px;
+  }
+
+
+  .visitas-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+
+  .visitas-brand-name {
+    font-size: 28px;
+  }
+
+
+  .visitas-brand-subtitle {
+    font-size: 11px;
+  }
+
+
+  .visitas-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+
+  .visitas-user-name,
+  .visitas-user-role {
+    font-size: 12px;
+  }
+
+
+  .visitas-container {
+    width: calc(100% - 1rem);
+
+    padding-top: 2rem;
+  }
+
+
+  .visitas-title {
+    margin-bottom: 2rem;
+
+    font-size: 1.6rem;
+  }
+
+
+  .visitas-filters {
+    grid-template-columns: 1fr;
+  }
+
+
+  .visitas-search {
+    grid-column: auto;
+  }
+
+
+  .visitas-footer {
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 0.3rem;
+
+    padding: 0.75rem;
+
+    text-align: center;
+  }
+
+}
+
+/* ============================================
+   BARRA DE NAVEGACIÓN
+============================================ */
+
+.visitas-backbar {
+  width: 100%;
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 3rem;
+
+  background-color: #dcebf3;
+}
+
+.visitas-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #005b7f;
+  font-size: 22px;
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.visitas-back span:first-child {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.visitas-back:hover {
+  text-decoration: underline;
+}
+
+.visitas-back:focus-visible {
+  outline: 2px solid #005b7f;
+  outline-offset: 4px;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 640px) {
+  .visitas-backbar {
+    min-height: 70px;
+    padding: 0 1rem;
+  }
+}

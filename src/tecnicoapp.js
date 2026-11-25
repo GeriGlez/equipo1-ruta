@@ -1,0 +1,719 @@
+import {
+  obtenerVisitasPendientes
+} from './modules/pendientes_sync/db-local.js'
+import {
+  obtenerSesionRemotaVerificada
+} from './modules/auth/authService.js';
+
+
+
+import {sincronizarOrdenesTecnico} from './services/ordenes-tecnico.js'
+
+
+// ============================================
+// RUTAS YA DISPONIBLES
+// ============================================
+
+const RUTAS = {
+
+  visitas:
+    '/src/modules/visitas/Visitas_y_Bitacora_Movil.html',
+
+  pendientes:
+    '/src/modules/pendientes_sync/Pendientes_Sincronizacion_Movil.html',
+  incidencias:
+    '/src/modules/incidencias/Registrar_Incidencia_Movil.html',
+
+  ordenes:
+    '/src/modules/ordenes/Ordenes_Servicio_Movil.html',
+
+  insumos:
+    '/src/modules/insumos/Registrar_Insumos_Movil.html'
+
+}
+
+
+// ============================================
+// INICIO DEL TÉCNICO
+// ============================================
+
+export function renderTecnicoApp(
+  app,
+  usuario,
+  onLogout
+) {
+
+  app.innerHTML = `
+
+    <div class="tecnico-app">
+
+
+      <!-- =====================================
+           ENCABEZADO
+      ====================================== -->
+
+      <header class="tecnico-header">
+
+        <div class="tecnico-brand">
+
+          <div class="tecnico-brand-main">
+
+            <img
+              src="/logo-ruta.png"
+              alt="Logotipo RUTA"
+              class="tecnico-logo"
+            >
+
+            <span class="tecnico-brand-name">
+              RUTA
+            </span>
+
+          </div>
+
+          <span class="tecnico-brand-subtitle">
+            Gestión de servicios en campo
+          </span>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="tecnico-profile-button"
+          class="tecnico-profile"
+          aria-label="Opciones de usuario"
+        >
+
+          <img
+            src="/avatar.png"
+            alt=""
+            aria-hidden="true"
+            class="tecnico-avatar"
+          >
+
+          <strong id="tecnico-profile-name">
+            Usuario
+          </strong>
+
+          <span>
+            Técnico
+          </span>
+
+        </button>
+
+      </header>
+
+
+      <!-- =====================================
+           CONTENIDO
+      ====================================== -->
+
+      <main class="tecnico-main">
+
+
+        <!-- SALUDO -->
+
+        <section class="tecnico-welcome">
+
+          <h1>
+            Hola,
+            <span id="tecnico-welcome-name"></span>
+          </h1>
+
+          <p>
+            ¿Qué deseas hacer?
+          </p>
+
+        </section>
+
+        
+
+        <!-- =================================
+             OPCIONES
+        ================================== -->
+
+        <nav
+          class="tecnico-menu"
+          aria-label="Opciones del técnico"
+        >
+
+
+          <!-- ÓRDENES -->
+
+          <button
+            type="button"
+            class="tecnico-menu-card"
+            data-module="ordenes"
+          >
+
+            <div class="
+            tecnico-menu-icon
+            tecnico-menu-icon--ordenes
+            ">
+            <img
+                src="/nota-adhesiva.png"
+                alt=""
+                aria-hidden="true"
+            >
+            </div>
+
+            <div class="tecnico-menu-info">
+
+              <strong>
+                Órdenes de Servicio
+              </strong>
+
+              <span>
+                Consulta las órdenes asignadas
+                a tu cuadrilla
+              </span>
+
+            </div>
+
+            <span
+              class="tecnico-menu-arrow"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+
+          </button>
+
+
+          <!-- VISITAS -->
+
+          <button
+            type="button"
+            class="tecnico-menu-card"
+            data-module="visitas"
+          >
+
+            <div class="
+            tecnico-menu-icon
+            tecnico-menu-icon--visitas
+            ">
+            <img
+                src="/portapapeles.png"
+                alt=""
+                aria-hidden="true"
+            >
+            </div>
+
+            <div class="tecnico-menu-info">
+
+              <strong>
+                Bitácora de visitas
+              </strong>
+
+              <span>
+                Registro de visitas en campo
+              </span>
+
+            </div>
+
+            <span
+              class="tecnico-menu-arrow"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+
+          </button>
+
+
+          <!-- INSUMOS -->
+
+          <button
+            type="button"
+            class="tecnico-menu-card"
+            data-module="insumos"
+          >
+
+            <div class="
+            tecnico-menu-icon
+            tecnico-menu-icon--insumos
+            ">
+            <img
+                src="/caja.png"
+                alt=""
+                aria-hidden="true"
+            >
+            </div>
+
+            <div class="tecnico-menu-info">
+
+              <strong>
+                Insumos y consumo
+              </strong>
+
+              <span>
+                Registra los insumos utilizados
+                en la visita
+              </span>
+
+            </div>
+
+            <span
+              class="tecnico-menu-arrow"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+
+          </button>
+
+
+          <!-- INCIDENCIAS -->
+
+          <button
+            type="button"
+            class="tecnico-menu-card"
+            data-module="incidencias"
+          >
+
+            <div class="
+            tecnico-menu-icon
+            tecnico-menu-icon--incidencias
+            ">
+            <img
+                src="/advertencia.png"
+                alt=""
+                aria-hidden="true"
+            >
+            </div>
+
+            <div class="tecnico-menu-info">
+
+              <strong>
+                Incidencias
+              </strong>
+
+              <span>
+                Reporta y da seguimiento
+                a incidencias
+              </span>
+
+            </div>
+
+            <span
+              class="tecnico-menu-arrow"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+
+          </button>
+
+        </nav>
+
+      </main>
+
+
+      <!-- =====================================
+           PENDIENTES
+      ====================================== -->
+
+      <footer class="tecnico-pending">
+
+        <div class="tecnico-pending-icon">
+        <img
+            src="/reloj.png"
+            alt=""
+            aria-hidden="true"
+        >
+        </div>
+
+
+        <div class="tecnico-pending-info">
+
+          <strong id="tecnico-pending-count">
+            Consultando pendientes...
+          </strong>
+
+          <span>
+            Sincronízalas cuando recuperes conexión
+          </span>
+
+        </div>
+
+
+        <button
+          type="button"
+          id="tecnico-pending-button"
+          class="tecnico-pending-button"
+        >
+          Ver pendientes
+        </button>
+
+      </footer>
+
+
+    </div>
+
+  `
+
+
+  // ==========================================
+  // DATOS DEL USUARIO
+  // ==========================================
+
+  const nombre =
+    usuario?.nombre || 'Técnico'
+
+
+  app
+    .querySelector('#tecnico-profile-name')
+    .textContent =
+      nombre
+
+
+  app
+    .querySelector('#tecnico-welcome-name')
+    .textContent =
+      nombre
+
+
+  // ==========================================
+  // CERRAR SESIÓN DESDE FOTO DE PERFIL
+  // ==========================================
+
+  const botonPerfil =
+    app.querySelector(
+      '#tecnico-profile-button'
+    )
+
+
+  botonPerfil.addEventListener(
+    'click',
+    async () => {
+
+      const confirmar =
+        window.confirm(
+          '¿Deseas cerrar sesión?'
+        )
+
+
+      if (!confirmar) {
+        return
+      }
+
+
+      if (onLogout) {
+        await onLogout()
+      }
+
+    }
+  )
+
+
+  // ==========================================
+  // NAVEGACIÓN
+  // ==========================================
+
+  const botonVisitas =
+    app.querySelector(
+      '[data-module="visitas"]'
+    )
+
+
+  botonVisitas.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.visitas
+
+    }
+  )
+
+  const botonIncidencias =
+    app.querySelector(
+      '[data-module="incidencias"]'
+    )
+
+
+  botonIncidencias.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.incidencias
+
+    }
+  )
+
+
+  const botonPendientes =
+    app.querySelector(
+      '#tecnico-pending-button'
+    )
+
+
+  botonPendientes.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.pendientes
+
+    }
+  )
+
+
+  const botonOrdenes =
+    app.querySelector(
+      '[data-module="ordenes"]'
+    )
+
+
+  botonOrdenes.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.ordenes
+
+    }
+  )
+
+
+  const botonInsumos =
+    app.querySelector(
+      '[data-module="insumos"]'
+    )
+
+
+  botonInsumos.addEventListener(
+    'click',
+    () => {
+
+      window.location.href =
+        RUTAS.insumos
+
+    }
+  )
+
+
+  // ==========================================
+  // MÓDULOS AÚN NO INTEGRADOS
+  // ==========================================
+
+  const modulosPendientes = [];
+
+
+  modulosPendientes.forEach(
+    modulo => {
+
+      const boton =
+        app.querySelector(
+          `[data-module="${modulo}"]`
+        )
+
+
+      boton.addEventListener(
+        'click',
+        () => {
+
+          alert(
+            'Este módulo todavía no está integrado ' +
+            'a la pantalla principal del técnico.'
+          )
+
+        }
+      )
+
+    }
+  )
+
+
+  // ==========================================
+  // CARGA DE DATOS LOCALES
+  // ==========================================
+
+  actualizarPendientes(
+    app,
+    usuario
+  )
+
+  actualizarOrdenesTecnico(
+    usuario
+  )
+
+  descargarCatalogosOffline(usuario);
+
+
+}
+
+
+
+// ============================================
+// CONSULTAR PENDIENTES LOCALES
+// ============================================
+
+async function actualizarPendientes(
+  app,
+  usuario
+) {
+
+  const contador =
+    app.querySelector(
+      '#tecnico-pending-count'
+    )
+
+
+  try {
+
+    const pendientes =
+      await obtenerVisitasPendientes(usuario?.id)
+
+
+    const cantidad =
+      pendientes.length
+
+
+    contador.textContent =
+      cantidad === 1
+        ? '1 visita pendiente de sincronización'
+        : `${cantidad} visitas pendientes de sincronización`
+
+
+  } catch (error) {
+
+    console.error(
+      '[RUTA] No fue posible consultar ' +
+      'las visitas pendientes:',
+      error
+    )
+
+
+    contador.textContent =
+      'Pendientes no disponibles'
+
+  }
+
+}
+
+// ============================================
+// ACTUALIZAR ÓRDENES LOCALES DEL TÉCNICO
+// ============================================
+
+async function actualizarOrdenesTecnico(
+  usuario
+) {
+
+  try {
+
+    const ordenes =
+      await sincronizarOrdenesTecnico(
+        usuario
+      )
+
+
+    console.log(
+      '[RUTA] Órdenes del técnico disponibles:',
+      ordenes.length
+    )
+
+  } catch (error) {
+
+    console.error(
+      '[RUTA] No fue posible actualizar ' +
+      'las órdenes del técnico:',
+      error
+    )
+
+  }
+
+}
+// ================================================
+// PRECARGAR CATÁLOGO PARA EL MÓDULO DE INCIDENCIAS
+// ================================================
+import { supabase } from './services/supabase.js';
+import { guardarCatalogoM7 } from './modules/pendientes_sync/db-local.js';
+
+// Ejecutar silenciosamente en segundo plano
+async function descargarCatalogosOffline(usuario) {
+  if (
+    !navigator.onLine ||
+    usuario?.rol !== 'tecnico' ||
+    !usuario?.id
+  ) {
+    return;
+  }
+
+  try {
+    const sesion = await obtenerSesionRemotaVerificada(
+      usuario.id
+    );
+
+    if (!sesion) {
+      console.info(
+        '[RUTA] Catálogo M7: esperando autenticación remota.'
+      );
+      return;
+    }
+
+    const { data: visitas, error } = await supabase
+      .from('visitas')
+      .select(`
+        id,
+        tecnico_id,
+        ordenes_servicio (
+          condominio_id,
+          area_id,
+          condominios ( nombre ),
+          areas ( nombre )
+        )
+      `)
+      .eq('tecnico_id', usuario.id)
+      .order('id', { ascending: false });
+
+    if (error) throw error;
+
+    // Evitar persistir información si cambió la sesión.
+    const sesionVigente =
+      await obtenerSesionRemotaVerificada(usuario.id);
+
+    if (
+      !sesionVigente ||
+      sesionVigente.user.id !== sesion.user.id
+    ) {
+      return;
+    }
+
+    await guardarCatalogoM7(visitas || []);
+
+    console.log(
+      '[RUTA] Catálogo M7 descargado:',
+      visitas?.length || 0,
+      'visitas del técnico'
+    );
+
+  } catch (error) {
+    console.error(
+      '[RUTA] Error al descargar catálogo M7:',
+      error
+    );
+  }
+}
+
+// Llamar a la función al cargar el dashboard
+// descargarCatalogosOffline();
+
+
+
+
+window.addEventListener('online', async () => {
+  try {
+    const sesion = await obtenerSesionRemotaVerificada();
+
+    if (sesion) {
+      await descargarCatalogosOffline(sesion.usuario);
+    }
+  } catch (error) {
+    console.warn(
+      '[RUTA] Catálogo M7 pendiente de actualización:',
+      error
+    );
+  }
+});
