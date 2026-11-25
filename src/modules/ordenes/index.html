@@ -35,22 +35,19 @@
             <span>Volver</span>
         </a>
 
-        <button type="button" id="btn-sincronizar-ordenes" class="btn-sync-ordenes" hidden>
+        <!-- <button type="button" id="btn-sincronizar-ordenes" class="btn-sync-ordenes" hidden>
             🔄 Sincronizar pendientes (<span id="badge-pendientes-sync">0</span>)
-        </button>
+        </button> -->
     </nav>
 
     <!-- CONTENEDOR PRINCIPAL -->
     <div class="container">
         <div class="header-actions">
             <div>
-                <h1>Órdenes de Servicio</h1>
-                <p class="header-subtitle">Consulta, programa individualmente o genera la programación semanal a partir de los contratos.</p>
+              <h1>Órdenes de Servicio</h1>
+                <p class="header-subtitle">Consulta, programa, asigna y gestiona las órdenes de servicio.</p>
             </div>
             <div class="header-buttons">
-                <button type="button" class="btn-primary-ruta" id="btn-abrir-programacion-semanal">
-                    📅 Programación semanal automática
-                </button>
                 <button type="button" class="btn-success" id="btn-abrir-nueva-orden">
                     ⊕ Programar una nueva orden
                 </button>
@@ -195,106 +192,7 @@
         </div>
     </div>
 
-    <!-- MODAL 4: PROGRAMACIÓN SEMANAL AUTOMÁTICA DESDE CONTRATOS -->
-    <div id="modal-programacion-semanal" class="modal-overlay" aria-hidden="true">
-        <div class="modal-content modal-content-xl">
-            <div class="modal-header-row">
-                <div>
-                    <h2 style="text-align: left; margin-bottom: 4px;">📅 Programación Semanal de Órdenes (Desde Contratos)</h2>
-                    <p style="font-size: 13px; color: #475569;">
-                        Selecciona la semana a programar, revisa las órdenes propuestas por contrato, asigna el área cuando se requiera y confirma la generación.
-                    </p>
-                </div>
-                <button type="button" class="btn-close-x btn-cerrar-modal" aria-label="Cerrar">&times;</button>
-            </div>
-
-            <!-- Controles de selección de semana -->
-            <div class="semana-toolbar">
-                <div class="semana-control-group">
-                    <label for="input-semana-programacion">Semana ISO:</label>
-                    <input type="week" id="input-semana-programacion">
-                </div>
-                <div class="semana-control-group">
-                    <label for="input-fecha-referencia-semana">O elegir fecha de la semana:</label>
-                    <input type="date" id="input-fecha-referencia-semana">
-                </div>
-                <button type="button" id="btn-generar-vista-previa" class="btn-primary-ruta">
-                    🔍 Consultar contratos y generar vista previa
-                </button>
-                <button type="button" id="btn-autocompletar-areas" class="btn-secondary-sm" title="Asignar áreas sugeridas por tipo de servicio">
-                    ✨ Usar áreas sugeridas
-                </button>
-            </div>
-
-            <div id="rango-semana-banner" class="rango-semana-banner"></div>
-
-            <!-- Resumen de conteos de la vista previa -->
-            <div class="resumen-previa-grid">
-                <div class="resumen-card resumen-card-ok">
-                    <span class="resumen-num" id="resumen-propuestas-count">0</span>
-                    <span class="resumen-label">Órdenes nuevas propuestas</span>
-                </div>
-                <div class="resumen-card resumen-card-info">
-                    <span class="resumen-num" id="resumen-existentes-count">0</span>
-                    <span class="resumen-label">Ya existían en la semana</span>
-                </div>
-                <div class="resumen-card resumen-card-warn">
-                    <span class="resumen-num" id="resumen-errores-count">0</span>
-                    <span class="resumen-label">Contratos con datos incompletos</span>
-                </div>
-                <div class="resumen-card resumen-card-muted">
-                    <span class="resumen-num" id="resumen-omitidos-count">0</span>
-                    <span class="resumen-label">Frecuencia no aplicable esta semana</span>
-                </div>
-            </div>
-
-            <!-- Resultado después de confirmar generación -->
-            <div id="resultado-programacion-semanal" class="resultado-generacion-box" hidden></div>
-
-            <!-- Tabla de vista previa editable -->
-            <div class="previa-table-wrap">
-                <table class="previa-table">
-                    <thead>
-                        <tr>
-                            <th>Generar</th>
-                            <th>Contrato / Frecuencia</th>
-                            <th>Condominio</th>
-                            <th>Servicio Contratado</th>
-                            <th>Área Asignada (Obligatoria)</th>
-                            <th>Fecha Programada</th>
-                            <th>Estado en Vista Previa</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpo-vista-previa-semanal">
-                        <tr>
-                            <td colspan="7" style="padding: 24px; color: #64748b;">
-                                Selecciona una semana y pulsa "Consultar contratos y generar vista previa".
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Detalle de contratos que no pudieron generar propuestas -->
-            <div id="seccion-no-generables" class="detalle-incidencias-contratos" hidden>
-                <h3>⚠️ Contratos que no pudieron programarse (datos insuficientes o inconsistentes)</h3>
-                <ul id="lista-contratos-no-generables"></ul>
-            </div>
-
-            <!-- Detalle de contratos quincenales / mensuales que no corresponden a la semana -->
-            <div id="seccion-omitidos-frecuencia" class="detalle-omitidos-contratos" hidden>
-                <h3>ℹ️ Contratos quincenales/mensuales que no corresponden en esta semana</h3>
-                <ul id="lista-contratos-omitidos"></ul>
-            </div>
-
-            <div class="modal-actions modal-actions-spread">
-                <button type="button" class="btn-danger btn-cerrar-modal">⊘ Cerrar</button>
-                <button type="button" class="btn-success" id="btn-confirmar-programacion-semanal">
-                    ☑ Confirmar y guardar órdenes válidas
-                </button>
-            </div>
-        </div>
-    </div>
+  
 
     <!-- Lógica modular con Vite y cliente compartido de Supabase -->
     <script type="module" src="./ordenes.js"></script>

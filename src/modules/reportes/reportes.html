@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUTA | Reporte de Cumplimiento de Ruta</title>
+  <link rel="stylesheet" href="../../styles/main.css">
+  <link rel="stylesheet" href="../../styles/adminapp.css">
+  <link rel="stylesheet" href="./reportes.css">
+</head>
+<body>
+
+  <!-- ENCABEZADO OFICIAL DE ADMINISTRADOR -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <div class="admin-brand-main">
+        <img src="/logo-ruta.png" class="admin-logo" alt="Logotipo RUTA">
+        <span class="admin-brand-name">RUTA</span>
+      </div>
+      <span class="admin-brand-subtitle">Gestión de servicios en campo</span>
+    </div>
+
+    <div class="admin-user">
+      <img src="/avatar.png" class="admin-avatar" alt="Avatar Administrador">
+      <strong id="nombre-usuario-reporte">Usuario</strong>
+      <span>Administrador</span>
+    </div>
+  </header>
+
+  <!-- BARRA VOLVER -->
+  <nav class="rep-subbar" aria-label="Navegación">
+    <a href="/" class="rep-back-link" aria-label="Volver al panel de administración">
+      <span class="rep-back-arrow" aria-hidden="true">←</span>
+      <span>Volver</span>
+    </a>
+    <span class="rep-readonly-pill">Vista de solo lectura · Administrador</span>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="rep-container">
+    <header class="rep-header">
+      <div>
+        <h1>Reporte de Cumplimiento de Ruta</h1>
+        <p class="rep-subtitle">
+          Órdenes programadas contra completadas por cuadrilla y por semana, porcentaje de cumplimiento y desglose de canceladas con su motivo.
+        </p>
+      </div>
+      <button type="button" id="btn-imprimir-reporte" class="btn-rep-secondary">
+        🖨️ Imprimir / PDF
+      </button>
+    </header>
+
+    <!-- ALERTA DE ERROR -->
+    <div id="alerta-reporte" class="rep-alerta" role="alert" hidden></div>
+
+    <!-- FILTROS DE FECHA Y CUADRILLA -->
+    <section class="rep-filtros" aria-label="Filtros del reporte">
+      <div class="rep-filtros-campos">
+        <div class="rep-filtro-item">
+          <label for="filtro-desde">Desde:</label>
+          <input type="date" id="filtro-desde">
+        </div>
+
+        <div class="rep-filtro-item">
+          <label for="filtro-hasta">Hasta:</label>
+          <input type="date" id="filtro-hasta">
+        </div>
+
+        <div class="rep-filtro-item">
+          <label for="filtro-cuadrilla">Cuadrilla:</label>
+          <select id="filtro-cuadrilla">
+            <option value="">Todas las cuadrillas</option>
+          </select>
+        </div>
+
+        <div class="rep-filtro-acciones">
+          <button type="button" id="btn-aplicar-filtros" class="btn-rep-primary">
+            Consultar periodo
+          </button>
+        </div>
+      </div>
+
+      <div class="rep-atajos" role="group" aria-label="Periodos rápidos">
+        <span class="rep-atajos-label">Periodos rápidos:</span>
+        <button type="button" class="btn-atajo" data-periodo="semana_actual">Esta semana</button>
+        <button type="button" class="btn-atajo active" data-periodo="ultimas_4">Últimas 4 semanas</button>
+        <button type="button" class="btn-atajo" data-periodo="mes_actual">Este mes</button>
+        <button type="button" class="btn-atajo" data-periodo="todo">Todo el historial</button>
+      </div>
+
+      <p id="resumen-periodo-texto" class="rep-periodo-info"></p>
+    </section>
+
+    <!-- TARJETAS KPI PRINCIPALES -->
+    <section class="rep-kpis" aria-label="Resumen general del periodo">
+      <article class="kpi-card">
+        <span class="kpi-label">Órdenes programadas</span>
+        <strong id="kpi-programadas" class="kpi-value">0</strong>
+        <span class="kpi-hint">Total agendado en el periodo</span>
+      </article>
+
+      <article class="kpi-card kpi-card--success">
+        <span class="kpi-label">Completadas</span>
+        <strong id="kpi-completadas" class="kpi-value">0</strong>
+        <span id="kpi-pendientes-hint" class="kpi-hint">0 pendientes / en proceso</span>
+      </article>
+
+      <article class="kpi-card kpi-card--primary">
+        <span class="kpi-label">Cumplimiento global</span>
+        <strong id="kpi-porcentaje" class="kpi-value">0%</strong>
+        <div class="kpi-progress-track" aria-hidden="true">
+          <div id="kpi-barra-progreso" class="kpi-progress-fill" style="width: 0%;"></div>
+        </div>
+      </article>
+
+      <article class="kpi-card kpi-card--danger">
+        <span class="kpi-label">Canceladas</span>
+        <strong id="kpi-canceladas" class="kpi-value">0</strong>
+        <span id="kpi-canceladas-pct" class="kpi-hint">0% del periodo</span>
+      </article>
+    </section>
+
+    <!-- SECCIÓN 1: CUMPLIMIENTO POR CUADRILLA -->
+    <section class="rep-section" aria-labelledby="titulo-por-cuadrilla">
+      <div class="rep-section-head">
+        <h2 id="titulo-por-cuadrilla">Cumplimiento por cuadrilla</h2>
+        <span class="rep-section-note">Comparativo acumulado del periodo seleccionado</span>
+      </div>
+      <div id="grid-cuadrillas-cumplimiento" class="cuadrillas-grid">
+        <p class="rep-empty">Cargando datos...</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: CUMPLIMIENTO POR SEMANA Y CUADRILLA -->
+    <section class="rep-section" aria-labelledby="titulo-por-semana">
+      <div class="rep-section-head">
+        <h2 id="titulo-por-semana">Cumplimiento por semana y cuadrilla</h2>
+        <span class="rep-section-note">Agrupado de lunes a domingo (ISO)</span>
+      </div>
+      <div id="contenedor-semanas" class="semanas-stack">
+        <p class="rep-empty">Cargando semanas...</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: DESGLOSE DE CANCELADAS CON MOTIVO -->
+    <section class="rep-section rep-section--canceladas" aria-labelledby="titulo-canceladas">
+      <div class="rep-section-head">
+        <h2 id="titulo-canceladas">Desglose de órdenes canceladas</h2>
+        <span id="badge-total-canceladas" class="rep-count-badge">0 canceladas</span>
+      </div>
+      <div id="lista-canceladas" class="canceladas-list">
+        <p class="rep-empty">Consultando cancelaciones...</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./reportes.js"></script>
+</body>
+</html>

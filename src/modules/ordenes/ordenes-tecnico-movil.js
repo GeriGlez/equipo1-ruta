@@ -129,7 +129,7 @@ async function cargarCatalogosConNotas(permitirRemoto = false) {
     try {
       const { data, error } = await supabase
         .from('condominios')
-        .select('id, nombre, direccion, colonia, notas_acceso, activo')
+        .select('id, nombre, direccion, colonia, contacto, telefono, notas_acceso, activo')
         .order('nombre', { ascending: true });
 
       if (!error && Array.isArray(data)) {
@@ -184,6 +184,10 @@ async function guardarContextoDeOrdenIndividual(orden) {
         condominio: {
           id: condo.id,
           nombre: condo.nombre,
+          direccion: condo.direccion || null,
+          colonia: condo.colonia || null,
+          contacto: condo.contacto || null,
+          telefono: condo.telefono || null,
           notas_acceso: condo.notas_acceso || null
         },
         area: {
@@ -378,13 +382,14 @@ async function cargarDatosYRenderizar() {
 function obtenerConfigEstado(estadoRaw) {
   const estado = String(estadoRaw || 'programada').toLowerCase();
 
-  if (estado === 'en_proceso') {
+ if (estado === 'en_proceso') {
     return {
       textoBarra: 'En Proceso',
       claseBarra: 'orden-status-bar orden-status-bar--en-proceso',
       textoBoton: 'Continuar Visita',
       claseBoton: 'orden-action-btn orden-action-btn--iniciar',
-      dataState: 'running'
+      dataState: 'running',
+      mostrarBoton: true
     };
   }
 
@@ -392,9 +397,10 @@ function obtenerConfigEstado(estadoRaw) {
     return {
       textoBarra: 'Completada',
       claseBarra: 'orden-status-bar orden-status-bar--completada',
-      textoBoton: 'Editar Visita',
-      claseBoton: 'orden-action-btn orden-action-btn--completada',
-      dataState: 'done'
+      textoBoton: '',
+      claseBoton: '',
+      dataState: 'done',
+      mostrarBoton: false
     };
   }
 
@@ -403,7 +409,8 @@ function obtenerConfigEstado(estadoRaw) {
     claseBarra: 'orden-status-bar orden-status-bar--asignada',
     textoBoton: 'Iniciar Trabajo',
     claseBoton: 'orden-action-btn orden-action-btn--iniciar',
-    dataState: 'idle'
+    dataState: 'idle',
+    mostrarBoton: true
   };
 }
 
@@ -444,6 +451,10 @@ async function renderizarOrdenes() {
     const serv = mapaServicios.get(Number(orden.servicio_id)) || contexto?.servicio || {};
 
     const nombreCondominio = condo.nombre || `Condominio #${orden.condominio_id}`;
+    const direccionCondominio =
+      [condo.direccion, condo.colonia].filter(Boolean).join(', ') || 'Sin dirección registrada';
+    const contactoCondominio =
+      [condo.contacto, condo.telefono].filter(Boolean).join(' · ') || 'Sin contacto registrado';
     const nombreArea = area.nombre || `Área #${orden.area_id}`;
     const nombreServicio = serv.nombre || `Servicio #${orden.servicio_id}`;
 
@@ -489,7 +500,17 @@ async function renderizarOrdenes() {
 
         <div class="orden-accordion">
           <div class="orden-accordion-inner">
-            <div class="orden-card-body">
+          <div class="orden-card-body">
+
+              <div class="orden-field">
+                <span class="orden-field-label">Dirección:</span>
+                <div class="orden-field-box">${escaparHTML(direccionCondominio)}</div>
+              </div>
+
+              <div class="orden-field">
+                <span class="orden-field-label">Contacto:</span>
+                <div class="orden-field-box">${escaparHTML(contactoCondominio)}</div>
+              </div>
 
               <div class="orden-field">
                 <span class="orden-field-label">Área:</span>
@@ -503,16 +524,20 @@ async function renderizarOrdenes() {
 
               <div class="orden-notas-container" data-notas-orden-idx="${idx}"></div>
 
-              <div class="orden-btn-wrap">
-                <button
-                  type="button"
-                  class="${cfg.claseBoton}"
-                  data-action="iniciar-trabajo"
-                  data-state="${cfg.dataState}"
-                >
-                  ${cfg.textoBoton}
-                </button>
-              </div>
+              ${
+                cfg.mostrarBoton
+                  ? `<div class="orden-btn-wrap">
+                      <button
+                        type="button"
+                        class="${cfg.claseBoton}"
+                        data-action="iniciar-trabajo"
+                        data-state="${cfg.dataState}"
+                      >
+                        ${cfg.textoBoton}
+                      </button>
+                    </div>`
+                  : ''
+              }
 
             </div>
           </div>
