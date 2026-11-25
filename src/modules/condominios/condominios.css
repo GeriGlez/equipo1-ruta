@@ -11,63 +11,8 @@ body {
   background: var(--color-surface);
 }
 
-/* ---------- Encabezado ---------- */
-
-.condo-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 2rem;
-  background: var(--condo-azul);
-  color: #fff;
-}
-
-.condo-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.condo-logo {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-}
-
-.condo-brand-name {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.condo-brand-sub {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.condo-user {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.condo-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.condo-user-info {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8rem;
-}
-
-.condo-user-info strong {
-  font-size: 0.95rem;
-}
+/* ---------- Barra "Volver" ----------
+   El encabezado usa el estándar de home (.admin-header en adminapp.css) */
 
 .condo-subbar {
   padding: 0.4rem 2rem;
@@ -263,15 +208,9 @@ body {
 }
 
 @media (max-width: 640px) {
-  .condo-header,
   .condo-subbar {
     padding-left: 1rem;
     padding-right: 1rem;
-  }
-
-  .condo-brand-sub,
-  .condo-user-info {
-    display: none;
   }
 }
 

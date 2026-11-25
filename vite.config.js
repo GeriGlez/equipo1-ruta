@@ -123,6 +123,11 @@ export default defineConfig({
         contratos: resolve(
           process.cwd(),
           'src/modules/servicios/contratos.html'
+        ),
+
+        reportes: resolve(
+          process.cwd(),
+          'src/modules/reportes/reportes.html'
         )
       }
     }
