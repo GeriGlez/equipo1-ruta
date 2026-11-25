@@ -227,143 +227,10 @@ main {
   cursor: pointer;
 }
 
-/* --- Estilos para el nuevo Encabezado Unificado --- */
-.header-ruta {
-  background-color: #005C7A;
-  color: white;
-  padding: 0.8rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-ruta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-text-ruta {
-  display: flex;
-  flex-direction: column;
-}
-
-.brand-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.brand-subtitle {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-
-.user-profile-ruta {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #0284C7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  text-align: right;
-}
-
-.user-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #FFFFFF;
-}
-
-.user-role {
-  font-size: 0.75rem;
-  opacity: 0.8;
-  color: #FFFFFF;
-}
-
 .hidden {
   display: none !important;
 }
 
-/* ==================================================
-   ESTILOS ENCABEZADO UNIFICADO (VISITAS-HEADER)
-=================================================== */
-.visitas-header {
-  background-color: #005C7A;
-  color: #ffffff;
-  padding: 0.8rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.visitas-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.visitas-logo {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-}
-
-.visitas-brand-text {
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 1.2rem;
-}
-
-.visitas-brand-text:nth-of-type(2) {
-  font-size: 0.8rem;
-  font-weight: 400;
-  opacity: 0.85;
-}
-
-.visitas-user {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.visitas-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.visitas-user-info {
-  display: flex;
-  flex-direction: column;
-  text-align: right;
-  color: #ffffff;
-}
-
-.visitas-user-info strong {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.visitas-user-info span {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
 /* Aviso de error dentro del modal (validaciones y duplicados) */
 .form-error-ruta {
   margin: 0.75rem 0 0;
@@ -502,3 +369,6 @@ main {
 .modal-card-confirmar .form-error-ruta {
   margin: 0 0 1.25rem;
 }
+
+/* Encabezado unificado del panel de administración */
+.admin-header { font-family: var(--font-sans); }
