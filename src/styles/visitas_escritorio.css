@@ -24,13 +24,14 @@
 
 .visitas-header {
   width: 100%;
-  min-height: 115px;
+  min-height: 136px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
 
-  padding: 0 3rem;
+  padding: 16px 30px;
 
   background-color: #075f80;
   color: #ffffff;
@@ -41,23 +42,37 @@
 
 .visitas-brand {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+}
 
-  gap: 1rem;
+
+.visitas-brand-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 
 .visitas-logo {
-  width: 220px;
-  height: 95px;
+  width: 94px;
+  height: 82px;
 
   object-fit: contain;
 }
 
 
-.visitas-brand-text {
-  font-size: 1rem;
+.visitas-brand-name {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+
+.visitas-brand-subtitle {
+  font-size: 14px;
   font-weight: 600;
+  color: #c9e0eb;
 }
 
 
@@ -65,37 +80,31 @@
 
 .visitas-user {
   display: flex;
-  align-items: center;
-
-  gap: 0.8rem;
-}
-
-
-.visitas-avatar {
-  width: 56px;
-  height: 56px;
-
-  object-fit: cover;
-
-  border-radius: 50%;
-  border: 1px solid var(--color-primary);
-}
-
-
-.visitas-user-info {
-  display: flex;
   flex-direction: column;
-}
-
-
-.visitas-user-info strong {
-  font-size: 1.15rem;
+  align-items: center;
   line-height: 1.2;
 }
 
 
-.visitas-user-info span {
-  font-size: 0.9rem;
+.visitas-avatar {
+  width: 66px;
+  height: 66px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1px solid #328db1;
+}
+
+
+.visitas-user-name {
+  font-size: 16px;
+}
+
+
+.visitas-user-role {
+  font-size: 14px;
+  color: #d2e5ed;
 }
 
 
@@ -370,36 +379,36 @@
 @media (max-width: 640px) {
 
   .visitas-header {
-    padding: 1rem;
-
-    min-height: 90px;
+    min-height: 100px;
+    padding: 12px 16px;
   }
 
 
   .visitas-logo {
-    width: 150px;
-    height: auto;
+    width: 60px;
+    height: 60px;
   }
 
 
-  .visitas-brand-text {
-    display: none;
+  .visitas-brand-name {
+    font-size: 28px;
+  }
+
+
+  .visitas-brand-subtitle {
+    font-size: 11px;
   }
 
 
   .visitas-avatar {
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
   }
 
 
-  .visitas-user-info strong {
-    font-size: 0.95rem;
-  }
-
-
-  .visitas-user-info span {
-    font-size: 0.8rem;
+  .visitas-user-name,
+  .visitas-user-role {
+    font-size: 12px;
   }
 
 
