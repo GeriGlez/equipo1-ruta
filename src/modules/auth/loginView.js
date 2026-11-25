@@ -203,7 +203,7 @@ export function renderLogin(container, onLoginSuccess) {
         </header>
 
         <section class="login-card">
-          <h2 class="card-title">Ingresar a tu cuenta</h2>
+          <h2 class="card-title">Ingresa a tu cuenta</h2>
 
           <div id="error-alert" class="error-alert"></div>
 

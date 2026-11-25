@@ -1,4 +1,3 @@
-
 import './styles/adminapp.css'
 
 const modulosAdministrador = [
@@ -6,49 +5,57 @@ const modulosAdministrador = [
     titulo: 'Condominios y Áreas',
     descripcion: 'Administra los condominios, áreas y notas de acceso',
     estilo: 'condominios',
-    ruta: './src/modules/condominios/condominios.html'
+    ruta: './src/modules/condominios/condominios.html',
+    icono: '/Figma/edificio-de-oficinas.png'
   },
   {
     titulo: 'Servicios Contratados',
     descripcion: 'Define servicios, frecuencia y día preferente',
     estilo: 'servicios',
-    ruta: './src/modules/servicios/modulos.html'
+    ruta: './src/modules/servicios/modulos.html',
+    icono: '/Figma/mantenimiento.png'
   },
   {
     titulo: 'Personal y Cuadrillas',
     descripcion: 'Gestión de usuarios, técnicos y cuadrillas',
     estilo: 'personal',
-    ruta: './src/modules/cuadrillas/cuadrillas.html'
+    ruta: './src/modules/cuadrillas/cuadrillas.html',
+    icono: '/Figma/usuarios.png'
   },
   {
     titulo: 'Órdenes de Servicio',
     descripcion: 'Programa, asigna y cancela órdenes',
     estilo: 'ordenes',
-    ruta: './src/modules/ordenes/index.html'
+    ruta: './src/modules/ordenes/index.html',
+    icono: '/Figma/nota-adhesiva.png'
   },
   {
     titulo: 'Bitácora de Visitas',
     descripcion: 'Registro de visitas en campo',
     estilo: 'visitas',
-    ruta: './src/modules/visitas/Visitas_y_Bitacora_Escritorio.html'
+    ruta: './src/modules/visitas/Visitas_y_Bitacora_Escritorio.html',
+    icono: '/Figma/portapapeles.png'
   },
   {
     titulo: 'Insumos y Consumo',
     descripcion: 'Administra insumos y consulta su consumo',
     estilo: 'insumos',
-    ruta: './src/modules/insumos/Catalogo_Insumos_Escritorio.html'
+    ruta: './src/modules/insumos/Catalogo_Insumos_Escritorio.html',
+    icono: '/Figma/caja.png'
   },
   {
     titulo: 'Incidencias',
     descripcion: 'Revisa y resuelve incidencias reportadas',
     estilo: 'incidencias',
-    ruta: './src/modules/incidencias/incidencias-admin.html'
+    ruta: './src/modules/incidencias/incidencias-admin.html',
+    icono: '/Figma/advertencia.png'
   },
   {
     titulo: 'Reportes',
     descripcion: 'Cumplimiento de ruta y desglose de canceladas',
     estilo: 'reportes',
-    ruta: './src/modules/reportes/reportes.html'
+    ruta: './src/modules/reportes/reportes.html',
+    icono: '/Figma/estadistico.png'
   }
 ]
 
@@ -56,7 +63,7 @@ export function renderAdminApp(app, usuario, onLogout) {
   const tarjetas = modulosAdministrador.map((modulo) => {
     const contenido = `
       <span class="admin-module-icon" aria-hidden="true">
-        <img src="/caja.png" alt="">
+        <img src="${modulo.icono}" alt="">
       </span>
       <span class="admin-module-arrow" aria-hidden="true">›</span>
       <strong class="admin-module-title">${modulo.titulo}</strong>

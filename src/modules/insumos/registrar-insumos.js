@@ -379,30 +379,28 @@ function esVisitaDeHoy(visita) {
 //   Una visita que aún no se sincroniza no lo tiene y no se inventa uno.
 // - Condominio y área: datos de su orden guardados en el dispositivo.
 async function etiquetaVisita(visita) {
+  let contexto = null;
 
-  let lugar = null;
-
-  try {
-
-    const contexto = await obtenerContextoOrden(visita.orden_id);
-
-    const condominio = contexto?.condominio?.nombre;
-    const area = contexto?.area?.nombre;
-
-    lugar = [condominio, area].filter(Boolean).join(' - ') || null;
-
-  } catch (error) {
-
-    console.warn('[RUTA] Sin contexto para la orden', visita.orden_id);
-
+  if (visita.orden_id) {
+    try {
+      contexto = await obtenerContextoOrden(visita.orden_id, usuario.id);
+    } catch (_) {
+      try {
+        contexto = await obtenerContextoOrden(visita.orden_id);
+      } catch (error) {
+        console.warn('[RUTA] Sin contexto para la orden', visita.orden_id);
+      }
+    }
   }
 
-  const encabezado = visita.visita_servidor_id
+  const condominioNombre = contexto?.condominio?.nombre || 'Condominio';
+  const areaNombre = contexto?.area?.nombre || 'Área';
+  const hora = visita.hora_entrada ? `(${visita.hora_entrada})` : '';
+  const prefijo = visita.visita_servidor_id
     ? `Visita #${visita.visita_servidor_id}`
-    : 'Visita';
+    : 'Visita local';
 
-  return lugar ? `${encabezado}: ${lugar}` : encabezado;
-
+  return `${prefijo}: ${condominioNombre} - ${areaNombre} ${hora}`.trim();
 }
 
 // Una visita real se identifica por su id en Supabase cuando ya lo
