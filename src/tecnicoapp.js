@@ -151,7 +151,7 @@ export function renderTecnicoApp(
             tecnico-menu-icon--ordenes
             ">
             <img
-                src="/portapapeles.png"
+                src="/nota-adhesiva.png"
                 alt=""
                 aria-hidden="true"
             >
@@ -193,7 +193,7 @@ export function renderTecnicoApp(
             tecnico-menu-icon--visitas
             ">
             <img
-                src="/ubicacion.png"
+                src="/portapapeles.png"
                 alt=""
                 aria-hidden="true"
             >
